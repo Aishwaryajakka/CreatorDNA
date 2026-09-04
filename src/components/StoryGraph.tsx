@@ -1,6 +1,7 @@
 import { useId } from "react";
 import {
   KIND_META,
+  type LegacyDnaKind,
   type DnaKind,
   type GraphEdge,
   type GraphNode,
@@ -147,7 +148,7 @@ export function StoryGraph({
   );
 }
 
-export function GraphLegend({ kinds }: { kinds: DnaKind[] }) {
+export function GraphLegend({ kinds }: { kinds: LegacyDnaKind[] }) {
   return (
     <div className="flex flex-wrap items-center gap-x-5 gap-y-2">
       {kinds.map((k) => (

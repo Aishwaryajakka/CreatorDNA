@@ -5,6 +5,7 @@ import { KindBadge, PageHeader, Panel, SourceChip } from "@/components/dna-ui";
 import { GraphLegend, StoryGraph } from "@/components/StoryGraph";
 import {
   KIND_META,
+  type LegacyDnaKind,
   storyMap,
   type DnaKind,
   type GraphNode,
@@ -81,7 +82,7 @@ function StoryMapPage() {
                   "theme",
                   "experience",
                   "evolution",
-                ] as DnaKind[]
+                ] as LegacyDnaKind[]
               ).map((k) => (
                 <div
                   key={k}

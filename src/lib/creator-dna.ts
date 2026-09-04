@@ -7,10 +7,13 @@
  * without touching the components.
  */
 
-export type DnaKind = "story" | "belief" | "theme" | "experience" | "evolution";
+import type { DnaKind as DomainDnaKind } from "./creator-dna/types";
+
+export type DnaKind = DomainDnaKind;
+export type LegacyDnaKind = DnaKind | "evolution";
 
 export const KIND_META: Record<
-  DnaKind,
+  LegacyDnaKind,
   { label: string; plural: string; color: string; token: string }
 > = {
   story: {
@@ -43,6 +46,12 @@ export const KIND_META: Record<
     color: "var(--evolution)",
     token: "evolution",
   },
+  lesson: {
+    label: "Lesson",
+    plural: "Lessons",
+    color: "var(--lesson)",
+    token: "lesson",
+  },
 };
 
 export type SourceRef = {
@@ -55,7 +64,7 @@ export type SourceRef = {
 export type GraphNode = {
   id: string;
   label: string;
-  kind: DnaKind | "me";
+  kind: LegacyDnaKind | "me";
   /** normalized layout position, 0-100 in both axes */
   x: number;
   y: number;

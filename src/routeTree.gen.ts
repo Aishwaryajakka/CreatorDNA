@@ -14,6 +14,11 @@ import { Route as AddContentRouteImport } from './routes/add-content'
 import { Route as LibraryRouteImport } from './routes/library'
 import { Route as PlanRouteImport } from './routes/plan'
 import { Route as StoryMapRouteImport } from './routes/story-map'
+import { Route as ApiContentRouteImport } from './routes/api/content'
+import { Route as ApiDevExtractTestRouteImport } from './routes/api/dev/extract-test'
+import { Route as ApiDevSaveContentTestRouteImport } from './routes/api/dev/save-content-test'
+import { Route as ApiDevSearchDnaTestRouteImport } from './routes/api/dev/search-dna-test'
+import { Route as ApiDevSupabaseTestRouteImport } from './routes/api/dev/supabase-test'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -40,6 +45,31 @@ const StoryMapRoute = StoryMapRouteImport.update({
   path: '/story-map',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiContentRoute = ApiContentRouteImport.update({
+  id: '/api/content',
+  path: '/api/content',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiDevExtractTestRoute = ApiDevExtractTestRouteImport.update({
+  id: '/api/dev/extract-test',
+  path: '/api/dev/extract-test',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiDevSaveContentTestRoute = ApiDevSaveContentTestRouteImport.update({
+  id: '/api/dev/save-content-test',
+  path: '/api/dev/save-content-test',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiDevSearchDnaTestRoute = ApiDevSearchDnaTestRouteImport.update({
+  id: '/api/dev/search-dna-test',
+  path: '/api/dev/search-dna-test',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiDevSupabaseTestRoute = ApiDevSupabaseTestRouteImport.update({
+  id: '/api/dev/supabase-test',
+  path: '/api/dev/supabase-test',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -47,6 +77,11 @@ export interface FileRoutesByFullPath {
   '/library': typeof LibraryRoute
   '/plan': typeof PlanRoute
   '/story-map': typeof StoryMapRoute
+  '/api/content': typeof ApiContentRoute
+  '/api/dev/extract-test': typeof ApiDevExtractTestRoute
+  '/api/dev/save-content-test': typeof ApiDevSaveContentTestRoute
+  '/api/dev/search-dna-test': typeof ApiDevSearchDnaTestRoute
+  '/api/dev/supabase-test': typeof ApiDevSupabaseTestRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -54,6 +89,11 @@ export interface FileRoutesByTo {
   '/library': typeof LibraryRoute
   '/plan': typeof PlanRoute
   '/story-map': typeof StoryMapRoute
+  '/api/content': typeof ApiContentRoute
+  '/api/dev/extract-test': typeof ApiDevExtractTestRoute
+  '/api/dev/save-content-test': typeof ApiDevSaveContentTestRoute
+  '/api/dev/search-dna-test': typeof ApiDevSearchDnaTestRoute
+  '/api/dev/supabase-test': typeof ApiDevSupabaseTestRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -62,13 +102,49 @@ export interface FileRoutesById {
   '/library': typeof LibraryRoute
   '/plan': typeof PlanRoute
   '/story-map': typeof StoryMapRoute
+  '/api/content': typeof ApiContentRoute
+  '/api/dev/extract-test': typeof ApiDevExtractTestRoute
+  '/api/dev/save-content-test': typeof ApiDevSaveContentTestRoute
+  '/api/dev/search-dna-test': typeof ApiDevSearchDnaTestRoute
+  '/api/dev/supabase-test': typeof ApiDevSupabaseTestRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/add-content' | '/library' | '/plan' | '/story-map'
+  fullPaths:
+    | '/'
+    | '/add-content'
+    | '/library'
+    | '/plan'
+    | '/story-map'
+    | '/api/content'
+    | '/api/dev/extract-test'
+    | '/api/dev/save-content-test'
+    | '/api/dev/search-dna-test'
+    | '/api/dev/supabase-test'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/add-content' | '/library' | '/plan' | '/story-map'
-  id: '__root__' | '/' | '/add-content' | '/library' | '/plan' | '/story-map'
+  to:
+    | '/'
+    | '/add-content'
+    | '/library'
+    | '/plan'
+    | '/story-map'
+    | '/api/content'
+    | '/api/dev/extract-test'
+    | '/api/dev/save-content-test'
+    | '/api/dev/search-dna-test'
+    | '/api/dev/supabase-test'
+  id:
+    | '__root__'
+    | '/'
+    | '/add-content'
+    | '/library'
+    | '/plan'
+    | '/story-map'
+    | '/api/content'
+    | '/api/dev/extract-test'
+    | '/api/dev/save-content-test'
+    | '/api/dev/search-dna-test'
+    | '/api/dev/supabase-test'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -77,6 +153,11 @@ export interface RootRouteChildren {
   LibraryRoute: typeof LibraryRoute
   PlanRoute: typeof PlanRoute
   StoryMapRoute: typeof StoryMapRoute
+  ApiContentRoute: typeof ApiContentRoute
+  ApiDevExtractTestRoute: typeof ApiDevExtractTestRoute
+  ApiDevSaveContentTestRoute: typeof ApiDevSaveContentTestRoute
+  ApiDevSearchDnaTestRoute: typeof ApiDevSearchDnaTestRoute
+  ApiDevSupabaseTestRoute: typeof ApiDevSupabaseTestRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -116,6 +197,41 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof StoryMapRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/content': {
+      id: '/api/content'
+      path: '/api/content'
+      fullPath: '/api/content'
+      preLoaderRoute: typeof ApiContentRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/dev/extract-test': {
+      id: '/api/dev/extract-test'
+      path: '/api/dev/extract-test'
+      fullPath: '/api/dev/extract-test'
+      preLoaderRoute: typeof ApiDevExtractTestRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/dev/save-content-test': {
+      id: '/api/dev/save-content-test'
+      path: '/api/dev/save-content-test'
+      fullPath: '/api/dev/save-content-test'
+      preLoaderRoute: typeof ApiDevSaveContentTestRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/dev/search-dna-test': {
+      id: '/api/dev/search-dna-test'
+      path: '/api/dev/search-dna-test'
+      fullPath: '/api/dev/search-dna-test'
+      preLoaderRoute: typeof ApiDevSearchDnaTestRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/dev/supabase-test': {
+      id: '/api/dev/supabase-test'
+      path: '/api/dev/supabase-test'
+      fullPath: '/api/dev/supabase-test'
+      preLoaderRoute: typeof ApiDevSupabaseTestRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -125,6 +241,11 @@ const rootRouteChildren: RootRouteChildren = {
   LibraryRoute: LibraryRoute,
   PlanRoute: PlanRoute,
   StoryMapRoute: StoryMapRoute,
+  ApiContentRoute: ApiContentRoute,
+  ApiDevExtractTestRoute: ApiDevExtractTestRoute,
+  ApiDevSaveContentTestRoute: ApiDevSaveContentTestRoute,
+  ApiDevSearchDnaTestRoute: ApiDevSearchDnaTestRoute,
+  ApiDevSupabaseTestRoute: ApiDevSupabaseTestRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

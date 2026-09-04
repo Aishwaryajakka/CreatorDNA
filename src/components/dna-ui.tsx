@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 import { FileText } from "lucide-react";
-import { KIND_META, type DnaKind } from "@/lib/creator-dna";
+import { KIND_META, type LegacyDnaKind } from "@/lib/creator-dna";
 
 export function PageHeader({
   eyebrow,
@@ -31,7 +31,13 @@ export function PageHeader({
   );
 }
 
-export function KindBadge({ kind, label }: { kind: DnaKind; label?: string }) {
+export function KindBadge({
+  kind,
+  label,
+}: {
+  kind: LegacyDnaKind;
+  label?: string;
+}) {
   const meta = KIND_META[kind];
   return (
     <span className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-3 py-1 text-[0.6875rem] font-semibold uppercase tracking-[0.12em] text-midnight">
