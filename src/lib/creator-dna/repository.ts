@@ -1,5 +1,6 @@
 import type { ContentItem, CreatorDNAMatch, CreatorDNANode } from "./types";
 import type { NewContentSubmissionInput } from "./validation";
+import type { CreatorFoundation } from "./validation";
 import { supabaseServer } from "@/lib/supabase/server";
 import type {
   ContentItemRow,
@@ -196,6 +197,101 @@ export async function getDnaNodesForUser(
   if (error)
     throw new Error(`Failed to fetch Story Map nodes: ${error.message}`);
   return data.map(toDnaNode);
+}
+
+export async function replaceFoundationNodes(
+  foundation: CreatorFoundation,
+  userId: string,
+): Promise<CreatorDNANode[]> {
+  const old = await supabaseServer
+    .from("content_items")
+    .select("id")
+    .eq("user_id", userId)
+    .eq("title", "Creator Foundation");
+  if (old.error) throw new Error(old.error.message);
+  if (old.data.length) {
+    const removed = await supabaseServer
+      .from("content_items")
+      .delete()
+      .in(
+        "id",
+        old.data.map((row) => row.id),
+      )
+      .eq("user_id", userId);
+    if (removed.error) throw new Error(removed.error.message);
+  }
+  const content = await insertContentItem(
+    { title: "Creator Foundation", rawText: JSON.stringify(foundation) },
+    userId,
+  );
+  const date = new Date().toISOString();
+  const entries: Array<{
+    type: CreatorDNANode["type"];
+    label: string;
+    summary: string;
+  }> = [
+    { type: "identity", label: "What I do", summary: foundation.whatYouDo },
+    { type: "theme", label: "Main topics", summary: foundation.mainTopics },
+    ...foundation.expertise.map((summary) => ({
+      type: "expertise" as const,
+      label: summary,
+      summary,
+    })),
+    ...foundation.importantExperiences.map((summary) => ({
+      type: "experience" as const,
+      label: summary,
+      summary,
+    })),
+    ...foundation.accomplishments.map((summary) => ({
+      type: "experience" as const,
+      label: summary,
+      summary,
+    })),
+    ...foundation.failures.map((summary) => ({
+      type: "experience" as const,
+      label: summary,
+      summary,
+    })),
+    ...foundation.perspectiveChanges.map((summary) => ({
+      type: "lesson" as const,
+      label: summary,
+      summary,
+    })),
+    ...foundation.beliefs.map((summary) => ({
+      type: "belief" as const,
+      label: summary,
+      summary,
+    })),
+    ...foundation.values.map((summary) => ({
+      type: "value" as const,
+      label: summary,
+      summary,
+    })),
+    ...foundation.personality.map((summary) => ({
+      type: "identity" as const,
+      label: summary,
+      summary,
+    })),
+    ...foundation.goals.map((summary) => ({
+      type: "goal" as const,
+      label: summary,
+      summary,
+    })),
+  ];
+  return insertDnaNodes(
+    entries.map((entry) => ({
+      id: crypto.randomUUID(),
+      contentId: content.id,
+      type: entry.type,
+      label: entry.label,
+      summary: entry.summary,
+      evidenceQuote: `Creator-declared foundation: ${entry.summary}`,
+      confidence: 1,
+      sourceTitle: "Creator Foundation",
+      sourceDate: date,
+    })),
+    userId,
+  );
 }
 
 export async function checkDatabaseConnection(): Promise<

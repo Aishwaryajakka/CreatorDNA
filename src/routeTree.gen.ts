@@ -13,10 +13,12 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AddContentRouteImport } from './routes/add-content'
 import { Route as LibraryRouteImport } from './routes/library'
 import { Route as LoginRouteImport } from './routes/login'
+import { Route as OnboardingRouteImport } from './routes/onboarding'
 import { Route as PlanRouteImport } from './routes/plan'
 import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as StoryMapRouteImport } from './routes/story-map'
 import { Route as ApiContentRouteImport } from './routes/api/content'
+import { Route as ApiOnboardingRouteImport } from './routes/api/onboarding'
 import { Route as ApiPlanContentRouteImport } from './routes/api/plan-content'
 import { Route as ApiProfileRouteImport } from './routes/api/profile'
 import { Route as ApiStoryMapRouteImport } from './routes/api/story-map'
@@ -47,6 +49,11 @@ const LoginRoute = LoginRouteImport.update({
   path: '/login',
   getParentRoute: () => rootRouteImport,
 } as any)
+const OnboardingRoute = OnboardingRouteImport.update({
+  id: '/onboarding',
+  path: '/onboarding',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const PlanRoute = PlanRouteImport.update({
   id: '/plan',
   path: '/plan',
@@ -65,6 +72,11 @@ const StoryMapRoute = StoryMapRouteImport.update({
 const ApiContentRoute = ApiContentRouteImport.update({
   id: '/api/content',
   path: '/api/content',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiOnboardingRoute = ApiOnboardingRouteImport.update({
+  id: '/api/onboarding',
+  path: '/api/onboarding',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiPlanContentRoute = ApiPlanContentRouteImport.update({
@@ -119,10 +131,12 @@ export interface FileRoutesByFullPath {
   '/add-content': typeof AddContentRoute
   '/library': typeof LibraryRoute
   '/login': typeof LoginRoute
+  '/onboarding': typeof OnboardingRoute
   '/plan': typeof PlanRoute
   '/profile': typeof ProfileRoute
   '/story-map': typeof StoryMapRoute
   '/api/content': typeof ApiContentRoute
+  '/api/onboarding': typeof ApiOnboardingRoute
   '/api/plan-content': typeof ApiPlanContentRoute
   '/api/profile': typeof ApiProfileRoute
   '/api/story-map': typeof ApiStoryMapRoute
@@ -138,10 +152,12 @@ export interface FileRoutesByTo {
   '/add-content': typeof AddContentRoute
   '/library': typeof LibraryRoute
   '/login': typeof LoginRoute
+  '/onboarding': typeof OnboardingRoute
   '/plan': typeof PlanRoute
   '/profile': typeof ProfileRoute
   '/story-map': typeof StoryMapRoute
   '/api/content': typeof ApiContentRoute
+  '/api/onboarding': typeof ApiOnboardingRoute
   '/api/plan-content': typeof ApiPlanContentRoute
   '/api/profile': typeof ApiProfileRoute
   '/api/story-map': typeof ApiStoryMapRoute
@@ -158,10 +174,12 @@ export interface FileRoutesById {
   '/add-content': typeof AddContentRoute
   '/library': typeof LibraryRoute
   '/login': typeof LoginRoute
+  '/onboarding': typeof OnboardingRoute
   '/plan': typeof PlanRoute
   '/profile': typeof ProfileRoute
   '/story-map': typeof StoryMapRoute
   '/api/content': typeof ApiContentRoute
+  '/api/onboarding': typeof ApiOnboardingRoute
   '/api/plan-content': typeof ApiPlanContentRoute
   '/api/profile': typeof ApiProfileRoute
   '/api/story-map': typeof ApiStoryMapRoute
@@ -179,10 +197,12 @@ export interface FileRouteTypes {
     | '/add-content'
     | '/library'
     | '/login'
+    | '/onboarding'
     | '/plan'
     | '/profile'
     | '/story-map'
     | '/api/content'
+    | '/api/onboarding'
     | '/api/plan-content'
     | '/api/profile'
     | '/api/story-map'
@@ -198,10 +218,12 @@ export interface FileRouteTypes {
     | '/add-content'
     | '/library'
     | '/login'
+    | '/onboarding'
     | '/plan'
     | '/profile'
     | '/story-map'
     | '/api/content'
+    | '/api/onboarding'
     | '/api/plan-content'
     | '/api/profile'
     | '/api/story-map'
@@ -217,10 +239,12 @@ export interface FileRouteTypes {
     | '/add-content'
     | '/library'
     | '/login'
+    | '/onboarding'
     | '/plan'
     | '/profile'
     | '/story-map'
     | '/api/content'
+    | '/api/onboarding'
     | '/api/plan-content'
     | '/api/profile'
     | '/api/story-map'
@@ -237,10 +261,12 @@ export interface RootRouteChildren {
   AddContentRoute: typeof AddContentRoute
   LibraryRoute: typeof LibraryRoute
   LoginRoute: typeof LoginRoute
+  OnboardingRoute: typeof OnboardingRoute
   PlanRoute: typeof PlanRoute
   ProfileRoute: typeof ProfileRoute
   StoryMapRoute: typeof StoryMapRoute
   ApiContentRoute: typeof ApiContentRoute
+  ApiOnboardingRoute: typeof ApiOnboardingRoute
   ApiPlanContentRoute: typeof ApiPlanContentRoute
   ApiProfileRoute: typeof ApiProfileRoute
   ApiStoryMapRoute: typeof ApiStoryMapRoute
@@ -282,6 +308,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LoginRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/onboarding': {
+      id: '/onboarding'
+      path: '/onboarding'
+      fullPath: '/onboarding'
+      preLoaderRoute: typeof OnboardingRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/plan': {
       id: '/plan'
       path: '/plan'
@@ -308,6 +341,13 @@ declare module '@tanstack/react-router' {
       path: '/api/content'
       fullPath: '/api/content'
       preLoaderRoute: typeof ApiContentRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/onboarding': {
+      id: '/api/onboarding'
+      path: '/api/onboarding'
+      fullPath: '/api/onboarding'
+      preLoaderRoute: typeof ApiOnboardingRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/plan-content': {
@@ -381,10 +421,12 @@ const rootRouteChildren: RootRouteChildren = {
   AddContentRoute: AddContentRoute,
   LibraryRoute: LibraryRoute,
   LoginRoute: LoginRoute,
+  OnboardingRoute: OnboardingRoute,
   PlanRoute: PlanRoute,
   ProfileRoute: ProfileRoute,
   StoryMapRoute: StoryMapRoute,
   ApiContentRoute: ApiContentRoute,
+  ApiOnboardingRoute: ApiOnboardingRoute,
   ApiPlanContentRoute: ApiPlanContentRoute,
   ApiProfileRoute: ApiProfileRoute,
   ApiStoryMapRoute: ApiStoryMapRoute,

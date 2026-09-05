@@ -1,4 +1,6 @@
-export type DnaKind = "story" | "belief" | "theme" | "experience" | "lesson";
+export type DnaKind =
+  | "story" | "belief" | "theme" | "experience" | "lesson"
+  | "value" | "goal" | "identity" | "expertise";
 
 export type ContentItem = {
   id: string;

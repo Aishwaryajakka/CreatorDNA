@@ -52,6 +52,30 @@ export const KIND_META: Record<
     color: "var(--lesson)",
     token: "lesson",
   },
+  value: {
+    label: "Value",
+    plural: "Values",
+    color: "var(--belief)",
+    token: "value",
+  },
+  goal: {
+    label: "Goal",
+    plural: "Goals",
+    color: "var(--lesson)",
+    token: "goal",
+  },
+  identity: {
+    label: "Identity",
+    plural: "Identity",
+    color: "var(--story)",
+    token: "identity",
+  },
+  expertise: {
+    label: "Expertise",
+    plural: "Expertise",
+    color: "var(--experience)",
+    token: "expertise",
+  },
 };
 
 export type SourceRef = {

@@ -7,8 +7,23 @@ export const DnaKindSchema = z.enum([
   "belief",
   "theme",
   "experience",
-  "lesson",
+  "lesson", "value", "goal", "identity", "expertise",
 ]);
+
+export const CreatorFoundationSchema = z.object({
+  whatYouDo: nonEmptyString,
+  mainTopics: nonEmptyString,
+  expertise: z.array(nonEmptyString).default([]),
+  importantExperiences: z.array(nonEmptyString).default([]),
+  accomplishments: z.array(nonEmptyString).default([]),
+  failures: z.array(nonEmptyString).default([]),
+  perspectiveChanges: z.array(nonEmptyString).default([]),
+  beliefs: z.array(nonEmptyString).min(1).max(5),
+  values: z.array(nonEmptyString).default([]),
+  personality: z.array(nonEmptyString).default([]),
+  goals: z.array(nonEmptyString).default([]),
+});
+export type CreatorFoundation = z.infer<typeof CreatorFoundationSchema>;
 
 export const DNANodeExtractionSchema = z.object({
   label: nonEmptyString,
