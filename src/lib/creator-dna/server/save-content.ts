@@ -38,9 +38,10 @@ const categoryToType = {
 
 export async function saveCreatorContentAndDNA(
   input: SaveCreatorContentAndDNAInput,
+  userId: string,
 ): Promise<SaveCreatorContentAndDNAResult> {
   const parsed = NewContentSubmissionInputSchema.parse(input);
-  const contentItem = await insertContentItem(parsed);
+  const contentItem = await insertContentItem(parsed, userId);
 
   try {
     const extractedDNA = await extractCreatorDNA(parsed.rawText, {
@@ -53,19 +54,30 @@ export async function saveCreatorContentAndDNA(
 
     const savedNodes = await insertDnaNodes(
       flattenExtractedDNA(extractedDNA, contentItem),
+      userId,
     );
     const embeddings = await embedTexts(
       savedNodes.map(buildDnaNodeEmbeddingText),
     );
     await Promise.all(
       savedNodes.map((node, index) =>
-        updateDnaNodeEmbedding(node.id, embeddings[index] ?? []),
+        updateDnaNodeEmbedding(
+          node.id,
+          embeddings[index] ?? [],
+          contentItem.id,
+          userId,
+        ),
       ),
     );
     const savedNodesWithEmbeddings = await getDnaNodesByContentId(
       contentItem.id,
+      userId,
     );
-    await verifySavedContentAndDNA(contentItem, savedNodesWithEmbeddings);
+    await verifySavedContentAndDNA(
+      contentItem,
+      savedNodesWithEmbeddings,
+      userId,
+    );
 
     return {
       contentItem,
@@ -74,7 +86,7 @@ export async function saveCreatorContentAndDNA(
     };
   } catch (error) {
     try {
-      await deleteContentItem(contentItem.id);
+      await deleteContentItem(contentItem.id, userId);
     } catch (rollbackError) {
       throw new Error(
         "Creator DNA save failed and rollback was unsuccessful.",
@@ -111,9 +123,10 @@ function flattenExtractedDNA(
 async function verifySavedContentAndDNA(
   contentItem: ContentItem,
   savedNodes: CreatorDNANode[],
+  userId: string,
 ): Promise<void> {
-  const persistedContent = await getContentItemById(contentItem.id);
-  const persistedNodes = await getDnaNodesByContentId(contentItem.id);
+  const persistedContent = await getContentItemById(contentItem.id, userId);
+  const persistedNodes = await getDnaNodesByContentId(contentItem.id, userId);
 
   if (!persistedContent || persistedNodes.length !== savedNodes.length) {
     throw new Error("Creator DNA persistence verification failed.");

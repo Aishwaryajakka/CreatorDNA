@@ -36,10 +36,12 @@ function toDnaNode(row: DnaNodeRow): CreatorDNANode {
 
 export async function insertContentItem(
   input: NewContentSubmissionInput,
+  userId: string,
 ): Promise<ContentItem> {
   const { data, error } = await supabaseServer
     .from("content_items")
     .insert({
+      user_id: userId,
       title: input.title,
       platform: input.platform ?? null,
       published_at: input.publishedAt ?? null,
@@ -53,8 +55,19 @@ export async function insertContentItem(
 
 export async function insertDnaNodes(
   nodes: CreatorDNANode[],
+  userId: string,
 ): Promise<CreatorDNANode[]> {
   if (nodes.length === 0) return [];
+
+  const contentIds = [...new Set(nodes.map((node) => node.contentId))];
+  if (contentIds.some((contentId) => !contentId)) {
+    throw new Error("DNA nodes must belong to a content item.");
+  }
+  for (const contentId of contentIds) {
+    if (!(await getContentItemById(contentId as string, userId))) {
+      throw new Error("Content item not found.");
+    }
+  }
 
   const rows: DnaNodeInsert[] = nodes.map((node) => ({
     id: node.id,
@@ -77,28 +90,39 @@ export async function insertDnaNodes(
   return data.map(toDnaNode);
 }
 
-export async function deleteContentItem(id: string): Promise<void> {
+export async function deleteContentItem(
+  id: string,
+  userId: string,
+): Promise<void> {
   const { error } = await supabaseServer
     .from("content_items")
     .delete()
-    .eq("id", id);
+    .eq("id", id)
+    .eq("user_id", userId);
   if (error) throw new Error(`Failed to delete content item: ${error.message}`);
 }
 
 export async function updateDnaNodeEmbedding(
   nodeId: string,
   embedding: number[],
+  contentId: string,
+  userId: string,
 ): Promise<void> {
+  if (!(await getContentItemById(contentId, userId))) {
+    throw new Error("Content item not found.");
+  }
   const { error } = await supabaseServer
     .from("dna_nodes")
     .update({ embedding })
-    .eq("id", nodeId);
+    .eq("id", nodeId)
+    .eq("content_id", contentId);
   if (error)
     throw new Error(`Failed to save DNA node embedding: ${error.message}`);
 }
 
 export async function matchDnaNodes(
   queryEmbedding: number[],
+  userId: string,
   matchThreshold = 0.25,
   matchCount = 10,
 ): Promise<CreatorDNAMatch[]> {
@@ -106,6 +130,7 @@ export async function matchDnaNodes(
     query_embedding: queryEmbedding,
     match_threshold: matchThreshold,
     match_count: matchCount,
+    match_user_id: userId,
   });
   if (error) throw new Error(`Failed to search DNA nodes: ${error.message}`);
   return data.map((row) => ({
@@ -124,11 +149,13 @@ export async function matchDnaNodes(
 
 export async function getContentItemById(
   id: string,
+  userId: string,
 ): Promise<ContentItem | null> {
   const { data, error } = await supabaseServer
     .from("content_items")
     .select()
     .eq("id", id)
+    .eq("user_id", userId)
     .maybeSingle();
   if (error) throw new Error(`Failed to fetch content item: ${error.message}`);
   return data ? toContentItem(data) : null;
@@ -136,12 +163,38 @@ export async function getContentItemById(
 
 export async function getDnaNodesByContentId(
   contentId: string,
+  userId: string,
 ): Promise<CreatorDNANode[]> {
+  const content = await getContentItemById(contentId, userId);
+  if (!content) return [];
   const { data, error } = await supabaseServer
     .from("dna_nodes")
     .select()
     .eq("content_id", contentId);
   if (error) throw new Error(`Failed to fetch DNA nodes: ${error.message}`);
+  return data.map(toDnaNode);
+}
+
+export async function getDnaNodesForUser(
+  userId: string,
+): Promise<CreatorDNANode[]> {
+  const { data: content, error: contentError } = await supabaseServer
+    .from("content_items")
+    .select("id")
+    .eq("user_id", userId);
+  if (contentError)
+    throw new Error(`Failed to fetch content items: ${contentError.message}`);
+  const contentIds = content.map((item) => item.id);
+  if (contentIds.length === 0) return [];
+  const { data, error } = await supabaseServer
+    .from("dna_nodes")
+    .select(
+      "id,content_id,type,label,summary,evidence_quote,confidence,source_title,source_date,embedding,created_at",
+    )
+    .in("content_id", contentIds)
+    .order("created_at", { ascending: true });
+  if (error)
+    throw new Error(`Failed to fetch Story Map nodes: ${error.message}`);
   return data.map(toDnaNode);
 }
 

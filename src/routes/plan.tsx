@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { z } from "zod";
-import { ArrowRight, ArrowDown, AlertTriangle, Quote } from "lucide-react";
+import { AlertTriangle, ArrowRight, Quote } from "lucide-react";
+
 import {
   EvidenceNote,
   KindBadge,
@@ -9,7 +10,11 @@ import {
   Panel,
   SourceChip,
 } from "@/components/dna-ui";
-import { KIND_META, planResult, type DnaKind } from "@/lib/creator-dna";
+import type {
+  CreatorDNAMatch,
+  StoryIntelligenceResult,
+} from "@/lib/creator-dna/types";
+import { authenticatedFetch } from "@/lib/supabase/client";
 
 export const Route = createFileRoute("/plan")({
   validateSearch: z.object({ topic: z.string().optional() }),
@@ -35,7 +40,48 @@ export const Route = createFileRoute("/plan")({
 function PlanPage() {
   const { topic: initial } = Route.useSearch();
   const [topic, setTopic] = useState(initial ?? "");
-  const [submitted, setSubmitted] = useState(Boolean(initial));
+  const [result, setResult] = useState<PlanningResponse | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  async function submitIdea(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (loading) return;
+    if (!topic.trim()) {
+      setError("Please add a content idea.");
+      setResult(null);
+      return;
+    }
+
+    setLoading(true);
+    setError(null);
+    try {
+      const response = await authenticatedFetch("/api/plan-content", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ idea: topic.trim() }),
+      });
+      const payload = (await response.json()) as
+        PlanningResponse | ErrorResponse;
+      if (!response.ok || "error" in payload) {
+        throw new Error(
+          "error" in payload ? payload.error : "Planning failed.",
+        );
+      }
+      setResult(payload);
+    } catch (requestError) {
+      setError(
+        requestError instanceof TypeError
+          ? "Unable to reach Creator DNA. Please try again."
+          : requestError instanceof Error
+            ? requestError.message
+            : "Creator DNA planning is temporarily unavailable. Please try again.",
+      );
+      setResult(null);
+    } finally {
+      setLoading(false);
+    }
+  }
 
   return (
     <div className="space-y-10">
@@ -46,168 +92,233 @@ function PlanPage() {
       />
 
       <Panel accent="var(--story)" className="p-6 sm:p-8">
-        <form
-          className="flex flex-col gap-3 sm:flex-row"
-          onSubmit={(e) => {
-            e.preventDefault();
-            setSubmitted(true);
-          }}
-        >
+        <form className="flex flex-col gap-3 sm:flex-row" onSubmit={submitIdea}>
           <input
             value={topic}
-            onChange={(e) => setTopic(e.target.value)}
+            onChange={(event) => setTopic(event.target.value)}
             placeholder="I want to create something about burnout."
             className="min-w-0 flex-1 rounded-xl border border-input bg-background px-4 py-4 text-base outline-none placeholder:text-muted-foreground focus:border-primary"
           />
           <button
             type="submit"
-            className="inline-flex shrink-0 items-center justify-center gap-2 rounded-xl bg-primary px-6 py-4 text-sm font-semibold text-primary-foreground transition-opacity hover:opacity-90"
+            disabled={loading}
+            aria-busy={loading}
+            className="inline-flex shrink-0 items-center justify-center gap-2 rounded-xl bg-primary px-6 py-4 text-sm font-semibold text-primary-foreground transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
           >
-            Explore my story <ArrowRight className="h-4 w-4" />
+            {loading ? "Looking through your DNA..." : "Explore my story"}
+            {!loading ? <ArrowRight className="h-4 w-4" /> : null}
           </button>
         </form>
+        {error ? (
+          <p className="mt-3 text-sm text-destructive">{error}</p>
+        ) : null}
       </Panel>
 
-      {submitted ? (
-        <div className="space-y-8">
-          <div className="grid gap-6 lg:grid-cols-2">
-            <Panel accent="var(--story)" className="p-6">
-              <p className="eyebrow">Your story connection</p>
-              <Quote className="mt-4 h-5 w-5 text-story" />
-              <p className="mt-3 text-[0.9375rem] font-medium leading-relaxed text-midnight">
-                {planResult.storyConnection.text}
-              </p>
-              <div className="mt-4">
-                <SourceChip>{planResult.storyConnection.source}</SourceChip>
-              </div>
-            </Panel>
+      {result ? <PlanningResults result={result} /> : null}
+    </div>
+  );
+}
 
-            <Panel accent="var(--belief)" className="p-6">
-              <p className="eyebrow">What you've said before</p>
-              <Quote className="mt-4 h-5 w-5 text-muted-foreground" />
-              <p className="mt-3 text-[0.9375rem] font-medium leading-relaxed text-midnight">
-                {planResult.saidBefore.text}
-              </p>
-              <div className="mt-4">
-                <SourceChip>{planResult.saidBefore.source}</SourceChip>
-              </div>
+function PlanningResults({ result }: { result: PlanningResponse }) {
+  const nodesById = new Map(result.retrievedDNA.map((node) => [node.id, node]));
+  const evolution = result.possiblePerspectiveEvolution;
+  const repetition = result.possibleRepetition;
+
+  return (
+    <div className="space-y-8">
+      <section>
+        <p className="eyebrow">Relevant history</p>
+        <h2 className="mt-2 text-2xl font-extrabold text-midnight sm:text-3xl">
+          What connects to this idea
+        </h2>
+        <div className="mt-5 grid gap-4 lg:grid-cols-2">
+          {result.retrievedDNA.length ? (
+            result.retrievedDNA.map((node) => (
+              <EvidenceCard key={node.id} node={node} />
+            ))
+          ) : (
+            <Panel className="p-6 text-sm text-muted-foreground">
+              No closely related Creator DNA was found yet.
             </Panel>
+          )}
+        </div>
+      </section>
+
+      <Panel accent="var(--belief)" className="p-6 sm:p-8">
+        <p className="eyebrow">What you've said before</p>
+        <Quote className="mt-4 h-5 w-5 text-muted-foreground" />
+        {result.previousPositions.length ? (
+          <div className="mt-4 space-y-5">
+            {result.previousPositions.map((position, index) => (
+              <div key={`${position.position}-${index}`}>
+                <p className="text-[0.9375rem] font-medium leading-relaxed text-midnight">
+                  {position.position}
+                </p>
+                <EvidenceList
+                  ids={position.supportingNodeIds}
+                  nodes={nodesById}
+                />
+              </div>
+            ))}
           </div>
+        ) : (
+          <p className="mt-3 text-sm text-muted-foreground">
+            There is not enough retrieved evidence of a previous position yet.
+          </p>
+        )}
+      </Panel>
 
-          <Panel accent="var(--evolution)" className="p-6 sm:p-8">
-            <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-4 sm:flex sm:justify-between">
-              <div className="min-w-0">
-                <p className="eyebrow">Perspective evolution</p>
-                <h2 className="mt-2 text-xl font-bold text-midnight">
-                  Your perspective evolved
-                </h2>
-              </div>
-              <span className="shrink-0 rounded-full bg-evolution px-3 py-1.5 text-[0.6875rem] font-bold uppercase tracking-[0.12em] text-midnight">
-                Not a contradiction
-              </span>
-            </div>
-
-            <div className="mt-7 grid items-stretch gap-3 lg:grid-cols-[1fr_auto_1fr_auto_1fr]">
-              {planResult.evolution.map((step, idx) => (
-                <div key={step.stage} className="contents">
-                  <div
-                    className="rounded-2xl border border-border bg-background p-5"
-                    style={{
-                      borderTop: `4px solid ${KIND_META[step.kind as DnaKind].color}`,
-                    }}
-                  >
-                    <div className="flex items-center justify-between gap-2">
-                      <span className="eyebrow">{step.stage}</span>
-                      <span className="text-xs font-bold text-midnight">
-                        {step.year}
-                      </span>
-                    </div>
-                    <p className="mt-3 text-[0.9375rem] font-semibold leading-snug text-midnight">
-                      {step.text}
-                    </p>
-                  </div>
-                  {idx < planResult.evolution.length - 1 ? (
-                    <div className="grid place-items-center py-1">
-                      <ArrowDown className="h-5 w-5 text-muted-foreground lg:-rotate-90" />
-                    </div>
-                  ) : null}
-                </div>
-              ))}
-            </div>
-
-            <p className="mt-6 max-w-3xl text-sm leading-relaxed text-muted-foreground">
-              {planResult.evolutionNote}
+      <Panel accent="var(--evolution)" className="p-6 sm:p-8">
+        <p className="eyebrow">Perspective evolution</p>
+        {evolution.status === "identified" ? (
+          <>
+            <h2 className="mt-2 text-xl font-bold text-midnight">
+              A meaningful shift may be here
+            </h2>
+            <p className="mt-3 max-w-3xl text-sm leading-relaxed text-muted-foreground">
+              {evolution.summary}
             </p>
-          </Panel>
+            <EvidenceList ids={evolution.supportingNodeIds} nodes={nodesById} />
+          </>
+        ) : (
+          <p className="mt-3 text-sm text-muted-foreground">
+            There is not enough dated evidence to identify a meaningful change
+            in perspective.
+          </p>
+        )}
+      </Panel>
 
-          <Panel className="p-6 sm:p-8">
-            <div className="flex items-start gap-3">
-              <span className="mt-0.5 grid h-8 w-8 shrink-0 place-items-center rounded-full bg-evolution/30">
-                <AlertTriangle className="h-4 w-4 text-midnight" />
-              </span>
-              <div className="min-w-0">
-                <p className="eyebrow">Story fatigue</p>
+      <Panel className="p-6 sm:p-8">
+        <div className="flex items-start gap-3">
+          <span className="mt-0.5 grid h-8 w-8 shrink-0 place-items-center rounded-full bg-evolution/30">
+            <AlertTriangle className="h-4 w-4 text-midnight" />
+          </span>
+          <div className="min-w-0">
+            <p className="eyebrow">Repetition / story fatigue</p>
+            {repetition.status === "identified" ? (
+              <>
                 <p className="mt-2 text-[0.9375rem] font-semibold text-midnight">
-                  You've used your "{planResult.fatigue.story}" story{" "}
-                  {planResult.fatigue.times} times recently.
+                  A possible overlap surfaced in your retrieved material.
                 </p>
                 <p className="mt-2 text-sm text-muted-foreground">
-                  {planResult.fatigue.suggestion}
+                  {repetition.summary}
                 </p>
-              </div>
-            </div>
-          </Panel>
-
-          <section>
-            <h2 className="text-2xl font-extrabold text-midnight sm:text-3xl">
-              3 ways to make this yours
-            </h2>
-            <p className="mt-2 text-sm text-muted-foreground">
-              Each direction is grounded in your Creator DNA — with the source
-              material it leans on.
-            </p>
-
-            <div className="mt-6 grid gap-5 lg:grid-cols-3">
-              {planResult.angles.map((a) => (
-                <Panel
-                  key={a.key}
-                  accent={KIND_META[a.kind].color}
-                  className="flex flex-col p-6 transition-shadow hover:shadow-lift"
-                >
-                  <div className="flex items-center justify-between gap-3">
-                    <KindBadge kind={a.kind} label={a.label} />
-                    <span className="text-sm font-extrabold text-muted-foreground">
-                      {a.key}
-                    </span>
-                  </div>
-                  <h3 className="mt-5 text-lg font-bold leading-snug text-midnight">
-                    {a.title}
-                  </h3>
-                  <p className="mt-3 flex-1 text-sm leading-relaxed text-muted-foreground">
-                    {a.body}
-                  </p>
-
-                  <div className="mt-6 rounded-xl bg-muted/70 p-4">
-                    <EvidenceNote>Grounded in your Creator DNA</EvidenceNote>
-                    <div className="mt-3 flex flex-wrap gap-2">
-                      {a.sources.map((s) => (
-                        <SourceChip key={s}>{s}</SourceChip>
-                      ))}
-                    </div>
-                  </div>
-
-                  <button
-                    type="button"
-                    className="mt-5 w-full rounded-xl bg-midnight px-4 py-3 text-sm font-semibold text-background transition-opacity hover:opacity-90"
-                  >
-                    Develop this angle
-                  </button>
-                </Panel>
-              ))}
-            </div>
-          </section>
+                <EvidenceList
+                  ids={repetition.supportingNodeIds}
+                  nodes={nodesById}
+                />
+              </>
+            ) : (
+              <p className="mt-2 text-sm text-muted-foreground">
+                {repetition.status === "not detected"
+                  ? "No meaningful repetition was detected in the retrieved evidence."
+                  : "There is not enough retrieved evidence to assess repetition."}
+              </p>
+            )}
+          </div>
         </div>
+      </Panel>
+
+      <section>
+        <h2 className="text-2xl font-extrabold text-midnight sm:text-3xl">
+          3 ways to make this yours
+        </h2>
+        <p className="mt-2 text-sm text-muted-foreground">
+          Each direction is grounded in your Creator DNA — with the source
+          material it leans on.
+        </p>
+        <div className="mt-6 grid gap-5 lg:grid-cols-3">
+          {result.threeAuthenticAngles.map((angle, index) => (
+            <Panel
+              key={`${angle.title}-${index}`}
+              accent="var(--story)"
+              className="flex flex-col p-6 transition-shadow hover:shadow-lift"
+            >
+              <span className="eyebrow">{angle.framingType}</span>
+              <h3 className="mt-3 text-lg font-bold leading-snug text-midnight">
+                {angle.title}
+              </h3>
+              <p className="mt-3 text-sm font-semibold leading-relaxed text-midnight">
+                {angle.hook}
+              </p>
+              <p className="mt-3 flex-1 text-sm leading-relaxed text-muted-foreground">
+                {angle.rationale}
+              </p>
+              <div className="mt-6 rounded-xl bg-muted/70 p-4">
+                <EvidenceNote>Grounded in your Creator DNA</EvidenceNote>
+                <EvidenceList ids={angle.supportingNodeIds} nodes={nodesById} />
+              </div>
+              <button
+                type="button"
+                className="mt-5 w-full rounded-xl bg-midnight px-4 py-3 text-sm font-semibold text-background transition-opacity hover:opacity-90"
+              >
+                Develop this angle
+              </button>
+            </Panel>
+          ))}
+        </div>
+      </section>
+    </div>
+  );
+}
+
+function EvidenceCard({ node }: { node: CreatorDNAMatch }) {
+  return (
+    <Panel className="p-5">
+      <div className="flex items-start justify-between gap-3">
+        <KindBadge kind={node.type} />
+        <span className="text-xs font-semibold text-muted-foreground">
+          {Math.round(node.similarity * 100)}% match
+        </span>
+      </div>
+      <h3 className="mt-3 text-base font-bold text-midnight">{node.label}</h3>
+      <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
+        {node.summary}
+      </p>
+      <EvidenceSource node={node} />
+    </Panel>
+  );
+}
+
+function EvidenceList({
+  ids,
+  nodes,
+}: {
+  ids: string[];
+  nodes: Map<string, CreatorDNAMatch>;
+}) {
+  const evidence = ids
+    .map((id) => nodes.get(id))
+    .filter((node): node is CreatorDNAMatch => Boolean(node));
+  return evidence.length ? (
+    <div className="mt-3 space-y-2">
+      {evidence.map((node) => (
+        <EvidenceSource key={node.id} node={node} />
+      ))}
+    </div>
+  ) : null;
+}
+
+function EvidenceSource({ node }: { node: CreatorDNAMatch }) {
+  return (
+    <div className="mt-3 rounded-xl border border-border bg-muted/50 p-3">
+      <div className="flex flex-wrap gap-2">
+        <SourceChip>{node.sourceTitle ?? node.label}</SourceChip>
+        {node.sourceDate ? <SourceChip>{node.sourceDate}</SourceChip> : null}
+        <SourceChip>{node.type}</SourceChip>
+      </div>
+      {node.evidenceQuote ? (
+        <p className="mt-2 text-xs italic leading-relaxed text-muted-foreground">
+          “{node.evidenceQuote}”
+        </p>
       ) : null}
     </div>
   );
 }
+
+type PlanningResponse = StoryIntelligenceResult & {
+  idea: string;
+  retrievedDNA: CreatorDNAMatch[];
+};
+
+type ErrorResponse = { error: string };

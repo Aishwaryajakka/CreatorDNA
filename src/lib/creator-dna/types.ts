@@ -63,3 +63,43 @@ export type ContentMetadata = {
   platform?: string | null;
   publishedAt?: string | null;
 };
+
+export type StoryIntelligenceAngle = {
+  title: string;
+  framingType:
+    | "personal story"
+    | "perspective evolution"
+    | "contrarian"
+    | "lesson learned"
+    | "reflective"
+    | "audience-focused";
+  hook: string;
+  rationale: string;
+  supportingNodeIds: string[];
+};
+
+export type StoryIntelligenceResult = {
+  relevantStories: Array<{
+    summary: string;
+    supportingNodeIds: string[];
+  }>;
+  previousPositions: Array<{
+    position: string;
+    supportingNodeIds: string[];
+  }>;
+  possiblePerspectiveEvolution: {
+    status: "identified" | "insufficient evidence";
+    summary: string;
+    supportingNodeIds: string[];
+  };
+  possibleRepetition: {
+    status: "identified" | "not detected" | "insufficient evidence";
+    summary: string;
+    supportingNodeIds: string[];
+  };
+  threeAuthenticAngles: [
+    StoryIntelligenceAngle,
+    StoryIntelligenceAngle,
+    StoryIntelligenceAngle,
+  ];
+};

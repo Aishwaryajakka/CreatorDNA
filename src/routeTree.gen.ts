@@ -12,12 +12,19 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AddContentRouteImport } from './routes/add-content'
 import { Route as LibraryRouteImport } from './routes/library'
+import { Route as LoginRouteImport } from './routes/login'
 import { Route as PlanRouteImport } from './routes/plan'
+import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as StoryMapRouteImport } from './routes/story-map'
 import { Route as ApiContentRouteImport } from './routes/api/content'
+import { Route as ApiPlanContentRouteImport } from './routes/api/plan-content'
+import { Route as ApiProfileRouteImport } from './routes/api/profile'
+import { Route as ApiStoryMapRouteImport } from './routes/api/story-map'
+import { Route as ApiAuthUsernameLoginRouteImport } from './routes/api/auth/username-login'
 import { Route as ApiDevExtractTestRouteImport } from './routes/api/dev/extract-test'
 import { Route as ApiDevSaveContentTestRouteImport } from './routes/api/dev/save-content-test'
 import { Route as ApiDevSearchDnaTestRouteImport } from './routes/api/dev/search-dna-test'
+import { Route as ApiDevStoryIntelligenceTestRouteImport } from './routes/api/dev/story-intelligence-test'
 import { Route as ApiDevSupabaseTestRouteImport } from './routes/api/dev/supabase-test'
 
 const IndexRoute = IndexRouteImport.update({
@@ -35,9 +42,19 @@ const LibraryRoute = LibraryRouteImport.update({
   path: '/library',
   getParentRoute: () => rootRouteImport,
 } as any)
+const LoginRoute = LoginRouteImport.update({
+  id: '/login',
+  path: '/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const PlanRoute = PlanRouteImport.update({
   id: '/plan',
   path: '/plan',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ProfileRoute = ProfileRouteImport.update({
+  id: '/profile',
+  path: '/profile',
   getParentRoute: () => rootRouteImport,
 } as any)
 const StoryMapRoute = StoryMapRouteImport.update({
@@ -48,6 +65,26 @@ const StoryMapRoute = StoryMapRouteImport.update({
 const ApiContentRoute = ApiContentRouteImport.update({
   id: '/api/content',
   path: '/api/content',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPlanContentRoute = ApiPlanContentRouteImport.update({
+  id: '/api/plan-content',
+  path: '/api/plan-content',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiProfileRoute = ApiProfileRouteImport.update({
+  id: '/api/profile',
+  path: '/api/profile',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiStoryMapRoute = ApiStoryMapRouteImport.update({
+  id: '/api/story-map',
+  path: '/api/story-map',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiAuthUsernameLoginRoute = ApiAuthUsernameLoginRouteImport.update({
+  id: '/api/auth/username-login',
+  path: '/api/auth/username-login',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiDevExtractTestRoute = ApiDevExtractTestRouteImport.update({
@@ -65,6 +102,12 @@ const ApiDevSearchDnaTestRoute = ApiDevSearchDnaTestRouteImport.update({
   path: '/api/dev/search-dna-test',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiDevStoryIntelligenceTestRoute =
+  ApiDevStoryIntelligenceTestRouteImport.update({
+    id: '/api/dev/story-intelligence-test',
+    path: '/api/dev/story-intelligence-test',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiDevSupabaseTestRoute = ApiDevSupabaseTestRouteImport.update({
   id: '/api/dev/supabase-test',
   path: '/api/dev/supabase-test',
@@ -75,24 +118,38 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/add-content': typeof AddContentRoute
   '/library': typeof LibraryRoute
+  '/login': typeof LoginRoute
   '/plan': typeof PlanRoute
+  '/profile': typeof ProfileRoute
   '/story-map': typeof StoryMapRoute
   '/api/content': typeof ApiContentRoute
+  '/api/plan-content': typeof ApiPlanContentRoute
+  '/api/profile': typeof ApiProfileRoute
+  '/api/story-map': typeof ApiStoryMapRoute
+  '/api/auth/username-login': typeof ApiAuthUsernameLoginRoute
   '/api/dev/extract-test': typeof ApiDevExtractTestRoute
   '/api/dev/save-content-test': typeof ApiDevSaveContentTestRoute
   '/api/dev/search-dna-test': typeof ApiDevSearchDnaTestRoute
+  '/api/dev/story-intelligence-test': typeof ApiDevStoryIntelligenceTestRoute
   '/api/dev/supabase-test': typeof ApiDevSupabaseTestRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/add-content': typeof AddContentRoute
   '/library': typeof LibraryRoute
+  '/login': typeof LoginRoute
   '/plan': typeof PlanRoute
+  '/profile': typeof ProfileRoute
   '/story-map': typeof StoryMapRoute
   '/api/content': typeof ApiContentRoute
+  '/api/plan-content': typeof ApiPlanContentRoute
+  '/api/profile': typeof ApiProfileRoute
+  '/api/story-map': typeof ApiStoryMapRoute
+  '/api/auth/username-login': typeof ApiAuthUsernameLoginRoute
   '/api/dev/extract-test': typeof ApiDevExtractTestRoute
   '/api/dev/save-content-test': typeof ApiDevSaveContentTestRoute
   '/api/dev/search-dna-test': typeof ApiDevSearchDnaTestRoute
+  '/api/dev/story-intelligence-test': typeof ApiDevStoryIntelligenceTestRoute
   '/api/dev/supabase-test': typeof ApiDevSupabaseTestRoute
 }
 export interface FileRoutesById {
@@ -100,12 +157,19 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/add-content': typeof AddContentRoute
   '/library': typeof LibraryRoute
+  '/login': typeof LoginRoute
   '/plan': typeof PlanRoute
+  '/profile': typeof ProfileRoute
   '/story-map': typeof StoryMapRoute
   '/api/content': typeof ApiContentRoute
+  '/api/plan-content': typeof ApiPlanContentRoute
+  '/api/profile': typeof ApiProfileRoute
+  '/api/story-map': typeof ApiStoryMapRoute
+  '/api/auth/username-login': typeof ApiAuthUsernameLoginRoute
   '/api/dev/extract-test': typeof ApiDevExtractTestRoute
   '/api/dev/save-content-test': typeof ApiDevSaveContentTestRoute
   '/api/dev/search-dna-test': typeof ApiDevSearchDnaTestRoute
+  '/api/dev/story-intelligence-test': typeof ApiDevStoryIntelligenceTestRoute
   '/api/dev/supabase-test': typeof ApiDevSupabaseTestRoute
 }
 export interface FileRouteTypes {
@@ -114,36 +178,57 @@ export interface FileRouteTypes {
     | '/'
     | '/add-content'
     | '/library'
+    | '/login'
     | '/plan'
+    | '/profile'
     | '/story-map'
     | '/api/content'
+    | '/api/plan-content'
+    | '/api/profile'
+    | '/api/story-map'
+    | '/api/auth/username-login'
     | '/api/dev/extract-test'
     | '/api/dev/save-content-test'
     | '/api/dev/search-dna-test'
+    | '/api/dev/story-intelligence-test'
     | '/api/dev/supabase-test'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/add-content'
     | '/library'
+    | '/login'
     | '/plan'
+    | '/profile'
     | '/story-map'
     | '/api/content'
+    | '/api/plan-content'
+    | '/api/profile'
+    | '/api/story-map'
+    | '/api/auth/username-login'
     | '/api/dev/extract-test'
     | '/api/dev/save-content-test'
     | '/api/dev/search-dna-test'
+    | '/api/dev/story-intelligence-test'
     | '/api/dev/supabase-test'
   id:
     | '__root__'
     | '/'
     | '/add-content'
     | '/library'
+    | '/login'
     | '/plan'
+    | '/profile'
     | '/story-map'
     | '/api/content'
+    | '/api/plan-content'
+    | '/api/profile'
+    | '/api/story-map'
+    | '/api/auth/username-login'
     | '/api/dev/extract-test'
     | '/api/dev/save-content-test'
     | '/api/dev/search-dna-test'
+    | '/api/dev/story-intelligence-test'
     | '/api/dev/supabase-test'
   fileRoutesById: FileRoutesById
 }
@@ -151,12 +236,19 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AddContentRoute: typeof AddContentRoute
   LibraryRoute: typeof LibraryRoute
+  LoginRoute: typeof LoginRoute
   PlanRoute: typeof PlanRoute
+  ProfileRoute: typeof ProfileRoute
   StoryMapRoute: typeof StoryMapRoute
   ApiContentRoute: typeof ApiContentRoute
+  ApiPlanContentRoute: typeof ApiPlanContentRoute
+  ApiProfileRoute: typeof ApiProfileRoute
+  ApiStoryMapRoute: typeof ApiStoryMapRoute
+  ApiAuthUsernameLoginRoute: typeof ApiAuthUsernameLoginRoute
   ApiDevExtractTestRoute: typeof ApiDevExtractTestRoute
   ApiDevSaveContentTestRoute: typeof ApiDevSaveContentTestRoute
   ApiDevSearchDnaTestRoute: typeof ApiDevSearchDnaTestRoute
+  ApiDevStoryIntelligenceTestRoute: typeof ApiDevStoryIntelligenceTestRoute
   ApiDevSupabaseTestRoute: typeof ApiDevSupabaseTestRoute
 }
 
@@ -183,11 +275,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LibraryRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/login': {
+      id: '/login'
+      path: '/login'
+      fullPath: '/login'
+      preLoaderRoute: typeof LoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/plan': {
       id: '/plan'
       path: '/plan'
       fullPath: '/plan'
       preLoaderRoute: typeof PlanRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/profile': {
+      id: '/profile'
+      path: '/profile'
+      fullPath: '/profile'
+      preLoaderRoute: typeof ProfileRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/story-map': {
@@ -202,6 +308,34 @@ declare module '@tanstack/react-router' {
       path: '/api/content'
       fullPath: '/api/content'
       preLoaderRoute: typeof ApiContentRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/plan-content': {
+      id: '/api/plan-content'
+      path: '/api/plan-content'
+      fullPath: '/api/plan-content'
+      preLoaderRoute: typeof ApiPlanContentRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/profile': {
+      id: '/api/profile'
+      path: '/api/profile'
+      fullPath: '/api/profile'
+      preLoaderRoute: typeof ApiProfileRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/story-map': {
+      id: '/api/story-map'
+      path: '/api/story-map'
+      fullPath: '/api/story-map'
+      preLoaderRoute: typeof ApiStoryMapRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/auth/username-login': {
+      id: '/api/auth/username-login'
+      path: '/api/auth/username-login'
+      fullPath: '/api/auth/username-login'
+      preLoaderRoute: typeof ApiAuthUsernameLoginRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/dev/extract-test': {
@@ -225,6 +359,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiDevSearchDnaTestRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/dev/story-intelligence-test': {
+      id: '/api/dev/story-intelligence-test'
+      path: '/api/dev/story-intelligence-test'
+      fullPath: '/api/dev/story-intelligence-test'
+      preLoaderRoute: typeof ApiDevStoryIntelligenceTestRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/dev/supabase-test': {
       id: '/api/dev/supabase-test'
       path: '/api/dev/supabase-test'
@@ -239,12 +380,19 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AddContentRoute: AddContentRoute,
   LibraryRoute: LibraryRoute,
+  LoginRoute: LoginRoute,
   PlanRoute: PlanRoute,
+  ProfileRoute: ProfileRoute,
   StoryMapRoute: StoryMapRoute,
   ApiContentRoute: ApiContentRoute,
+  ApiPlanContentRoute: ApiPlanContentRoute,
+  ApiProfileRoute: ApiProfileRoute,
+  ApiStoryMapRoute: ApiStoryMapRoute,
+  ApiAuthUsernameLoginRoute: ApiAuthUsernameLoginRoute,
   ApiDevExtractTestRoute: ApiDevExtractTestRoute,
   ApiDevSaveContentTestRoute: ApiDevSaveContentTestRoute,
   ApiDevSearchDnaTestRoute: ApiDevSearchDnaTestRoute,
+  ApiDevStoryIntelligenceTestRoute: ApiDevStoryIntelligenceTestRoute,
   ApiDevSupabaseTestRoute: ApiDevSupabaseTestRoute,
 }
 export const routeTree = rootRouteImport

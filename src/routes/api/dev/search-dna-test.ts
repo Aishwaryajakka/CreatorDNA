@@ -1,6 +1,10 @@
 import { createFileRoute } from "@tanstack/react-router";
 
 import { searchCreatorDNA } from "@/lib/creator-dna/server/search-dna";
+import {
+  AuthenticationError,
+  requireAuthenticatedUser,
+} from "@/lib/supabase/auth";
 
 export const Route = createFileRoute("/api/dev/search-dna-test")({
   server: {
@@ -9,7 +13,8 @@ export const Route = createFileRoute("/api/dev/search-dna-test")({
         if (!import.meta.env.DEV) return new Response(null, { status: 404 });
         const query = new URL(request.url).searchParams.get("q") ?? "";
         try {
-          const matches = await searchCreatorDNA(query);
+          const user = await requireAuthenticatedUser(request);
+          const matches = await searchCreatorDNA(query, user.id);
           return Response.json({
             query,
             matches: matches.map((match) => ({
@@ -23,7 +28,13 @@ export const Route = createFileRoute("/api/dev/search-dna-test")({
               similarity: match.similarity,
             })),
           });
-        } catch {
+        } catch (error) {
+          if (error instanceof AuthenticationError) {
+            return Response.json(
+              { error: "Authentication required." },
+              { status: 401 },
+            );
+          }
           return Response.json(
             { error: "Creator DNA search is temporarily unavailable." },
             { status: 502 },

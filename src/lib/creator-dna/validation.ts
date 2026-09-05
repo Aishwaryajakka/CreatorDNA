@@ -38,3 +38,47 @@ export const NewContentSubmissionInputSchema = ContentMetadataSchema.extend({
 export type NewContentSubmissionInput = z.infer<
   typeof NewContentSubmissionInputSchema
 >;
+
+const supportingNodeIdsSchema = z.array(nonEmptyString);
+const statusSchema = z.enum(["identified", "insufficient evidence"]);
+
+export const StoryIntelligenceAngleSchema = z.object({
+  title: nonEmptyString,
+  framingType: z.enum([
+    "personal story",
+    "perspective evolution",
+    "contrarian",
+    "lesson learned",
+    "reflective",
+    "audience-focused",
+  ]),
+  hook: nonEmptyString,
+  rationale: nonEmptyString,
+  supportingNodeIds: supportingNodeIdsSchema,
+});
+
+export const StoryIntelligenceSchema = z.object({
+  relevantStories: z.array(
+    z.object({
+      summary: nonEmptyString,
+      supportingNodeIds: supportingNodeIdsSchema,
+    }),
+  ),
+  previousPositions: z.array(
+    z.object({
+      position: nonEmptyString,
+      supportingNodeIds: supportingNodeIdsSchema,
+    }),
+  ),
+  possiblePerspectiveEvolution: z.object({
+    status: statusSchema,
+    summary: nonEmptyString,
+    supportingNodeIds: supportingNodeIdsSchema,
+  }),
+  possibleRepetition: z.object({
+    status: z.enum(["identified", "not detected", "insufficient evidence"]),
+    summary: nonEmptyString,
+    supportingNodeIds: supportingNodeIdsSchema,
+  }),
+  threeAuthenticAngles: z.array(StoryIntelligenceAngleSchema).length(3),
+});

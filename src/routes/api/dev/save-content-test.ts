@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 
 import { saveCreatorContentAndDNA } from "@/lib/creator-dna/server/save-content";
+import { requireAuthenticatedUser } from "@/lib/supabase/auth";
 
 const sampleText = `I spent months waiting for the perfect idea before launching anything.
 Eventually I realized I was using planning as a way to avoid being judged.
@@ -13,16 +14,20 @@ before starting — you need enough information to take the next step.`;
 export const Route = createFileRoute("/api/dev/save-content-test")({
   server: {
     handlers: {
-      POST: async () => {
+      POST: async ({ request }) => {
         if (!import.meta.env.DEV) return new Response(null, { status: 404 });
 
         try {
-          const result = await saveCreatorContentAndDNA({
-            title: "Why I stopped waiting to feel ready",
-            platform: "LinkedIn",
-            publishedAt: "2025-01-15",
-            rawText: sampleText,
-          });
+          const user = await requireAuthenticatedUser(request);
+          const result = await saveCreatorContentAndDNA(
+            {
+              title: "Why I stopped waiting to feel ready",
+              platform: "LinkedIn",
+              publishedAt: "2025-01-15",
+              rawText: sampleText,
+            },
+            user.id,
+          );
           return Response.json({
             contentItem: {
               id: result.contentItem.id,

@@ -4,6 +4,7 @@ import { UploadCloud, Check, Loader2 } from "lucide-react";
 import { KindBadge, PageHeader, Panel } from "@/components/dna-ui";
 import { KIND_META, platforms } from "@/lib/creator-dna";
 import type { ExtractedCreatorDNA } from "@/lib/creator-dna/types";
+import { authenticatedFetch } from "@/lib/supabase/client";
 
 export const Route = createFileRoute("/add-content")({
   head: () => ({
@@ -54,7 +55,7 @@ function AddContent() {
     setResult(null);
     setState("working");
     try {
-      const response = await fetch("/api/content", {
+      const response = await authenticatedFetch("/api/content", {
         method: "POST",
         headers: { "content-type": "application/json" },
         body: JSON.stringify({

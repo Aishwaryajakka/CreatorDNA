@@ -6,11 +6,14 @@ import {
   useRouter,
   HeadContent,
   Scripts,
+  useLocation,
+  useNavigate,
 } from "@tanstack/react-router";
-import type { ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 
 import appCss from "../styles.css?url";
 import { AppSidebar } from "@/components/AppSidebar";
+import { supabase } from "@/lib/supabase/client";
 
 function NotFoundComponent() {
   return (
@@ -135,18 +138,57 @@ function RootShell({ children }: { children: ReactNode }) {
 
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
+  const location = useLocation();
+
+  if (location.pathname === "/login") {
+    return (
+      <QueryClientProvider client={queryClient}>
+        <Outlet />
+      </QueryClientProvider>
+    );
+  }
 
   return (
     <QueryClientProvider client={queryClient}>
-      <div className="flex min-h-screen w-full flex-col lg:flex-row">
-        <AppSidebar />
-        <main className="min-w-0 flex-1 px-5 py-8 sm:px-8 lg:px-12 lg:py-12">
-          <div className="mx-auto max-w-6xl">
-            {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
-            <Outlet />
-          </div>
-        </main>
-      </div>
+      <ProtectedApp>
+        <div className="flex min-h-screen w-full flex-col lg:flex-row">
+          <AppSidebar />
+          <main className="min-w-0 flex-1 px-5 py-8 sm:px-8 lg:px-12 lg:py-12">
+            <div className="mx-auto max-w-6xl">
+              <Outlet />
+            </div>
+          </main>
+        </div>
+      </ProtectedApp>
     </QueryClientProvider>
+  );
+}
+
+function ProtectedApp({ children }: { children: ReactNode }) {
+  const navigate = useNavigate();
+  const [checking, setChecking] = useState(true);
+  useEffect(() => {
+    let active = true;
+    void supabase.auth.getSession().then(({ data }) => {
+      if (!active) return;
+      if (!data.session) void navigate({ to: "/login", replace: true });
+      else setChecking(false);
+    });
+    const { data: listener } = supabase.auth.onAuthStateChange(
+      (_event, session) => {
+        if (!session) void navigate({ to: "/login", replace: true });
+      },
+    );
+    return () => {
+      active = false;
+      listener.subscription.unsubscribe();
+    };
+  }, [navigate]);
+  return checking ? (
+    <div className="flex min-h-screen items-center justify-center bg-background text-sm text-muted-foreground">
+      Loading…
+    </div>
+  ) : (
+    children
   );
 }

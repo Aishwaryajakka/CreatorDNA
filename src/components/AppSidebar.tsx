@@ -1,7 +1,8 @@
 import { Link } from "@tanstack/react-router";
 import { Home, Network, Sparkle, Library, Settings } from "lucide-react";
 import { DnaMark } from "./Logo";
-import { creator } from "@/lib/creator-dna";
+import { supabase } from "@/lib/supabase/client";
+import { useProfile } from "@/lib/use-profile";
 
 const nav = [
   { to: "/", label: "Home", icon: Home },
@@ -11,6 +12,11 @@ const nav = [
 ] as const;
 
 export function AppSidebar() {
+  const profile = useProfile();
+  async function signOut() {
+    await supabase.auth.signOut();
+    window.location.assign("/login");
+  }
   return (
     <aside className="flex w-[15.5rem] shrink-0 flex-col justify-between bg-sidebar px-4 py-6 lg:sticky lg:top-0 lg:h-screen">
       <div>
@@ -49,6 +55,12 @@ export function AppSidebar() {
       </div>
 
       <div className="space-y-1 border-t border-sidebar-border pt-4">
+        <Link
+          to="/profile"
+          className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+        >
+          <Settings className="h-4 w-4 shrink-0" /> Profile
+        </Link>
         <button
           type="button"
           className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-sidebar-foreground/70 transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
@@ -56,16 +68,28 @@ export function AppSidebar() {
           <Settings className="h-4 w-4 shrink-0" />
           Settings
         </button>
+        <button
+          type="button"
+          onClick={() => void signOut()}
+          className="flex w-full items-center rounded-xl px-3 py-2 text-xs text-sidebar-foreground/55 hover:text-sidebar-foreground"
+        >
+          Sign out
+        </button>
         <div className="flex items-center gap-3 rounded-xl px-3 py-2.5">
           <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-experience text-xs font-bold text-midnight">
-            AJ
+            {profile?.displayName
+              .split(/\s+/)
+              .map((part) => part[0])
+              .join("")
+              .slice(0, 2)
+              .toUpperCase() || "…"}
           </span>
           <span className="min-w-0">
             <span className="block truncate text-sm font-semibold text-sidebar-foreground">
-              {creator.name}
+              {profile?.displayName || "Loading profile…"}
             </span>
             <span className="block truncate text-[0.6875rem] text-sidebar-foreground/55">
-              {creator.handle}
+              {profile ? `@${profile.username}` : ""}
             </span>
           </span>
         </div>

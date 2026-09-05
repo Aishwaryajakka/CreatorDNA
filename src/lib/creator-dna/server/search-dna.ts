@@ -4,6 +4,7 @@ import { matchDnaNodes } from "../repository";
 
 export async function searchCreatorDNA(
   query: string,
+  userId: string,
   options: { matchThreshold?: number; matchCount?: number } = {},
 ): Promise<CreatorDNAMatch[]> {
   if (!query.trim()) {
@@ -15,5 +16,5 @@ export async function searchCreatorDNA(
     throw new CreatorDNAEmbeddingError("Invalid search options.");
   }
   const queryEmbedding = await embedQuery(query);
-  return matchDnaNodes(queryEmbedding, matchThreshold, matchCount);
+  return matchDnaNodes(queryEmbedding, userId, matchThreshold, matchCount);
 }

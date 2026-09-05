@@ -3,7 +3,8 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { ArrowRight, Plus } from "lucide-react";
 import { PageHeader, Panel } from "@/components/dna-ui";
 import { GraphLegend, StoryGraph } from "@/components/StoryGraph";
-import { KIND_META, dnaSummary, homeGraph, creator } from "@/lib/creator-dna";
+import { KIND_META, dnaSummary, homeGraph } from "@/lib/creator-dna";
+import { useProfile } from "@/lib/use-profile";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -28,11 +29,12 @@ export const Route = createFileRoute("/")({
 function Home() {
   const navigate = useNavigate();
   const [topic, setTopic] = useState("");
+  const profile = useProfile();
 
   return (
     <div className="space-y-10">
       <PageHeader
-        eyebrow={`Welcome back, ${creator.name.split(" ")[0]}`}
+        eyebrow={`Welcome back${profile ? `, ${profile.displayName.split(/\s+/)[0]}` : ""}`}
         title="Your story, remembered."
         subtitle="Creator DNA turns everything you've created into a living map of your stories, beliefs, themes, and evolving perspective."
         action={

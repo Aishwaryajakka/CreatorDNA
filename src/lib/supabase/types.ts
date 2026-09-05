@@ -11,10 +11,31 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      profiles: {
+        Relationships: [];
+        Row: {
+          id: string;
+          username: string;
+          display_name: string;
+          created_at: string;
+          updated_at: string;
+          profile_changed_at: string | null;
+        };
+        Insert: {
+          id: string;
+          username: string;
+          display_name: string;
+          created_at?: string;
+          updated_at?: string;
+          profile_changed_at?: string | null;
+        };
+        Update: Partial<Database["public"]["Tables"]["profiles"]["Insert"]>;
+      };
       content_items: {
         Relationships: [];
         Row: {
           id: string;
+          user_id: string | null;
           title: string;
           platform: string | null;
           published_at: string | null;
@@ -23,6 +44,7 @@ export type Database = {
         };
         Insert: {
           id?: string;
+          user_id?: string | null;
           title: string;
           platform?: string | null;
           published_at?: string | null;
@@ -89,6 +111,7 @@ export type Database = {
           query_embedding: number[];
           match_threshold: number;
           match_count: number;
+          match_user_id: string;
         };
         Returns: Array<{
           id: string;
