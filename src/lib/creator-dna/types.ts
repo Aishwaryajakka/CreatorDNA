@@ -2,6 +2,15 @@ export type DnaKind =
   | "story" | "belief" | "theme" | "experience" | "lesson"
   | "value" | "goal" | "identity" | "expertise";
 
+export type TargetPlatform =
+  | "linkedin"
+  | "instagram"
+  | "tiktok"
+  | "youtube"
+  | "youtube_shorts"
+  | "x"
+  | "threads";
+
 export type ContentItem = {
   id: string;
   title: string;

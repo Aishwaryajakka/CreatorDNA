@@ -1,5 +1,15 @@
 import { z } from "zod";
 
+export const TargetPlatformSchema = z.enum([
+  "linkedin",
+  "instagram",
+  "tiktok",
+  "youtube",
+  "youtube_shorts",
+  "x",
+  "threads",
+]);
+
 const nonEmptyString = z.string().trim().min(1);
 
 export const DnaKindSchema = z.enum([
@@ -53,6 +63,11 @@ export const NewContentSubmissionInputSchema = ContentMetadataSchema.extend({
 export type NewContentSubmissionInput = z.infer<
   typeof NewContentSubmissionInputSchema
 >;
+
+export const PlanContentInputSchema = z.object({
+  idea: nonEmptyString,
+  targetPlatform: TargetPlatformSchema,
+});
 
 const supportingNodeIdsSchema = z.array(nonEmptyString);
 const statusSchema = z.enum(["identified", "insufficient evidence"]);

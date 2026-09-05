@@ -1,5 +1,5 @@
 import { Link } from "@tanstack/react-router";
-import { Home, Network, Sparkle, Library, Settings } from "lucide-react";
+import { Home, Network, Sparkle, Library, Settings, Youtube } from "lucide-react";
 import { DnaMark } from "./Logo";
 import { supabase } from "@/lib/supabase/client";
 import { useProfile } from "@/lib/use-profile";
@@ -9,6 +9,7 @@ const nav = [
   { to: "/story-map", label: "My Story Map", icon: Network },
   { to: "/plan", label: "Plan Content", icon: Sparkle },
   { to: "/library", label: "Content Library", icon: Library },
+  { to: "/import-youtube", label: "Import YouTube", icon: Youtube },
 ] as const;
 
 export function AppSidebar() {

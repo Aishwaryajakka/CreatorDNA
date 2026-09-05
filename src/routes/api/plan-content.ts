@@ -1,14 +1,12 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { z } from "zod";
 
 import { analyzeContentIdea } from "@/lib/creator-dna/server/analyze-idea";
 import { searchCreatorDNA } from "@/lib/creator-dna/server/search-dna";
+import { PlanContentInputSchema } from "@/lib/creator-dna/validation";
 import {
   AuthenticationError,
   requireAuthenticatedUser,
 } from "@/lib/supabase/auth";
-
-const planRequestSchema = z.object({ idea: z.string().trim().min(1) });
 
 export const Route = createFileRoute("/api/plan-content")({
   server: {
@@ -24,10 +22,10 @@ export const Route = createFileRoute("/api/plan-content")({
           );
         }
 
-        const parsed = planRequestSchema.safeParse(body);
+        const parsed = PlanContentInputSchema.safeParse(body);
         if (!parsed.success) {
           return Response.json(
-            { error: "Please add a content idea." },
+            { error: "Please add a content idea and choose a target platform." },
             { status: 400 },
           );
         }
@@ -41,9 +39,11 @@ export const Route = createFileRoute("/api/plan-content")({
           const intelligence = await analyzeContentIdea(
             parsed.data.idea,
             retrievedDNA,
+            parsed.data.targetPlatform,
           );
           return Response.json({
             idea: parsed.data.idea,
+            targetPlatform: parsed.data.targetPlatform,
             retrievedDNA,
             ...intelligence,
           });

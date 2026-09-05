@@ -12,6 +12,7 @@ import {
   insertDnaNodes,
   updateDnaNodeEmbedding,
 } from "../repository";
+import type { ExternalContentIdentity } from "../repository";
 import { extractCreatorDNA } from "./extract";
 import { buildDnaNodeEmbeddingText, embedTexts } from "./embeddings";
 
@@ -20,6 +21,7 @@ export type SaveCreatorContentAndDNAInput = {
   platform?: string | null;
   publishedAt?: string | null;
   rawText: string;
+  external?: ExternalContentIdentity;
 };
 
 export type SaveCreatorContentAndDNAResult = {
@@ -41,7 +43,7 @@ export async function saveCreatorContentAndDNA(
   userId: string,
 ): Promise<SaveCreatorContentAndDNAResult> {
   const parsed = NewContentSubmissionInputSchema.parse(input);
-  const contentItem = await insertContentItem(parsed, userId);
+  const contentItem = await insertContentItem(parsed, userId, input.external);
 
   try {
     const extractedDNA = await extractCreatorDNA(parsed.rawText, {

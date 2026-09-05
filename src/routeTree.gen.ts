@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AddContentRouteImport } from './routes/add-content'
+import { Route as ImportYoutubeRouteImport } from './routes/import-youtube'
 import { Route as LibraryRouteImport } from './routes/library'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as OnboardingRouteImport } from './routes/onboarding'
@@ -18,6 +19,7 @@ import { Route as PlanRouteImport } from './routes/plan'
 import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as StoryMapRouteImport } from './routes/story-map'
 import { Route as ApiContentRouteImport } from './routes/api/content'
+import { Route as ApiContentLibraryRouteImport } from './routes/api/content-library'
 import { Route as ApiOnboardingRouteImport } from './routes/api/onboarding'
 import { Route as ApiPlanContentRouteImport } from './routes/api/plan-content'
 import { Route as ApiProfileRouteImport } from './routes/api/profile'
@@ -28,6 +30,12 @@ import { Route as ApiDevSaveContentTestRouteImport } from './routes/api/dev/save
 import { Route as ApiDevSearchDnaTestRouteImport } from './routes/api/dev/search-dna-test'
 import { Route as ApiDevStoryIntelligenceTestRouteImport } from './routes/api/dev/story-intelligence-test'
 import { Route as ApiDevSupabaseTestRouteImport } from './routes/api/dev/supabase-test'
+import { Route as ApiYoutubeChannelRouteImport } from './routes/api/youtube/channel'
+import { Route as ApiYoutubeImportRouteImport } from './routes/api/youtube/import'
+import { Route as ApiYoutubeImportedRouteImport } from './routes/api/youtube/imported'
+import { Route as ApiYoutubePlaylistVideosRouteImport } from './routes/api/youtube/playlist-videos'
+import { Route as ApiYoutubePlaylistsRouteImport } from './routes/api/youtube/playlists'
+import { Route as ApiYoutubeVideosRouteImport } from './routes/api/youtube/videos'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -37,6 +45,11 @@ const IndexRoute = IndexRouteImport.update({
 const AddContentRoute = AddContentRouteImport.update({
   id: '/add-content',
   path: '/add-content',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ImportYoutubeRoute = ImportYoutubeRouteImport.update({
+  id: '/import-youtube',
+  path: '/import-youtube',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LibraryRoute = LibraryRouteImport.update({
@@ -72,6 +85,11 @@ const StoryMapRoute = StoryMapRouteImport.update({
 const ApiContentRoute = ApiContentRouteImport.update({
   id: '/api/content',
   path: '/api/content',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiContentLibraryRoute = ApiContentLibraryRouteImport.update({
+  id: '/api/content-library',
+  path: '/api/content-library',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiOnboardingRoute = ApiOnboardingRouteImport.update({
@@ -125,10 +143,42 @@ const ApiDevSupabaseTestRoute = ApiDevSupabaseTestRouteImport.update({
   path: '/api/dev/supabase-test',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiYoutubeChannelRoute = ApiYoutubeChannelRouteImport.update({
+  id: '/api/youtube/channel',
+  path: '/api/youtube/channel',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiYoutubeImportRoute = ApiYoutubeImportRouteImport.update({
+  id: '/api/youtube/import',
+  path: '/api/youtube/import',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiYoutubeImportedRoute = ApiYoutubeImportedRouteImport.update({
+  id: '/api/youtube/imported',
+  path: '/api/youtube/imported',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiYoutubePlaylistVideosRoute =
+  ApiYoutubePlaylistVideosRouteImport.update({
+    id: '/api/youtube/playlist-videos',
+    path: '/api/youtube/playlist-videos',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiYoutubePlaylistsRoute = ApiYoutubePlaylistsRouteImport.update({
+  id: '/api/youtube/playlists',
+  path: '/api/youtube/playlists',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiYoutubeVideosRoute = ApiYoutubeVideosRouteImport.update({
+  id: '/api/youtube/videos',
+  path: '/api/youtube/videos',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/add-content': typeof AddContentRoute
+  '/import-youtube': typeof ImportYoutubeRoute
   '/library': typeof LibraryRoute
   '/login': typeof LoginRoute
   '/onboarding': typeof OnboardingRoute
@@ -136,6 +186,7 @@ export interface FileRoutesByFullPath {
   '/profile': typeof ProfileRoute
   '/story-map': typeof StoryMapRoute
   '/api/content': typeof ApiContentRoute
+  '/api/content-library': typeof ApiContentLibraryRoute
   '/api/onboarding': typeof ApiOnboardingRoute
   '/api/plan-content': typeof ApiPlanContentRoute
   '/api/profile': typeof ApiProfileRoute
@@ -146,10 +197,17 @@ export interface FileRoutesByFullPath {
   '/api/dev/search-dna-test': typeof ApiDevSearchDnaTestRoute
   '/api/dev/story-intelligence-test': typeof ApiDevStoryIntelligenceTestRoute
   '/api/dev/supabase-test': typeof ApiDevSupabaseTestRoute
+  '/api/youtube/channel': typeof ApiYoutubeChannelRoute
+  '/api/youtube/import': typeof ApiYoutubeImportRoute
+  '/api/youtube/imported': typeof ApiYoutubeImportedRoute
+  '/api/youtube/playlist-videos': typeof ApiYoutubePlaylistVideosRoute
+  '/api/youtube/playlists': typeof ApiYoutubePlaylistsRoute
+  '/api/youtube/videos': typeof ApiYoutubeVideosRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/add-content': typeof AddContentRoute
+  '/import-youtube': typeof ImportYoutubeRoute
   '/library': typeof LibraryRoute
   '/login': typeof LoginRoute
   '/onboarding': typeof OnboardingRoute
@@ -157,6 +215,7 @@ export interface FileRoutesByTo {
   '/profile': typeof ProfileRoute
   '/story-map': typeof StoryMapRoute
   '/api/content': typeof ApiContentRoute
+  '/api/content-library': typeof ApiContentLibraryRoute
   '/api/onboarding': typeof ApiOnboardingRoute
   '/api/plan-content': typeof ApiPlanContentRoute
   '/api/profile': typeof ApiProfileRoute
@@ -167,11 +226,18 @@ export interface FileRoutesByTo {
   '/api/dev/search-dna-test': typeof ApiDevSearchDnaTestRoute
   '/api/dev/story-intelligence-test': typeof ApiDevStoryIntelligenceTestRoute
   '/api/dev/supabase-test': typeof ApiDevSupabaseTestRoute
+  '/api/youtube/channel': typeof ApiYoutubeChannelRoute
+  '/api/youtube/import': typeof ApiYoutubeImportRoute
+  '/api/youtube/imported': typeof ApiYoutubeImportedRoute
+  '/api/youtube/playlist-videos': typeof ApiYoutubePlaylistVideosRoute
+  '/api/youtube/playlists': typeof ApiYoutubePlaylistsRoute
+  '/api/youtube/videos': typeof ApiYoutubeVideosRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/add-content': typeof AddContentRoute
+  '/import-youtube': typeof ImportYoutubeRoute
   '/library': typeof LibraryRoute
   '/login': typeof LoginRoute
   '/onboarding': typeof OnboardingRoute
@@ -179,6 +245,7 @@ export interface FileRoutesById {
   '/profile': typeof ProfileRoute
   '/story-map': typeof StoryMapRoute
   '/api/content': typeof ApiContentRoute
+  '/api/content-library': typeof ApiContentLibraryRoute
   '/api/onboarding': typeof ApiOnboardingRoute
   '/api/plan-content': typeof ApiPlanContentRoute
   '/api/profile': typeof ApiProfileRoute
@@ -189,12 +256,19 @@ export interface FileRoutesById {
   '/api/dev/search-dna-test': typeof ApiDevSearchDnaTestRoute
   '/api/dev/story-intelligence-test': typeof ApiDevStoryIntelligenceTestRoute
   '/api/dev/supabase-test': typeof ApiDevSupabaseTestRoute
+  '/api/youtube/channel': typeof ApiYoutubeChannelRoute
+  '/api/youtube/import': typeof ApiYoutubeImportRoute
+  '/api/youtube/imported': typeof ApiYoutubeImportedRoute
+  '/api/youtube/playlist-videos': typeof ApiYoutubePlaylistVideosRoute
+  '/api/youtube/playlists': typeof ApiYoutubePlaylistsRoute
+  '/api/youtube/videos': typeof ApiYoutubeVideosRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
     | '/add-content'
+    | '/import-youtube'
     | '/library'
     | '/login'
     | '/onboarding'
@@ -202,6 +276,7 @@ export interface FileRouteTypes {
     | '/profile'
     | '/story-map'
     | '/api/content'
+    | '/api/content-library'
     | '/api/onboarding'
     | '/api/plan-content'
     | '/api/profile'
@@ -212,10 +287,17 @@ export interface FileRouteTypes {
     | '/api/dev/search-dna-test'
     | '/api/dev/story-intelligence-test'
     | '/api/dev/supabase-test'
+    | '/api/youtube/channel'
+    | '/api/youtube/import'
+    | '/api/youtube/imported'
+    | '/api/youtube/playlist-videos'
+    | '/api/youtube/playlists'
+    | '/api/youtube/videos'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/add-content'
+    | '/import-youtube'
     | '/library'
     | '/login'
     | '/onboarding'
@@ -223,6 +305,7 @@ export interface FileRouteTypes {
     | '/profile'
     | '/story-map'
     | '/api/content'
+    | '/api/content-library'
     | '/api/onboarding'
     | '/api/plan-content'
     | '/api/profile'
@@ -233,10 +316,17 @@ export interface FileRouteTypes {
     | '/api/dev/search-dna-test'
     | '/api/dev/story-intelligence-test'
     | '/api/dev/supabase-test'
+    | '/api/youtube/channel'
+    | '/api/youtube/import'
+    | '/api/youtube/imported'
+    | '/api/youtube/playlist-videos'
+    | '/api/youtube/playlists'
+    | '/api/youtube/videos'
   id:
     | '__root__'
     | '/'
     | '/add-content'
+    | '/import-youtube'
     | '/library'
     | '/login'
     | '/onboarding'
@@ -244,6 +334,7 @@ export interface FileRouteTypes {
     | '/profile'
     | '/story-map'
     | '/api/content'
+    | '/api/content-library'
     | '/api/onboarding'
     | '/api/plan-content'
     | '/api/profile'
@@ -254,11 +345,18 @@ export interface FileRouteTypes {
     | '/api/dev/search-dna-test'
     | '/api/dev/story-intelligence-test'
     | '/api/dev/supabase-test'
+    | '/api/youtube/channel'
+    | '/api/youtube/import'
+    | '/api/youtube/imported'
+    | '/api/youtube/playlist-videos'
+    | '/api/youtube/playlists'
+    | '/api/youtube/videos'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AddContentRoute: typeof AddContentRoute
+  ImportYoutubeRoute: typeof ImportYoutubeRoute
   LibraryRoute: typeof LibraryRoute
   LoginRoute: typeof LoginRoute
   OnboardingRoute: typeof OnboardingRoute
@@ -266,6 +364,7 @@ export interface RootRouteChildren {
   ProfileRoute: typeof ProfileRoute
   StoryMapRoute: typeof StoryMapRoute
   ApiContentRoute: typeof ApiContentRoute
+  ApiContentLibraryRoute: typeof ApiContentLibraryRoute
   ApiOnboardingRoute: typeof ApiOnboardingRoute
   ApiPlanContentRoute: typeof ApiPlanContentRoute
   ApiProfileRoute: typeof ApiProfileRoute
@@ -276,6 +375,12 @@ export interface RootRouteChildren {
   ApiDevSearchDnaTestRoute: typeof ApiDevSearchDnaTestRoute
   ApiDevStoryIntelligenceTestRoute: typeof ApiDevStoryIntelligenceTestRoute
   ApiDevSupabaseTestRoute: typeof ApiDevSupabaseTestRoute
+  ApiYoutubeChannelRoute: typeof ApiYoutubeChannelRoute
+  ApiYoutubeImportRoute: typeof ApiYoutubeImportRoute
+  ApiYoutubeImportedRoute: typeof ApiYoutubeImportedRoute
+  ApiYoutubePlaylistVideosRoute: typeof ApiYoutubePlaylistVideosRoute
+  ApiYoutubePlaylistsRoute: typeof ApiYoutubePlaylistsRoute
+  ApiYoutubeVideosRoute: typeof ApiYoutubeVideosRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -292,6 +397,13 @@ declare module '@tanstack/react-router' {
       path: '/add-content'
       fullPath: '/add-content'
       preLoaderRoute: typeof AddContentRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/import-youtube': {
+      id: '/import-youtube'
+      path: '/import-youtube'
+      fullPath: '/import-youtube'
+      preLoaderRoute: typeof ImportYoutubeRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/library': {
@@ -341,6 +453,13 @@ declare module '@tanstack/react-router' {
       path: '/api/content'
       fullPath: '/api/content'
       preLoaderRoute: typeof ApiContentRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/content-library': {
+      id: '/api/content-library'
+      path: '/api/content-library'
+      fullPath: '/api/content-library'
+      preLoaderRoute: typeof ApiContentLibraryRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/onboarding': {
@@ -413,12 +532,55 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiDevSupabaseTestRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/youtube/channel': {
+      id: '/api/youtube/channel'
+      path: '/api/youtube/channel'
+      fullPath: '/api/youtube/channel'
+      preLoaderRoute: typeof ApiYoutubeChannelRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/youtube/import': {
+      id: '/api/youtube/import'
+      path: '/api/youtube/import'
+      fullPath: '/api/youtube/import'
+      preLoaderRoute: typeof ApiYoutubeImportRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/youtube/imported': {
+      id: '/api/youtube/imported'
+      path: '/api/youtube/imported'
+      fullPath: '/api/youtube/imported'
+      preLoaderRoute: typeof ApiYoutubeImportedRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/youtube/playlist-videos': {
+      id: '/api/youtube/playlist-videos'
+      path: '/api/youtube/playlist-videos'
+      fullPath: '/api/youtube/playlist-videos'
+      preLoaderRoute: typeof ApiYoutubePlaylistVideosRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/youtube/playlists': {
+      id: '/api/youtube/playlists'
+      path: '/api/youtube/playlists'
+      fullPath: '/api/youtube/playlists'
+      preLoaderRoute: typeof ApiYoutubePlaylistsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/youtube/videos': {
+      id: '/api/youtube/videos'
+      path: '/api/youtube/videos'
+      fullPath: '/api/youtube/videos'
+      preLoaderRoute: typeof ApiYoutubeVideosRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AddContentRoute: AddContentRoute,
+  ImportYoutubeRoute: ImportYoutubeRoute,
   LibraryRoute: LibraryRoute,
   LoginRoute: LoginRoute,
   OnboardingRoute: OnboardingRoute,
@@ -426,6 +588,7 @@ const rootRouteChildren: RootRouteChildren = {
   ProfileRoute: ProfileRoute,
   StoryMapRoute: StoryMapRoute,
   ApiContentRoute: ApiContentRoute,
+  ApiContentLibraryRoute: ApiContentLibraryRoute,
   ApiOnboardingRoute: ApiOnboardingRoute,
   ApiPlanContentRoute: ApiPlanContentRoute,
   ApiProfileRoute: ApiProfileRoute,
@@ -436,6 +599,12 @@ const rootRouteChildren: RootRouteChildren = {
   ApiDevSearchDnaTestRoute: ApiDevSearchDnaTestRoute,
   ApiDevStoryIntelligenceTestRoute: ApiDevStoryIntelligenceTestRoute,
   ApiDevSupabaseTestRoute: ApiDevSupabaseTestRoute,
+  ApiYoutubeChannelRoute: ApiYoutubeChannelRoute,
+  ApiYoutubeImportRoute: ApiYoutubeImportRoute,
+  ApiYoutubeImportedRoute: ApiYoutubeImportedRoute,
+  ApiYoutubePlaylistVideosRoute: ApiYoutubePlaylistVideosRoute,
+  ApiYoutubePlaylistsRoute: ApiYoutubePlaylistsRoute,
+  ApiYoutubeVideosRoute: ApiYoutubeVideosRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

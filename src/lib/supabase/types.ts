@@ -38,6 +38,9 @@ export type Database = {
           user_id: string | null;
           title: string;
           platform: string | null;
+          external_source: string | null;
+          external_id: string | null;
+          external_url: string | null;
           published_at: string | null;
           raw_text: string;
           created_at: string;
@@ -47,12 +50,35 @@ export type Database = {
           user_id?: string | null;
           title: string;
           platform?: string | null;
+          external_source?: string | null;
+          external_id?: string | null;
+          external_url?: string | null;
           published_at?: string | null;
           raw_text: string;
           created_at?: string;
         };
         Update: Partial<
           Database["public"]["Tables"]["content_items"]["Insert"]
+        >;
+      };
+      content_item_playlists: {
+        Relationships: [];
+        Row: {
+          content_id: string;
+          playlist_id: string;
+          playlist_title: string;
+          playlist_position: number | null;
+          created_at: string;
+        };
+        Insert: {
+          content_id: string;
+          playlist_id: string;
+          playlist_title: string;
+          playlist_position?: number | null;
+          created_at?: string;
+        };
+        Update: Partial<
+          Database["public"]["Tables"]["content_item_playlists"]["Insert"]
         >;
       };
       dna_nodes: {

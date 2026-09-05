@@ -2,7 +2,11 @@
 
 import type { ChatCompletionCreateParams } from "groq-sdk/resources/chat/completions";
 
-import type { CreatorDNAMatch, StoryIntelligenceResult } from "../types";
+import type {
+  CreatorDNAMatch,
+  StoryIntelligenceResult,
+  TargetPlatform,
+} from "../types";
 import { StoryIntelligenceSchema } from "../validation";
 import { CreatorDNAProviderError, getGroqClient, getGroqModel } from "./llm";
 
@@ -123,14 +127,38 @@ If evidence is insufficient, explicitly use the appropriate insufficient evidenc
 Every factual or personal claim must cite supportingNodeIds from the supplied nodes.
 Every supportingNodeIds value must contain only IDs from the supplied nodes.
 Create exactly three meaningfully different authentic angles, and ground every angle in retrieved nodes.
-Do not add any node IDs that are not supplied.`;
+Do not add any node IDs that are not supplied.
+The creator's DNA stays constant; adapt only the expression and framing of the three angles for the requested target platform.
+Do not invent platform-specific facts about the creator.`;
+
+const platformGuidance: Record<TargetPlatform, string> = {
+  linkedin:
+    "Personal experience → professional lesson → practical takeaway.",
+  instagram:
+    "Visual or personal hook → relatable story → concise reflection or takeaway.",
+  tiktok:
+    "Immediate hook → mistake or tension → quick story → punchy lesson.",
+  youtube:
+    "Narrative hook → context → journey → turning point → lessons.",
+  youtube_shorts:
+    "Fast hook → one tension or insight → compact story → memorable payoff.",
+  x: "Strong observation or opinion → concise story or insight → memorable takeaway.",
+  threads:
+    "Conversational observation → personal story → reflection.",
+};
 
 function buildUserPrompt(
   idea: string,
+  targetPlatform: TargetPlatform,
   retrievedDNA: CreatorDNAMatch[],
 ): string {
   return `Content idea:
 ${idea}
+
+Target platform: ${targetPlatform}
+Platform framing guidance: ${platformGuidance[targetPlatform]}
+
+Use this guidance to shape exactly three authentic directions. Keep all historical analysis grounded in the same retrieved Creator DNA; do not change or invent the creator's history.
 
 Retrieved Creator DNA (the only allowed evidence):
 ${JSON.stringify(
@@ -155,6 +183,7 @@ Return the requested structured Story Intelligence result only.`;
 export async function analyzeContentIdea(
   idea: string,
   retrievedDNA: CreatorDNAMatch[],
+  targetPlatform: TargetPlatform,
 ): Promise<StoryIntelligenceResult> {
   if (!idea.trim()) {
     throw new CreatorDNAProviderError("Content idea must not be empty.");
@@ -167,7 +196,10 @@ export async function analyzeContentIdea(
       temperature: 0,
       messages: [
         { role: "system", content: SYSTEM_PROMPT },
-        { role: "user", content: buildUserPrompt(idea, retrievedDNA) },
+        {
+          role: "user",
+          content: buildUserPrompt(idea, targetPlatform, retrievedDNA),
+        },
       ],
       response_format: responseFormat,
     };

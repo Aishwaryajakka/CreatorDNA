@@ -13,25 +13,40 @@ import type { CreatorDNANode } from "@/lib/creator-dna/types";
 import { authenticatedFetch } from "@/lib/supabase/client";
 
 export const Route = createFileRoute("/story-map")({ component: StoryMapPage });
-const kinds: DnaKind[] = ["story", "belief", "theme", "experience", "lesson"];
+const kinds: DnaKind[] = [
+  "story",
+  "belief",
+  "theme",
+  "experience",
+  "lesson",
+  "value",
+  "goal",
+  "identity",
+  "expertise",
+];
 
 function StoryMapPage() {
   const [rawNodes, setRawNodes] = useState<CreatorDNANode[]>([]);
   const [selected, setSelected] = useState<CreatorDNANode | null>(null);
   const [filter, setFilter] = useState<DnaKind | "all">("all");
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   useEffect(() => {
     void authenticatedFetch("/api/story-map")
       .then(async (r) => {
         const data = await r.json();
         if (!r.ok) throw new Error(data.error);
-        setRawNodes(data.nodes);
+        if (!Array.isArray(data.nodes)) {
+          throw new Error("Unable to load your Story Map.");
+        }
+        setRawNodes(data.nodes as CreatorDNANode[]);
       })
       .catch((e: unknown) =>
         setError(
           e instanceof Error ? e.message : "Unable to load your Story Map.",
         ),
-      );
+      )
+      .finally(() => setLoading(false));
   }, []);
   const visible = useMemo(
     () => rawNodes.filter((n) => filter === "all" || n.type === filter),
@@ -69,6 +84,12 @@ function StoryMapPage() {
   }, [visible]);
   if (error)
     return <Panel className="p-8 text-sm text-destructive">{error}</Panel>;
+  if (loading)
+    return (
+      <Panel className="p-10 text-center text-sm text-muted-foreground">
+        Loading your Story Map…
+      </Panel>
+    );
   return (
     <div className="space-y-8">
       <PageHeader

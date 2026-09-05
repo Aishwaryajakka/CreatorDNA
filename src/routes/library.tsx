@@ -1,8 +1,8 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { Search } from "lucide-react";
 import { PageHeader, Panel } from "@/components/dna-ui";
-import { allThemes, libraryItems, platforms } from "@/lib/creator-dna";
+import { authenticatedFetch } from "@/lib/supabase/client";
 
 export const Route = createFileRoute("/library")({
   head: () => ({
@@ -30,22 +30,44 @@ const statusStyle: Record<string, string> = {
   Queued: "bg-muted text-muted-foreground",
 };
 
+type LibraryRow = {
+  id: string;
+  title: string;
+  platform: string;
+  date: string;
+  counts: Record<string, number>;
+};
+
 function LibraryPage() {
   const [query, setQuery] = useState("");
   const [platform, setPlatform] = useState("All");
   const [theme, setTheme] = useState("All");
   const [year, setYear] = useState("All");
+  const [items, setItems] = useState<LibraryRow[]>([]);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    void authenticatedFetch("/api/content-library")
+      .then(async (response) => {
+        const data = (await response.json()) as { items?: LibraryRow[]; error?: string };
+        if (!response.ok) throw new Error(data.error ?? "Unable to load your content library.");
+        setItems(data.items ?? []);
+      })
+      .catch((requestError: unknown) => setError(requestError instanceof Error ? requestError.message : "Unable to load your content library."));
+  }, []);
 
   const years = useMemo(
     () =>
-      Array.from(new Set(libraryItems.map((i) => i.date.slice(0, 4)))).sort(),
-    [],
+      Array.from(new Set(items.map((i) => i.date.slice(0, 4)))).sort(),
+    [items],
   );
 
-  const rows = libraryItems.filter(
+  const platforms = useMemo(() => Array.from(new Set(items.map((item) => item.platform))).sort(), [items]);
+  const themes = useMemo(() => Array.from(new Set(items.flatMap((item) => Object.keys(item.counts)))).sort(), [items]);
+  const rows = items.filter(
     (i) =>
       (platform === "All" || i.platform === platform) &&
-      (theme === "All" || i.themes.includes(theme)) &&
+      (theme === "All" || (i.counts[theme] ?? 0) > 0) &&
       (year === "All" || i.date.startsWith(year)) &&
       i.title.toLowerCase().includes(query.toLowerCase()),
   );
@@ -80,7 +102,7 @@ function LibraryPage() {
             label="Theme"
             value={theme}
             onChange={setTheme}
-            options={allThemes}
+            options={themes}
           />
           <Filter
             label="Date"
@@ -92,6 +114,7 @@ function LibraryPage() {
       </Panel>
 
       <Panel className="overflow-x-auto">
+        {error ? <p className="p-5 text-sm text-destructive">{error}</p> : null}
         <table className="w-full min-w-[54rem] text-left text-sm">
           <thead>
             <tr className="border-b border-border">
@@ -124,20 +147,20 @@ function LibraryPage() {
                 </td>
                 <td className="px-5 py-4 text-muted-foreground">{i.date}</td>
                 <td className="px-5 py-4">
-                  <Count n={i.stories} color="var(--story)" />
+                  <Count n={i.counts["story"] ?? 0} color="var(--story)" />
                 </td>
                 <td className="px-5 py-4">
-                  <Count n={i.beliefs} color="var(--belief)" />
+                  <Count n={i.counts["belief"] ?? 0} color="var(--belief)" />
                 </td>
                 <td className="px-5 py-4">
                   <div className="flex flex-wrap gap-1.5">
-                    {i.themes.length ? (
-                      i.themes.map((t) => (
+                    {Object.keys(i.counts).length ? (
+                      Object.keys(i.counts).map((t) => (
                         <span
                           key={t}
                           className="rounded-md bg-muted px-2 py-1 text-[0.6875rem] font-medium text-muted-foreground"
                         >
-                          {t}
+                          {t} · {i.counts[t]}
                         </span>
                       ))
                     ) : (
@@ -147,9 +170,9 @@ function LibraryPage() {
                 </td>
                 <td className="px-5 py-4">
                   <span
-                    className={`rounded-full px-2.5 py-1 text-[0.6875rem] font-semibold ${statusStyle[i.status]}`}
+                    className={`rounded-full px-2.5 py-1 text-[0.6875rem] font-semibold ${statusStyle["Analyzed"]}`}
                   >
-                    {i.status}
+                    Analyzed
                   </span>
                 </td>
               </tr>

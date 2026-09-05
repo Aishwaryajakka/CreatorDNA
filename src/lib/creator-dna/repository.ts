@@ -8,6 +8,18 @@ import type {
   DnaNodeRow,
 } from "@/lib/supabase/types";
 
+export type ExternalContentIdentity = {
+  source: string;
+  id: string;
+  url?: string | null;
+};
+
+export type ContentPlaylistAssociation = {
+  playlistId: string;
+  playlistTitle: string;
+  playlistPosition?: number | null;
+};
+
 function toContentItem(row: ContentItemRow): ContentItem {
   return {
     id: row.id,
@@ -38,6 +50,7 @@ function toDnaNode(row: DnaNodeRow): CreatorDNANode {
 export async function insertContentItem(
   input: NewContentSubmissionInput,
   userId: string,
+  external?: ExternalContentIdentity,
 ): Promise<ContentItem> {
   const { data, error } = await supabaseServer
     .from("content_items")
@@ -45,6 +58,9 @@ export async function insertContentItem(
       user_id: userId,
       title: input.title,
       platform: input.platform ?? null,
+      external_source: external?.source ?? null,
+      external_id: external?.id ?? null,
+      external_url: external?.url ?? null,
       published_at: input.publishedAt ?? null,
       raw_text: input.rawText,
     })
@@ -52,6 +68,45 @@ export async function insertContentItem(
     .single();
   if (error) throw new Error(`Failed to insert content item: ${error.message}`);
   return toContentItem(data);
+}
+
+export async function getContentItemByExternalId(
+  userId: string,
+  source: string,
+  externalId: string,
+): Promise<ContentItem | null> {
+  const { data, error } = await supabaseServer
+    .from("content_items")
+    .select()
+    .eq("user_id", userId)
+    .eq("external_source", source)
+    .eq("external_id", externalId)
+    .maybeSingle();
+  if (error) throw new Error(`Failed to check imported content: ${error.message}`);
+  return data ? toContentItem(data) : null;
+}
+
+export async function addContentItemPlaylistAssociations(
+  contentId: string,
+  userId: string,
+  associations: ContentPlaylistAssociation[],
+): Promise<void> {
+  if (!associations.length) return;
+  if (!(await getContentItemById(contentId, userId))) {
+    throw new Error("Content item not found.");
+  }
+  const { error } = await supabaseServer
+    .from("content_item_playlists")
+    .upsert(
+      associations.map((association) => ({
+        content_id: contentId,
+        playlist_id: association.playlistId,
+        playlist_title: association.playlistTitle,
+        playlist_position: association.playlistPosition ?? null,
+      })),
+      { onConflict: "content_id,playlist_id" },
+    );
+  if (error) throw new Error(`Failed to save playlist context: ${error.message}`);
 }
 
 export async function insertDnaNodes(

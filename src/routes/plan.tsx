@@ -13,6 +13,7 @@ import {
 import type {
   CreatorDNAMatch,
   StoryIntelligenceResult,
+  TargetPlatform,
 } from "@/lib/creator-dna/types";
 import { authenticatedFetch } from "@/lib/supabase/client";
 
@@ -37,9 +38,26 @@ export const Route = createFileRoute("/plan")({
   component: PlanPage,
 });
 
+const platformOptions: Array<{ value: TargetPlatform; label: string }> = [
+  { value: "linkedin", label: "LinkedIn" },
+  { value: "instagram", label: "Instagram" },
+  { value: "tiktok", label: "TikTok" },
+  { value: "youtube", label: "YouTube" },
+  { value: "youtube_shorts", label: "YouTube Shorts" },
+  { value: "x", label: "X" },
+  { value: "threads", label: "Threads" },
+];
+
+const platformLabels = Object.fromEntries(
+  platformOptions.map((option) => [option.value, option.label]),
+) as Record<TargetPlatform, string>;
+
 function PlanPage() {
   const { topic: initial } = Route.useSearch();
   const [topic, setTopic] = useState(initial ?? "");
+  const [targetPlatform, setTargetPlatform] = useState<TargetPlatform | "">(
+    "",
+  );
   const [result, setResult] = useState<PlanningResponse | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -52,6 +70,11 @@ function PlanPage() {
       setResult(null);
       return;
     }
+    if (!targetPlatform) {
+      setError("Please choose a target platform.");
+      setResult(null);
+      return;
+    }
 
     setLoading(true);
     setError(null);
@@ -59,7 +82,10 @@ function PlanPage() {
       const response = await authenticatedFetch("/api/plan-content", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ idea: topic.trim() }),
+        body: JSON.stringify({
+          idea: topic.trim(),
+          targetPlatform,
+        }),
       });
       const payload = (await response.json()) as
         PlanningResponse | ErrorResponse;
@@ -92,29 +118,53 @@ function PlanPage() {
       />
 
       <Panel accent="var(--story)" className="p-6 sm:p-8">
-        <form className="flex flex-col gap-3 sm:flex-row" onSubmit={submitIdea}>
+        <form className="flex flex-col gap-3" onSubmit={submitIdea}>
           <input
             value={topic}
             onChange={(event) => setTopic(event.target.value)}
             placeholder="I want to create something about burnout."
             className="min-w-0 flex-1 rounded-xl border border-input bg-background px-4 py-4 text-base outline-none placeholder:text-muted-foreground focus:border-primary"
           />
-          <button
-            type="submit"
-            disabled={loading}
-            aria-busy={loading}
-            className="inline-flex shrink-0 items-center justify-center gap-2 rounded-xl bg-primary px-6 py-4 text-sm font-semibold text-primary-foreground transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
-          >
-            {loading ? "Looking through your DNA..." : "Explore my story"}
-            {!loading ? <ArrowRight className="h-4 w-4" /> : null}
-          </button>
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <label className="flex items-center gap-3 text-sm font-semibold text-midnight">
+              <span className="whitespace-nowrap">Plan for</span>
+              <select
+                value={targetPlatform}
+                onChange={(event) =>
+                  setTargetPlatform(event.target.value as TargetPlatform | "")
+                }
+                disabled={loading}
+                className="rounded-xl border border-input bg-background px-3 py-3 text-sm font-medium outline-none focus:border-primary"
+              >
+                <option value="">Choose a platform</option>
+                {platformOptions.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <button
+              type="submit"
+              disabled={loading}
+              aria-busy={loading}
+              className="inline-flex shrink-0 items-center justify-center gap-2 rounded-xl bg-primary px-6 py-4 text-sm font-semibold text-primary-foreground transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              {loading ? "Looking through your DNA..." : "Explore my story"}
+              {!loading ? <ArrowRight className="h-4 w-4" /> : null}
+            </button>
+          </div>
         </form>
         {error ? (
           <p className="mt-3 text-sm text-destructive">{error}</p>
         ) : null}
       </Panel>
 
-      {result ? <PlanningResults result={result} /> : null}
+      {result ? (
+        <PlanningResults result={result} />
+      ) : loading ? null : (
+        <InitialPlanState hasError={Boolean(error)} />
+      )}
     </div>
   );
 }
@@ -124,8 +174,35 @@ function PlanningResults({ result }: { result: PlanningResponse }) {
   const evolution = result.possiblePerspectiveEvolution;
   const repetition = result.possibleRepetition;
 
+  if (result.retrievedDNA.length === 0) {
+    return (
+      <Panel className="p-8 sm:p-10">
+        <p className="eyebrow">Not enough memory yet</p>
+        <h2 className="mt-2 text-xl font-bold text-midnight">
+          Creator DNA needs more of your history to make this analysis reliable.
+        </h2>
+        <p className="mt-3 max-w-2xl text-sm leading-relaxed text-muted-foreground">
+          Add more of your published content so your planning results can be
+          grounded in real stories, positions, and evidence.
+        </p>
+        <a
+          href="/add-content"
+          className="mt-5 inline-flex rounded-xl bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground"
+        >
+          Add Content
+        </a>
+      </Panel>
+    );
+  }
+
   return (
     <div className="space-y-8">
+      <Panel accent="var(--story)" className="p-5 sm:p-6">
+        <p className="eyebrow">Story Intelligence</p>
+        <h2 className="mt-2 text-xl font-bold text-midnight">
+          Planning for: {platformLabels[result.targetPlatform]}
+        </h2>
+      </Panel>
       <section>
         <p className="eyebrow">Relevant history</p>
         <h2 className="mt-2 text-2xl font-extrabold text-midnight sm:text-3xl">
@@ -142,6 +219,24 @@ function PlanningResults({ result }: { result: PlanningResponse }) {
             </Panel>
           )}
         </div>
+        {result.relevantStories.length ? (
+          <Panel className="mt-5 p-6 sm:p-8">
+            <p className="eyebrow">Relevant stories</p>
+            <div className="mt-4 space-y-5">
+              {result.relevantStories.map((story, index) => (
+                <div key={`${story.summary}-${index}`}>
+                  <p className="text-[0.9375rem] font-medium leading-relaxed text-midnight">
+                    {story.summary}
+                  </p>
+                  <EvidenceList
+                    ids={story.supportingNodeIds}
+                    nodes={nodesById}
+                  />
+                </div>
+              ))}
+            </div>
+          </Panel>
+        ) : null}
       </section>
 
       <Panel accent="var(--belief)" className="p-6 sm:p-8">
@@ -173,7 +268,7 @@ function PlanningResults({ result }: { result: PlanningResponse }) {
         {evolution.status === "identified" ? (
           <>
             <h2 className="mt-2 text-xl font-bold text-midnight">
-              A meaningful shift may be here
+              Your perspective has evolved
             </h2>
             <p className="mt-3 max-w-3xl text-sm leading-relaxed text-muted-foreground">
               {evolution.summary}
@@ -198,7 +293,7 @@ function PlanningResults({ result }: { result: PlanningResponse }) {
             {repetition.status === "identified" ? (
               <>
                 <p className="mt-2 text-[0.9375rem] font-semibold text-midnight">
-                  A possible overlap surfaced in your retrieved material.
+                  You&apos;ve told a similar story before
                 </p>
                 <p className="mt-2 text-sm text-muted-foreground">
                   {repetition.summary}
@@ -234,6 +329,7 @@ function PlanningResults({ result }: { result: PlanningResponse }) {
               accent="var(--story)"
               className="flex flex-col p-6 transition-shadow hover:shadow-lift"
             >
+              <span className="eyebrow">Direction {String.fromCharCode(65 + index)}</span>
               <span className="eyebrow">{angle.framingType}</span>
               <h3 className="mt-3 text-lg font-bold leading-snug text-midnight">
                 {angle.title}
@@ -259,6 +355,22 @@ function PlanningResults({ result }: { result: PlanningResponse }) {
         </div>
       </section>
     </div>
+  );
+}
+
+function InitialPlanState({ hasError }: { hasError: boolean }) {
+  if (hasError) return null;
+  return (
+    <Panel className="p-8 text-center sm:p-10">
+      <p className="eyebrow">Story Intelligence</p>
+      <h2 className="mt-2 text-xl font-bold text-midnight">
+        Start with an idea to see what your history says.
+      </h2>
+      <p className="mx-auto mt-3 max-w-xl text-sm leading-relaxed text-muted-foreground">
+        Creator DNA will connect your idea to the stories, positions, and
+        evidence you have already shared.
+      </p>
+    </Panel>
   );
 }
 
@@ -318,6 +430,7 @@ function EvidenceSource({ node }: { node: CreatorDNAMatch }) {
 
 type PlanningResponse = StoryIntelligenceResult & {
   idea: string;
+  targetPlatform: TargetPlatform;
   retrievedDNA: CreatorDNAMatch[];
 };
 
