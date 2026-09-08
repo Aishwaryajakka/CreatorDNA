@@ -125,6 +125,54 @@ const storyIntelligenceSchema = {
           hook: { type: "string" },
           rationale: { type: "string" },
           supportingNodeIds: { type: "array", items: { type: "string" } },
+          platformPrep: {
+            type: "object",
+            additionalProperties: false,
+            properties: {
+              platform: {
+                type: "string",
+                enum: [
+                  "linkedin",
+                  "instagram",
+                  "tiktok",
+                  "youtube",
+                  "youtube_shorts",
+                  "x",
+                  "threads",
+                ],
+              },
+              hook: { type: "string" },
+              formatRecommendation: { type: "string" },
+              structure: {
+                type: "array",
+                minItems: 3,
+                maxItems: 6,
+                items: { type: "string" },
+              },
+              toneNotes: {
+                type: "array",
+                minItems: 2,
+                maxItems: 5,
+                items: { type: "string" },
+              },
+              avoid: {
+                type: "array",
+                minItems: 2,
+                maxItems: 5,
+                items: { type: "string" },
+              },
+              suggestedTitle: { type: ["string", "null"] },
+            },
+            required: [
+              "platform",
+              "hook",
+              "formatRecommendation",
+              "structure",
+              "toneNotes",
+              "avoid",
+              "suggestedTitle",
+            ],
+          },
         },
         required: [
           "title",
@@ -132,6 +180,7 @@ const storyIntelligenceSchema = {
           "hook",
           "rationale",
           "supportingNodeIds",
+          "platformPrep",
         ],
       },
     },
@@ -170,6 +219,7 @@ Create exactly three meaningfully different authentic angles, and ground every a
 Do not add any node IDs that are not supplied.
 The creator's DNA stays constant; adapt only the expression and framing of the three angles for the requested target platform.
 Do not invent platform-specific facts about the creator.
+For every angle, return complete platformPrep for the requested target platform. Its hook and structural beats must express details supported by that angle's cited nodes, not generic social-media advice. Do not write a complete final post.
 
 Assess alignment without percentages or scores:
 - strong: multiple historical DNA signals support the idea, it fits the current Foundation and intended territories, and no major contradiction or repetition risk dominates.
@@ -179,18 +229,22 @@ Assess alignment without percentages or scores:
 Historical DNA is evidence of who the creator has been. Foundation is creator-declared current context. Brand Territories are intended direction, not proof of past authenticity.
 Every alignment why/watchOut claim must cite supplied node IDs. Return 1-3 why reasons when evidence exists. Return no watchOut items when there is no meaningful risk. Do not manufacture criticism.
 Perspective evolution is not automatically weak alignment: it can be the story opportunity. Authenticity and novelty are distinct, so a strongly aligned idea may still carry repetition risk.
+When the idea directly touches a meaningful old-to-new belief shift, use mixed alignment and make that evolution the opportunity rather than calling the idea strong or weak.
 The opportunity must be one concise sentence explaining how to make the idea more authentic, differentiated, or useful.`;
 
 const platformGuidance: Record<TargetPlatform, string> = {
-  linkedin: "Personal experience → professional lesson → practical takeaway.",
+  linkedin:
+    "Use a strong first 1-2 lines. Recommend a personal story + lesson, point-of-view post, founder reflection, grounded contrarian observation, or carousel when appropriate. Give 3-5 beats: tension, personal context, supported belief or lesson, practical implication, and close. Keep it professional but personal, reflective, clear, and grounded in lived evidence. Avoid corporate language, generic motivation, unnecessary hashtags, and overlong setup.",
   instagram:
     "Visual or personal hook → relatable story → concise reflection or takeaway.",
   tiktok: "Immediate hook → mistake or tension → quick story → punchy lesson.",
-  youtube: "Narrative hook → context → journey → turning point → lessons.",
+  youtube:
+    "Create an opening tension for the first 15 seconds, recommend a talking-head essay, story-driven lesson, or breakdown/explainer, and provide 5-6 beats: opening tension, personal context, insight, evidence/story, practical takeaway, and synthesis. Include a suggested title. Keep it narrative, clear, spoken, and curiosity-led. Avoid slow intros, generic channel intros, and burying the personal story.",
   youtube_shorts:
     "Fast hook → one tension or insight → compact story → memorable payoff.",
-  x: "Strong observation or opinion → concise story or insight → memorable takeaway.",
-  threads: "Conversational observation → personal story → reflection.",
+  x: "Use a short, sharp first sentence and choose either a single post or short thread based on complexity. A single post should move through claim, tension, takeaway; a thread should use a hook, 2-4 compact points, and conclusion. Keep it concise, direct, conversational, and opinionated only where evidence supports it. Avoid LinkedIn-style framing, excess context, thread bait, and unsupported hot takes.",
+  threads:
+    "Use a natural conversational opener and a short conversational sequence: opener, grounded personal observation, 1-3 compact thoughts, and a human closing line. Keep it informal, warm, conversational, and less polished than LinkedIn. Avoid corporate tone, rigid thread formatting, and excessive structure.",
 };
 
 function buildUserPrompt(
@@ -249,9 +303,13 @@ export async function analyzeContentIdea(
   if (!idea.trim()) {
     throw new CreatorDNAProviderError("Content idea must not be empty.");
   }
+  if (retrievedDNA.length === 0) {
+    return buildInsufficientEvidenceResult(idea.trim(), targetPlatform);
+  }
 
   let completion;
-  try {
+  let lastError: unknown;
+  for (let attempt = 0; attempt < 2 && !completion; attempt += 1) {
     const params: ChatCompletionCreateParams = {
       model: getGroqModel(),
       temperature: 0,
@@ -266,14 +324,28 @@ export async function analyzeContentIdea(
             creatorContext,
           ),
         },
+        ...(attempt
+          ? [
+              {
+                role: "user" as const,
+                content:
+                  "Schema correction: return every required field and exactly three complete threeAuthenticAngles entries. Do not stop after the first direction.",
+              },
+            ]
+          : []),
       ],
       response_format: responseFormat,
     };
-    completion = await getGroqClient().chat.completions.create(params);
-  } catch (error) {
-    if (error instanceof CreatorDNAProviderError) throw error;
+    try {
+      completion = await getGroqClient().chat.completions.create(params);
+    } catch (error) {
+      lastError = error;
+    }
+  }
+  if (!completion) {
+    if (lastError instanceof CreatorDNAProviderError) throw lastError;
     throw new CreatorDNAProviderError("Story Intelligence analysis failed.", {
-      cause: error,
+      cause: lastError,
     });
   }
 
@@ -312,12 +384,17 @@ export async function analyzeContentIdea(
     threeAuthenticAngles: [firstAngle, secondAngle, thirdAngle],
   };
   const validNodeIds = new Set(retrievedDNA.map((node) => node.id));
-  return sanitizeStoryIntelligence(normalizedResult, validNodeIds);
+  return sanitizeStoryIntelligence(
+    normalizedResult,
+    validNodeIds,
+    targetPlatform,
+  );
 }
 
 function sanitizeStoryIntelligence(
   result: StoryIntelligenceResult,
   validNodeIds: Set<string>,
+  targetPlatform: TargetPlatform,
 ): StoryIntelligenceResult {
   const filterIds = (ids: string[]) => [
     ...new Set(ids.filter((id) => validNodeIds.has(id))),
@@ -338,6 +415,14 @@ function sanitizeStoryIntelligence(
     (angle) => ({
       ...angle,
       supportingNodeIds: filterIds(angle.supportingNodeIds),
+      platformPrep: {
+        ...angle.platformPrep,
+        platform: targetPlatform,
+        suggestedTitle:
+          targetPlatform === "youtube"
+            ? (angle.platformPrep.suggestedTitle ?? angle.title)
+            : angle.platformPrep.suggestedTitle,
+      },
     }),
   );
   if (!firstAngle || !secondAngle || !thirdAngle)
@@ -376,6 +461,146 @@ function sanitizeStoryIntelligence(
             supportingNodeIds: repetitionIds,
           },
     threeAuthenticAngles: [firstAngle, secondAngle, thirdAngle],
+  };
+}
+
+function buildInsufficientEvidenceResult(
+  idea: string,
+  targetPlatform: TargetPlatform,
+): StoryIntelligenceResult {
+  const platformPrep = buildEvidenceLimitedPlatformPrep(idea, targetPlatform);
+  const makeAngle = (
+    title: string,
+    framingType: StoryIntelligenceResult["threeAuthenticAngles"][number]["framingType"],
+    hook: string,
+    rationale: string,
+  ): StoryIntelligenceResult["threeAuthenticAngles"][number] => ({
+    title,
+    framingType,
+    hook,
+    rationale,
+    supportingNodeIds: [],
+    platformPrep: { ...platformPrep, hook },
+  });
+  return {
+    alignment: {
+      state: "insufficient_evidence",
+      why: [],
+      watchOut: [],
+      opportunity:
+        "Add relevant past content before treating this idea as grounded in your Creator DNA.",
+    },
+    relevantStories: [],
+    previousPositions: [],
+    possiblePerspectiveEvolution: {
+      status: "insufficient evidence",
+      summary:
+        "Creator DNA does not yet have dated evidence for a perspective change on this idea.",
+      supportingNodeIds: [],
+    },
+    possibleRepetition: {
+      status: "insufficient evidence",
+      summary:
+        "Creator DNA does not yet have enough relevant history to assess repetition.",
+      supportingNodeIds: [],
+    },
+    threeAuthenticAngles: [
+      makeAngle(
+        "Clarify the core question",
+        "reflective",
+        `The question behind “${idea}” is worth examining before making a claim.`,
+        "This direction avoids implying personal history that Creator DNA cannot currently support.",
+      ),
+      makeAngle(
+        "Define the practical tension",
+        "audience-focused",
+        `What makes “${idea}” difficult in practice?`,
+        "This direction can frame the audience problem while clearly separating questions from unsupported creator history.",
+      ),
+      makeAngle(
+        "Collect the missing evidence",
+        "lesson learned",
+        `Before turning “${idea}” into a lesson, identify the experience that actually supports it.`,
+        "This direction makes the evidence gap explicit instead of inventing a lesson or belief.",
+      ),
+    ],
+  };
+}
+
+function buildEvidenceLimitedPlatformPrep(
+  idea: string,
+  targetPlatform: TargetPlatform,
+): StoryIntelligenceResult["threeAuthenticAngles"][number]["platformPrep"] {
+  if (targetPlatform === "linkedin")
+    return {
+      platform: targetPlatform,
+      hook: idea,
+      formatRecommendation: "Short reflective point-of-view post",
+      structure: [
+        "Open with the unresolved tension",
+        "State what evidence or experience is still missing",
+        "Offer one cautious practical question",
+      ],
+      toneNotes: ["Professional but personal", "Explicitly exploratory"],
+      avoid: ["Invented personal history", "Generic motivational claims"],
+      suggestedTitle: null,
+    };
+  if (targetPlatform === "x")
+    return {
+      platform: targetPlatform,
+      hook: idea,
+      formatRecommendation: "Single exploratory post",
+      structure: [
+        "State the question sharply",
+        "Name the central tension",
+        "Close with the evidence you want to examine",
+      ],
+      toneNotes: ["Concise", "Curious rather than authoritative"],
+      avoid: ["Unsupported hot takes", "Generic thread bait"],
+      suggestedTitle: null,
+    };
+  if (targetPlatform === "youtube")
+    return {
+      platform: targetPlatform,
+      hook: idea,
+      formatRecommendation: "Question-led talking-head exploration",
+      structure: [
+        "Open with the unresolved tension",
+        "Explain why the question matters",
+        "Separate known evidence from open questions",
+        "Identify what would change the conclusion",
+        "Close with a cautious synthesis",
+      ],
+      toneNotes: ["Spoken and clear", "Curiosity-led"],
+      avoid: ["A slow generic intro", "Invented personal experience"],
+      suggestedTitle: `The real question behind ${idea}`,
+    };
+  if (targetPlatform === "threads")
+    return {
+      platform: targetPlatform,
+      hook: idea,
+      formatRecommendation: "Short conversational sequence",
+      structure: [
+        "Open naturally with the question",
+        "Name one practical tension",
+        "Close with a human invitation to reflect",
+      ],
+      toneNotes: ["Warm", "Informal and exploratory"],
+      avoid: ["Corporate framing", "Claims unsupported by experience"],
+      suggestedTitle: null,
+    };
+  return {
+    platform: targetPlatform,
+    hook: idea,
+    formatRecommendation: "Evidence-aware exploratory format",
+    structure: [
+      "Open with the question",
+      "Name the tension",
+      "Close without overstating certainty",
+    ],
+    toneNotes: ["Clear", "Exploratory"],
+    avoid: ["Invented history", "Unsupported certainty"],
+    suggestedTitle: null,
   };
 }
 

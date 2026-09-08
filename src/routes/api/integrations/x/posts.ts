@@ -12,7 +12,12 @@ export const Route = createFileRoute("/api/integrations/x/posts")({
       GET: async ({ request }) => {
         try {
           const user = await requireAuthenticatedUser(request);
-          return Response.json({ posts: await getRecentXPosts(user.id) });
+          const posts = await getRecentXPosts(user.id);
+          return Response.json({
+            status: posts.length ? "success" : "empty",
+            provider: "x",
+            posts,
+          });
         } catch (error) {
           if (error instanceof AuthenticationError) {
             return Response.json(
@@ -30,16 +35,28 @@ export const Route = createFileRoute("/api/integrations/x/posts")({
             return Response.json(
               error.code === "x_api_access_unavailable"
                 ? {
-                    available: false,
-                    reason: "x_api_access_unavailable",
-                    message: error.message,
+                    status: "api_access_unavailable",
+                    provider: "x",
+                    message:
+                      "Your X account is connected. Direct post import is waiting on the required X API access and will be available once that access is approved.",
                   }
-                : { error: error.message, code: error.code },
+                : error.code === "x_provider_unavailable"
+                  ? {
+                      status: "temporary_error",
+                      provider: "x",
+                      message:
+                        "X posts are temporarily unavailable. Please try again later.",
+                    }
+                  : { error: error.message, code: error.code },
               { status },
             );
           }
           return Response.json(
-            { error: "Unable to load recent X posts." },
+            {
+              status: "temporary_error",
+              provider: "x",
+              message: "X posts are temporarily unavailable. Try again later.",
+            },
             { status: 502 },
           );
         }

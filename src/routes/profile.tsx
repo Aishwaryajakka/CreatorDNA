@@ -361,13 +361,20 @@ function IntegrationCard({
       {connected ? (
         <div className="mt-5 space-y-3">
           {provider === "linkedin" ? (
-            <Link
-              to="/add-content"
-              search={{ platform: "linkedin" }}
-              className="block rounded-xl bg-primary px-4 py-2.5 text-center text-sm font-semibold text-primary-foreground"
-            >
-              Add LinkedIn content
-            </Link>
+            <>
+              <Link
+                to="/add-content"
+                search={{ platform: "linkedin" }}
+                className="block rounded-xl bg-primary px-4 py-2.5 text-center text-sm font-semibold text-primary-foreground"
+              >
+                Add LinkedIn content manually
+              </Link>
+              <p className="text-xs leading-relaxed text-muted-foreground">
+                Direct LinkedIn post import is waiting on additional LinkedIn
+                API permissions. Your account is connected, and direct import
+                will be available once those permissions are approved.
+              </p>
+            </>
           ) : (
             <div className="space-y-2">
               <Link
@@ -443,17 +450,18 @@ export function XImportPanel({ onClose }: { onClose: () => void }) {
           posts?: RecentXPost[];
           error?: string;
           code?: string;
-          available?: boolean;
-          reason?: string;
+          status?:
+            "success" | "empty" | "api_access_unavailable" | "temporary_error";
           message?: string;
         };
-        if (!response.ok) {
-          if (
-            (body.reason === "x_api_access_unavailable" ||
-              body.code === "x_api_access_unavailable") &&
-            active
-          )
+        if (body.status === "api_access_unavailable") {
+          if (active) {
             setCapabilityUnavailable(true);
+            setError("");
+          }
+          return;
+        }
+        if (!response.ok) {
           throw new Error(
             body.message ?? body.error ?? "Unable to load recent X posts.",
           );
@@ -512,11 +520,22 @@ export function XImportPanel({ onClose }: { onClose: () => void }) {
         results?: XImportResult[];
         error?: string;
         code?: string;
+        status?: "success" | "api_access_unavailable" | "temporary_error";
+        message?: string;
       };
+      if (body.status === "api_access_unavailable") {
+        setCapabilityUnavailable(true);
+        setError("");
+        return;
+      }
       if (!response.ok || !body.results) {
         if (body.code === "x_api_access_unavailable")
           setCapabilityUnavailable(true);
-        throw new Error(body.error ?? "Unable to import the selected X posts.");
+        throw new Error(
+          body.message ??
+            body.error ??
+            "Unable to import the selected X posts.",
+        );
       }
       setResults(body.results);
       const completedIds = new Set(
@@ -564,15 +583,27 @@ export function XImportPanel({ onClose }: { onClose: () => void }) {
         <div className="mt-6 flex items-center gap-2 text-sm text-muted-foreground">
           <Loader2 className="h-4 w-4 animate-spin" /> Loading recent posts…
         </div>
+      ) : capabilityUnavailable ? (
+        <div className="mt-6 rounded-xl border border-border bg-muted p-4">
+          <p className="text-sm font-semibold text-midnight">
+            Your X account is still connected.
+          </p>
+          <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
+            Your X account is connected. Direct post import is waiting on the
+            required X API access and will be available once that access is
+            approved.
+          </p>
+          <Link
+            to="/add-content"
+            search={{ platform: "x" }}
+            className="mt-4 inline-flex rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground"
+          >
+            Add X content manually
+          </Link>
+        </div>
       ) : error ? (
         <div className="mt-6 rounded-xl border border-border bg-muted p-4">
           <p className="text-sm text-midnight">{error}</p>
-          {capabilityUnavailable ? (
-            <p className="mt-2 text-xs text-muted-foreground">
-              Your connection remains active. Your current X API access level
-              does not include recent-post access.
-            </p>
-          ) : null}
           <Link
             to="/add-content"
             search={{ platform: "x" }}

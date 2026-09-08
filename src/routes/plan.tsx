@@ -50,6 +50,7 @@ const platformOptions: Array<{ value: TargetPlatform; label: string }> = [
   { value: "linkedin", label: "LinkedIn" },
   { value: "youtube", label: "YouTube" },
   { value: "x", label: "X" },
+  { value: "threads", label: "Threads" },
 ];
 
 const platformLabels = Object.fromEntries(
@@ -533,6 +534,37 @@ function DirectionCard({
       <p className="mt-3 flex-1 text-sm leading-relaxed text-muted-foreground">
         {angle.rationale}
       </p>
+      <div className="mt-5 rounded-xl border border-border bg-background/70 p-4">
+        <p className="eyebrow">Platform prep</p>
+        {angle.platformPrep.suggestedTitle ? (
+          <div className="mt-3">
+            <p className="text-xs font-semibold text-muted-foreground">
+              Suggested title
+            </p>
+            <p className="mt-1 text-sm font-semibold text-midnight">
+              {angle.platformPrep.suggestedTitle}
+            </p>
+          </div>
+        ) : null}
+        <div className="mt-3">
+          <p className="text-xs font-semibold text-muted-foreground">Hook</p>
+          <p className="mt-1 text-sm font-semibold leading-relaxed text-midnight">
+            {angle.platformPrep.hook}
+          </p>
+        </div>
+        <p className="mt-3 text-xs font-semibold text-primary">
+          {angle.platformPrep.formatRecommendation}
+        </p>
+        <ol className="mt-3 list-inside list-decimal space-y-1.5 text-xs leading-relaxed text-muted-foreground">
+          {angle.platformPrep.structure.map((beat) => (
+            <li key={beat}>{beat}</li>
+          ))}
+        </ol>
+        <div className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-1">
+          <PrepList label="Tone" items={angle.platformPrep.toneNotes} />
+          <PrepList label="Avoid" items={angle.platformPrep.avoid} />
+        </div>
+      </div>
       <div className="mt-6 rounded-xl bg-muted/70 p-4">
         <EvidenceNote>Grounded in your Creator DNA</EvidenceNote>
         <EvidenceList ids={angle.supportingNodeIds} nodes={nodes} />
@@ -568,6 +600,19 @@ function DirectionCard({
       ) : null}
       {reshaped ? <ReshapedDirection result={reshaped} /> : null}
     </Panel>
+  );
+}
+
+function PrepList({ label, items }: { label: string; items: string[] }) {
+  return (
+    <div>
+      <p className="text-xs font-semibold text-muted-foreground">{label}</p>
+      <ul className="mt-1.5 space-y-1 text-xs leading-relaxed text-midnight">
+        {items.map((item) => (
+          <li key={item}>• {item}</li>
+        ))}
+      </ul>
+    </div>
   );
 }
 

@@ -237,12 +237,15 @@ function LinkedInWorkspace({
             search={{ platform: "linkedin" }}
             className="motion-cta mt-6 inline-flex rounded-xl bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground"
           >
-            Add LinkedIn content
+            Add LinkedIn content manually
           </Link>
           <p className="mt-3 text-xs text-muted-foreground">
-            LinkedIn historical post access requires additional LinkedIn API
-            permissions. You can still add your published LinkedIn posts
-            directly.
+            Direct LinkedIn post import is waiting on additional LinkedIn API
+            permissions. Your account is connected, and direct import will be
+            available once those permissions are approved.
+          </p>
+          <p className="mt-2 text-xs text-muted-foreground">
+            For now, paste any LinkedIn post you want Creator DNA to remember.
           </p>
         </>
       ) : (
@@ -287,21 +290,28 @@ function XWorkspace({
         <>
           <ConnectionIdentity connection={connected} providerLabel="X" />
           {!postsOpen ? (
-            <div className="mt-6 flex flex-wrap gap-3">
-              <button
-                type="button"
-                onClick={onLoadPosts}
-                className="motion-cta inline-flex rounded-xl bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground"
-              >
-                Load recent posts
-              </button>
-              <Link
-                to="/add-content"
-                search={{ platform: "x" }}
-                className="inline-flex rounded-xl border border-border px-5 py-3 text-sm font-semibold text-midnight hover:bg-muted"
-              >
-                Add X content manually
-              </Link>
+            <div className="mt-6">
+              <div className="flex flex-wrap gap-3">
+                <button
+                  type="button"
+                  onClick={onLoadPosts}
+                  className="motion-cta inline-flex rounded-xl bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground"
+                >
+                  Load recent posts
+                </button>
+                <Link
+                  to="/add-content"
+                  search={{ platform: "x" }}
+                  className="inline-flex rounded-xl border border-border px-5 py-3 text-sm font-semibold text-midnight hover:bg-muted"
+                >
+                  Add X content manually
+                </Link>
+              </div>
+              <p className="mt-3 text-xs text-muted-foreground">
+                Recent-post import depends on your X API access level. Your
+                connected account remains available even when direct import is
+                not.
+              </p>
             </div>
           ) : (
             <XImportPanel onClose={onClosePosts} />

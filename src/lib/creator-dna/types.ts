@@ -149,6 +149,15 @@ export type StoryIntelligenceAngle = {
   hook: string;
   rationale: string;
   supportingNodeIds: string[];
+  platformPrep: {
+    platform: TargetPlatform;
+    hook: string;
+    formatRecommendation: string;
+    structure: string[];
+    toneNotes: string[];
+    avoid: string[];
+    suggestedTitle: string | null;
+  };
 };
 
 export type AlignmentState =

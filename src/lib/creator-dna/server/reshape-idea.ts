@@ -187,11 +187,31 @@ export async function reshapeContentDirection(
   };
 
   let completion;
-  try {
-    completion = await getGroqClient().chat.completions.create(params);
-  } catch (error) {
+  let lastError: unknown;
+  for (let attempt = 0; attempt < 2 && !completion; attempt += 1) {
+    try {
+      completion = await getGroqClient().chat.completions.create({
+        ...params,
+        messages: [
+          ...params.messages,
+          ...(attempt
+            ? [
+                {
+                  role: "user" as const,
+                  content:
+                    "Schema correction: return every required field, keep platform preparation concise, and include only supplied supporting node IDs.",
+                },
+              ]
+            : []),
+        ],
+      });
+    } catch (error) {
+      lastError = error;
+    }
+  }
+  if (!completion) {
     throw new CreatorDNAProviderError("Direction reshape failed.", {
-      cause: error,
+      cause: lastError,
     });
   }
   const content = completion.choices[0]?.message?.content;

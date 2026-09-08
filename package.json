@@ -10,7 +10,9 @@
     "build:dev": "vite build --mode development",
     "preview": "vite preview",
     "lint": "eslint .",
-    "format": "prettier --write ."
+    "format": "prettier --write .",
+    "seed:demo": "node --env-file=.env --env-file=.env.local scripts/seed-demo-profiles.mjs",
+    "verify:demo": "node --env-file=.env --env-file=.env.local scripts/verify-demo-apis.mjs"
   },
   "overrides": {
     "rolldown": "1.2.1"

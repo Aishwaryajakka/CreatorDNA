@@ -131,6 +131,15 @@ export const StoryIntelligenceAngleSchema = z.object({
   hook: nonEmptyString,
   rationale: nonEmptyString,
   supportingNodeIds: supportingNodeIdsSchema,
+  platformPrep: z.object({
+    platform: TargetPlatformSchema,
+    hook: nonEmptyString,
+    formatRecommendation: nonEmptyString,
+    structure: z.array(nonEmptyString).min(3).max(6),
+    toneNotes: z.array(nonEmptyString).min(2).max(5),
+    avoid: z.array(nonEmptyString).min(2).max(5),
+    suggestedTitle: nonEmptyString.nullable(),
+  }),
 });
 
 export const StoryIntelligenceSchema = z.object({
