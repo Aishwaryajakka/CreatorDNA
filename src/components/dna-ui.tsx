@@ -1,6 +1,13 @@
 import type { ReactNode } from "react";
-import { FileText } from "lucide-react";
-import { KIND_META, type LegacyDnaKind } from "@/lib/creator-dna";
+import { FileText, Linkedin, Youtube } from "lucide-react";
+import { DnaTypeIcon } from "@/components/DnaTypeIcon";
+import {
+  KIND_META,
+  NODE_TYPE_COLORS,
+  type DnaKind,
+  type LegacyDnaKind,
+} from "@/lib/creator-dna";
+import { getDnaIconForeground } from "@/lib/dna-iconography";
 
 export function PageHeader({
   eyebrow,
@@ -17,9 +24,7 @@ export function PageHeader({
     <header className="grid grid-cols-[minmax(0,1fr)_auto] items-end gap-6 sm:flex sm:flex-wrap sm:justify-between">
       <div className="min-w-0 max-w-2xl">
         {eyebrow ? <p className="eyebrow mb-3">{eyebrow}</p> : null}
-        <h1 className="text-3xl font-extrabold text-midnight sm:text-4xl">
-          {title}
-        </h1>
+        <h1 className="product-page-title text-midnight">{title}</h1>
         {subtitle ? (
           <p className="mt-3 text-[0.9375rem] leading-relaxed text-muted-foreground">
             {subtitle}
@@ -40,11 +45,16 @@ export function KindBadge({
 }) {
   const meta = KIND_META[kind];
   return (
-    <span className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-3 py-1 text-[0.6875rem] font-semibold uppercase tracking-[0.12em] text-midnight">
+    <span className="mono-label inline-flex items-center gap-2 rounded-lg border border-border bg-card px-2.5 py-1 text-midnight">
       <span
-        className="h-2 w-2 rounded-full"
-        style={{ backgroundColor: meta.color }}
-      />
+        className="grid h-5 w-5 place-items-center rounded-full"
+        style={{
+          color: getDnaIconForeground(kind),
+          backgroundColor: NODE_TYPE_COLORS[kind as DnaKind] ?? meta.color,
+        }}
+      >
+        <DnaTypeIcon kind={kind} size={11} />
+      </span>
       {label ?? meta.label}
     </span>
   );
@@ -59,6 +69,35 @@ export function SourceChip({ children }: { children: ReactNode }) {
   );
 }
 
+export function SourceProvenance({
+  title,
+  platform,
+  date,
+}: {
+  title?: string | null | undefined;
+  platform?: string | null | undefined;
+  date?: string | null | undefined;
+}) {
+  const source =
+    title === "Creator Foundation"
+      ? "Creator Foundation"
+      : platform || "Manual";
+  const Icon =
+    source.toLowerCase() === "youtube"
+      ? Youtube
+      : source.toLowerCase() === "linkedin"
+        ? Linkedin
+        : FileText;
+  return (
+    <div className="flex items-center gap-2 text-xs text-muted-foreground">
+      <Icon className="h-3.5 w-3.5 shrink-0" />
+      <span className="font-semibold text-midnight">{title || source}</span>
+      <span>{source}</span>
+      {date ? <span>· {new Date(date).toLocaleDateString()}</span> : null}
+    </div>
+  );
+}
+
 export function Panel({
   children,
   className = "",
@@ -70,7 +109,7 @@ export function Panel({
 }) {
   return (
     <section
-      className={`relative overflow-hidden rounded-2xl border border-border bg-card shadow-card ${className}`}
+      className={`telemetry-edge telemetry-card relative overflow-hidden rounded-xl border border-border bg-card ${className}`}
     >
       {accent ? (
         <span
@@ -80,6 +119,22 @@ export function Panel({
       ) : null}
       {children}
     </section>
+  );
+}
+
+export function TelemetryDeck({
+  children,
+  className = "",
+}: {
+  children: ReactNode;
+  className?: string;
+}) {
+  return (
+    <div
+      className={`telemetry-edge telemetry-card relative overflow-hidden rounded-2xl border border-obsidian-border bg-obsidian-card ${className}`}
+    >
+      {children}
+    </div>
   );
 }
 

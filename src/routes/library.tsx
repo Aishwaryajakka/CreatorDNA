@@ -3,6 +3,13 @@ import { createFileRoute } from "@tanstack/react-router";
 import { Search } from "lucide-react";
 import { PageHeader, Panel } from "@/components/dna-ui";
 import { authenticatedFetch } from "@/lib/supabase/client";
+import {
+  getNodeTypeColor,
+  NODE_TYPE_LABELS,
+  type DnaKind,
+} from "@/lib/creator-dna";
+import { DnaTypeIcon } from "@/components/DnaTypeIcon";
+import { getDnaIconForeground } from "@/lib/dna-iconography";
 
 export const Route = createFileRoute("/library")({
   head: () => ({
@@ -45,25 +52,42 @@ function LibraryPage() {
   const [year, setYear] = useState("All");
   const [items, setItems] = useState<LibraryRow[]>([]);
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     void authenticatedFetch("/api/content-library")
       .then(async (response) => {
-        const data = (await response.json()) as { items?: LibraryRow[]; error?: string };
-        if (!response.ok) throw new Error(data.error ?? "Unable to load your content library.");
+        const data = (await response.json()) as {
+          items?: LibraryRow[];
+          error?: string;
+        };
+        if (!response.ok)
+          throw new Error(data.error ?? "Unable to load your content library.");
         setItems(data.items ?? []);
       })
-      .catch((requestError: unknown) => setError(requestError instanceof Error ? requestError.message : "Unable to load your content library."));
+      .catch((requestError: unknown) =>
+        setError(
+          requestError instanceof Error
+            ? requestError.message
+            : "Unable to load your content library.",
+        ),
+      )
+      .finally(() => setLoading(false));
   }, []);
 
   const years = useMemo(
-    () =>
-      Array.from(new Set(items.map((i) => i.date.slice(0, 4)))).sort(),
+    () => Array.from(new Set(items.map((i) => i.date.slice(0, 4)))).sort(),
     [items],
   );
 
-  const platforms = useMemo(() => Array.from(new Set(items.map((item) => item.platform))).sort(), [items]);
-  const themes = useMemo(() => Array.from(new Set(items.flatMap((item) => Object.keys(item.counts)))).sort(), [items]);
+  const platforms = ["YouTube", "LinkedIn", "X", "Manual"];
+  const themes = useMemo(
+    () =>
+      Array.from(
+        new Set(items.flatMap((item) => Object.keys(item.counts))),
+      ).sort(),
+    [items],
+  );
   const rows = items.filter(
     (i) =>
       (platform === "All" || i.platform === platform) &&
@@ -75,7 +99,6 @@ function LibraryPage() {
   return (
     <div className="space-y-8">
       <PageHeader
-        eyebrow="Content library"
         title="Everything you've ever said"
         subtitle="Each piece stays attached to the stories, beliefs and themes it produced, so every insight keeps its evidence."
       />
@@ -118,69 +141,90 @@ function LibraryPage() {
         <table className="w-full min-w-[54rem] text-left text-sm">
           <thead>
             <tr className="border-b border-border">
-              {[
-                "Title",
-                "Platform",
-                "Date",
-                "Stories",
-                "Beliefs",
-                "Themes",
-                "Status",
-              ].map((h) => (
-                <th key={h} className="eyebrow px-5 py-4 font-semibold">
-                  {h}
-                </th>
-              ))}
+              {["Title", "Source", "Date", "DNA extracted", "Status"].map(
+                (h) => (
+                  <th key={h} className="eyebrow px-5 py-4 font-semibold">
+                    {h}
+                  </th>
+                ),
+              )}
             </tr>
           </thead>
           <tbody>
-            {rows.map((i) => (
-              <tr
-                key={i.id}
-                className="border-b border-border last:border-0 hover:bg-muted/50"
-              >
-                <td className="px-5 py-4 font-semibold text-midnight">
-                  {i.title}
-                </td>
-                <td className="px-5 py-4 text-muted-foreground">
-                  {i.platform}
-                </td>
-                <td className="px-5 py-4 text-muted-foreground">{i.date}</td>
-                <td className="px-5 py-4">
-                  <Count n={i.counts["story"] ?? 0} color="var(--story)" />
-                </td>
-                <td className="px-5 py-4">
-                  <Count n={i.counts["belief"] ?? 0} color="var(--belief)" />
-                </td>
-                <td className="px-5 py-4">
-                  <div className="flex flex-wrap gap-1.5">
-                    {Object.keys(i.counts).length ? (
-                      Object.keys(i.counts).map((t) => (
-                        <span
-                          key={t}
-                          className="rounded-md bg-muted px-2 py-1 text-[0.6875rem] font-medium text-muted-foreground"
-                        >
-                          {t} · {i.counts[t]}
-                        </span>
-                      ))
-                    ) : (
-                      <span className="text-xs text-muted-foreground">—</span>
-                    )}
-                  </div>
-                </td>
-                <td className="px-5 py-4">
-                  <span
-                    className={`rounded-full px-2.5 py-1 text-[0.6875rem] font-semibold ${statusStyle["Analyzed"]}`}
+            {loading
+              ? Array.from({ length: 3 }).map((_, row) => (
+                  <tr key={row} className="border-b border-border">
+                    {Array.from({ length: 5 }).map((__, cell) => (
+                      <td key={cell} className="px-5 py-4">
+                        <span className="telemetry-skeleton block h-5 rounded-md" />
+                      </td>
+                    ))}
+                  </tr>
+                ))
+              : rows.map((i) => (
+                  <tr
+                    key={i.id}
+                    className="border-b border-border transition-[background-color,box-shadow] duration-[160ms] last:border-0 hover:bg-aqua-accent/5 hover:shadow-[inset_3px_0_0_var(--aqua-accent)]"
                   >
-                    Analyzed
-                  </span>
-                </td>
-              </tr>
-            ))}
-            {rows.length === 0 ? (
+                    <td className="px-5 py-4 font-semibold text-midnight">
+                      {i.title}
+                    </td>
+                    <td className="px-5 py-4 text-muted-foreground">
+                      {i.platform === "Manual" &&
+                      i.title === "Creator Foundation"
+                        ? "Creator Foundation"
+                        : i.platform}
+                    </td>
+                    <td className="px-5 py-4 text-muted-foreground">
+                      {formatDate(i.date)}
+                    </td>
+                    <td className="px-5 py-4">
+                      <div className="flex flex-wrap gap-1.5">
+                        {Object.keys(i.counts).length ? (
+                          Object.keys(i.counts).map((t) => (
+                            <span
+                              key={t}
+                              className="group/badge inline-flex items-center gap-1.5 rounded-md border px-2 py-1 text-[0.6875rem] font-medium text-midnight transition-[filter] hover:brightness-110 hover:drop-shadow-[0_0_5px_currentColor]"
+                              style={{
+                                borderColor: `${getNodeTypeColor(t)}66`,
+                                backgroundColor: `color-mix(in srgb, ${getNodeTypeColor(t)} 12%, transparent)`,
+                              }}
+                            >
+                              <span
+                                className="grid h-5 w-5 place-items-center rounded-full"
+                                style={{
+                                  color: getDnaIconForeground(t as DnaKind),
+                                  backgroundColor: getNodeTypeColor(t),
+                                }}
+                              >
+                                <DnaTypeIcon kind={t as DnaKind} size={11} />
+                              </span>
+                              {NODE_TYPE_LABELS[
+                                t as keyof typeof NODE_TYPE_LABELS
+                              ] ?? t}{" "}
+                              · {i.counts[t]}
+                            </span>
+                          ))
+                        ) : (
+                          <span className="text-xs text-muted-foreground">
+                            —
+                          </span>
+                        )}
+                      </div>
+                    </td>
+                    <td className="px-5 py-4">
+                      <span
+                        className={`rounded-full px-2.5 py-1 text-[0.6875rem] font-semibold ${statusStyle["Analyzed"]}`}
+                      >
+                        Analyzed
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+            {!loading && rows.length === 0 ? (
               <tr>
                 <td
-                  colSpan={7}
+                  colSpan={5}
                   className="px-5 py-12 text-center text-sm text-muted-foreground"
                 >
                   Nothing matches those filters yet.
@@ -194,16 +238,15 @@ function LibraryPage() {
   );
 }
 
-function Count({ n, color }: { n: number; color: string }) {
-  return (
-    <span className="inline-flex items-center gap-2 font-semibold text-midnight">
-      <span
-        className="h-2 w-2 rounded-full"
-        style={{ backgroundColor: color }}
-      />
-      {n}
-    </span>
-  );
+function formatDate(value: string) {
+  const date = new Date(value);
+  return Number.isNaN(date.getTime())
+    ? value
+    : date.toLocaleDateString(undefined, {
+        month: "short",
+        day: "numeric",
+        year: "numeric",
+      });
 }
 
 function Filter({
@@ -219,7 +262,7 @@ function Filter({
 }) {
   return (
     <label className="flex items-center gap-2 rounded-xl border border-input bg-background px-3 py-2 text-xs">
-      <span className="font-semibold uppercase tracking-[0.12em] text-muted-foreground">
+      <span className="font-mono font-semibold uppercase tracking-[0.12em] text-muted-foreground">
         {label}
       </span>
       <select

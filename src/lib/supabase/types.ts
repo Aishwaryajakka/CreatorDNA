@@ -20,6 +20,7 @@ export type Database = {
           created_at: string;
           updated_at: string;
           profile_changed_at: string | null;
+          onboarding_completed: boolean;
         };
         Insert: {
           id: string;
@@ -28,6 +29,7 @@ export type Database = {
           created_at?: string;
           updated_at?: string;
           profile_changed_at?: string | null;
+          onboarding_completed?: boolean;
         };
         Update: Partial<Database["public"]["Tables"]["profiles"]["Insert"]>;
       };

@@ -1,5 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { requireAuthenticatedUser, AuthenticationError } from "@/lib/supabase/auth";
+import {
+  requireAuthenticatedUser,
+  AuthenticationError,
+} from "@/lib/supabase/auth";
 import { supabaseServer } from "@/lib/supabase/server";
 
 export const Route = createFileRoute("/api/youtube/imported")({
@@ -8,7 +11,10 @@ export const Route = createFileRoute("/api/youtube/imported")({
       GET: async ({ request }) => {
         try {
           const user = await requireAuthenticatedUser(request);
-          const ids = new URL(request.url).searchParams.getAll("id").filter(Boolean).slice(0, 50);
+          const ids = new URL(request.url).searchParams
+            .getAll("id")
+            .filter(Boolean)
+            .slice(0, 50);
           if (!ids.length) return Response.json({ importedIds: [] });
           const { data, error } = await supabaseServer
             .from("content_items")
@@ -17,10 +23,21 @@ export const Route = createFileRoute("/api/youtube/imported")({
             .eq("external_source", "youtube")
             .in("external_id", ids);
           if (error) throw error;
-          return Response.json({ importedIds: data.map((row) => row.external_id).filter((id): id is string => Boolean(id)) });
+          return Response.json({
+            importedIds: data
+              .map((row) => row.external_id)
+              .filter((id): id is string => Boolean(id)),
+          });
         } catch (error) {
-          if (error instanceof AuthenticationError) return Response.json({ error: "Authentication required." }, { status: 401 });
-          return Response.json({ error: "Unable to check imported videos." }, { status: 502 });
+          if (error instanceof AuthenticationError)
+            return Response.json(
+              { error: "Authentication required." },
+              { status: 401 },
+            );
+          return Response.json(
+            { error: "Unable to check imported videos." },
+            { status: 502 },
+          );
         }
       },
     },

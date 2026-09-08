@@ -17,7 +17,11 @@ export const Route = createFileRoute("/api/dev/story-intelligence-test")({
         try {
           const user = await requireAuthenticatedUser(request);
           const retrievedDNA = await searchCreatorDNA(idea, user.id);
-          const analysis = await analyzeContentIdea(idea, retrievedDNA, "linkedin");
+          const analysis = await analyzeContentIdea(
+            idea,
+            retrievedDNA,
+            "linkedin",
+          );
           return Response.json({
             idea,
             retrievedDNA,

@@ -25,7 +25,9 @@ export const Route = createFileRoute("/api/plan-content")({
         const parsed = PlanContentInputSchema.safeParse(body);
         if (!parsed.success) {
           return Response.json(
-            { error: "Please add a content idea and choose a target platform." },
+            {
+              error: "Please add a content idea and choose a target platform.",
+            },
             { status: 400 },
           );
         }

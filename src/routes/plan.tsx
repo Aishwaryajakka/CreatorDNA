@@ -1,13 +1,14 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { z } from "zod";
-import { AlertTriangle, ArrowRight, Quote } from "lucide-react";
+import { AlertTriangle, ArrowRight, Check, Quote } from "lucide-react";
 
 import {
   EvidenceNote,
   KindBadge,
   PageHeader,
   Panel,
+  SourceProvenance,
   SourceChip,
 } from "@/components/dna-ui";
 import type {
@@ -40,12 +41,8 @@ export const Route = createFileRoute("/plan")({
 
 const platformOptions: Array<{ value: TargetPlatform; label: string }> = [
   { value: "linkedin", label: "LinkedIn" },
-  { value: "instagram", label: "Instagram" },
-  { value: "tiktok", label: "TikTok" },
   { value: "youtube", label: "YouTube" },
-  { value: "youtube_shorts", label: "YouTube Shorts" },
   { value: "x", label: "X" },
-  { value: "threads", label: "Threads" },
 ];
 
 const platformLabels = Object.fromEntries(
@@ -55,9 +52,7 @@ const platformLabels = Object.fromEntries(
 function PlanPage() {
   const { topic: initial } = Route.useSearch();
   const [topic, setTopic] = useState(initial ?? "");
-  const [targetPlatform, setTargetPlatform] = useState<TargetPlatform | "">(
-    "",
-  );
+  const [targetPlatform, setTargetPlatform] = useState<TargetPlatform | "">("");
   const [result, setResult] = useState<PlanningResponse | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -117,7 +112,7 @@ function PlanPage() {
         subtitle="Creator DNA looks through everything you've made, then offers a few directions grounded in your own material. You choose."
       />
 
-      <Panel accent="var(--story)" className="p-6 sm:p-8">
+      <Panel accent="var(--evolution)" className="p-6 sm:p-8">
         <form className="flex flex-col gap-3" onSubmit={submitIdea}>
           <input
             value={topic}
@@ -148,7 +143,7 @@ function PlanPage() {
               type="submit"
               disabled={loading}
               aria-busy={loading}
-              className="inline-flex shrink-0 items-center justify-center gap-2 rounded-xl bg-primary px-6 py-4 text-sm font-semibold text-primary-foreground transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
+              className="motion-cta glow-lime inline-flex shrink-0 items-center justify-center gap-2 rounded-xl bg-chartreuse px-6 py-4 text-sm font-bold text-[#050811] hover:bg-white disabled:cursor-not-allowed disabled:opacity-60"
             >
               {loading ? "Looking through your DNA..." : "Explore my story"}
               {!loading ? <ArrowRight className="h-4 w-4" /> : null}
@@ -162,7 +157,9 @@ function PlanPage() {
 
       {result ? (
         <PlanningResults result={result} />
-      ) : loading ? null : (
+      ) : loading ? (
+        <IntelligenceProgress />
+      ) : (
         <InitialPlanState hasError={Boolean(error)} />
       )}
     </div>
@@ -187,7 +184,7 @@ function PlanningResults({ result }: { result: PlanningResponse }) {
         </p>
         <a
           href="/add-content"
-          className="mt-5 inline-flex rounded-xl bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground"
+          className="motion-cta glow-lime mt-5 inline-flex rounded-xl bg-chartreuse px-5 py-2.5 text-sm font-bold text-[#050811] hover:bg-white"
         >
           Add Content
         </a>
@@ -196,7 +193,7 @@ function PlanningResults({ result }: { result: PlanningResponse }) {
   }
 
   return (
-    <div className="space-y-8">
+    <div className="result-reveal space-y-8">
       <Panel accent="var(--story)" className="p-5 sm:p-6">
         <p className="eyebrow">Story Intelligence</p>
         <h2 className="mt-2 text-xl font-bold text-midnight">
@@ -329,7 +326,9 @@ function PlanningResults({ result }: { result: PlanningResponse }) {
               accent="var(--story)"
               className="flex flex-col p-6 transition-shadow hover:shadow-lift"
             >
-              <span className="eyebrow">Direction {String.fromCharCode(65 + index)}</span>
+              <span className="eyebrow">
+                Direction {String.fromCharCode(65 + index)}
+              </span>
               <span className="eyebrow">{angle.framingType}</span>
               <h3 className="mt-3 text-lg font-bold leading-snug text-midnight">
                 {angle.title}
@@ -355,6 +354,63 @@ function PlanningResults({ result }: { result: PlanningResponse }) {
         </div>
       </section>
     </div>
+  );
+}
+
+function IntelligenceProgress() {
+  const [active, setActive] = useState(0);
+  const stages = [
+    "Connecting your history",
+    "Reviewing relevant Creator DNA",
+    "Organizing source-backed evidence",
+    "Comparing perspective signals",
+    "Building three directions",
+  ];
+
+  useEffect(() => {
+    const timer = window.setInterval(
+      () => setActive((value) => Math.min(value + 1, stages.length - 1)),
+      650,
+    );
+    return () => window.clearInterval(timer);
+  }, [stages.length]);
+
+  return (
+    <Panel className="telemetry-grid p-6 sm:p-8" accent="var(--aqua-accent)">
+      <p className="eyebrow text-aqua-accent">Building Story Intelligence</p>
+      <h2 className="mt-2 text-xl font-bold text-midnight">
+        Connecting your idea to your creative memory.
+      </h2>
+      <div className="mt-6 space-y-1">
+        {stages.map((stage, index) => {
+          const complete = index < active;
+          const current = index === active;
+          return (
+            <div
+              key={stage}
+              className={`flex items-center gap-3 rounded-xl border px-4 py-3 transition-all duration-200 ${current ? "scan-line border-aqua-accent/50 bg-aqua-accent/10 text-midnight" : "border-transparent text-muted-foreground"}`}
+            >
+              <span
+                className={`relative z-10 grid h-6 w-6 place-items-center rounded-full border ${complete ? "border-creator-green bg-creator-green text-[#050811]" : current ? "border-aqua-accent text-aqua-accent" : "border-border"}`}
+              >
+                {complete ? (
+                  <Check className="h-3.5 w-3.5" />
+                ) : (
+                  <span
+                    className={`h-1.5 w-1.5 rounded-full ${current ? "data-pulse bg-aqua-accent" : "bg-border"}`}
+                  />
+                )}
+              </span>
+              <span className="relative z-10 text-sm font-medium">{stage}</span>
+            </div>
+          );
+        })}
+      </div>
+      <p className="mt-5 font-mono text-[0.6875rem] text-muted-foreground">
+        This sequence reflects the active planning request and does not delay
+        the result.
+      </p>
+    </Panel>
   );
 }
 
@@ -414,9 +470,8 @@ function EvidenceList({
 function EvidenceSource({ node }: { node: CreatorDNAMatch }) {
   return (
     <div className="mt-3 rounded-xl border border-border bg-muted/50 p-3">
+      <SourceProvenance title={node.sourceTitle} date={node.sourceDate} />
       <div className="flex flex-wrap gap-2">
-        <SourceChip>{node.sourceTitle ?? node.label}</SourceChip>
-        {node.sourceDate ? <SourceChip>{node.sourceDate}</SourceChip> : null}
         <SourceChip>{node.type}</SourceChip>
       </div>
       {node.evidenceQuote ? (

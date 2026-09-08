@@ -11,15 +11,18 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AddContentRouteImport } from './routes/add-content'
+import { Route as FoundationRouteImport } from './routes/foundation'
 import { Route as ImportYoutubeRouteImport } from './routes/import-youtube'
 import { Route as LibraryRouteImport } from './routes/library'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as OnboardingRouteImport } from './routes/onboarding'
 import { Route as PlanRouteImport } from './routes/plan'
 import { Route as ProfileRouteImport } from './routes/profile'
+import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as StoryMapRouteImport } from './routes/story-map'
 import { Route as ApiContentRouteImport } from './routes/api/content'
 import { Route as ApiContentLibraryRouteImport } from './routes/api/content-library'
+import { Route as ApiFoundationRouteImport } from './routes/api/foundation'
 import { Route as ApiOnboardingRouteImport } from './routes/api/onboarding'
 import { Route as ApiPlanContentRouteImport } from './routes/api/plan-content'
 import { Route as ApiProfileRouteImport } from './routes/api/profile'
@@ -45,6 +48,11 @@ const IndexRoute = IndexRouteImport.update({
 const AddContentRoute = AddContentRouteImport.update({
   id: '/add-content',
   path: '/add-content',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const FoundationRoute = FoundationRouteImport.update({
+  id: '/foundation',
+  path: '/foundation',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ImportYoutubeRoute = ImportYoutubeRouteImport.update({
@@ -77,6 +85,11 @@ const ProfileRoute = ProfileRouteImport.update({
   path: '/profile',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ResetPasswordRoute = ResetPasswordRouteImport.update({
+  id: '/reset-password',
+  path: '/reset-password',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const StoryMapRoute = StoryMapRouteImport.update({
   id: '/story-map',
   path: '/story-map',
@@ -90,6 +103,11 @@ const ApiContentRoute = ApiContentRouteImport.update({
 const ApiContentLibraryRoute = ApiContentLibraryRouteImport.update({
   id: '/api/content-library',
   path: '/api/content-library',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiFoundationRoute = ApiFoundationRouteImport.update({
+  id: '/api/foundation',
+  path: '/api/foundation',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiOnboardingRoute = ApiOnboardingRouteImport.update({
@@ -178,15 +196,18 @@ const ApiYoutubeVideosRoute = ApiYoutubeVideosRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/add-content': typeof AddContentRoute
+  '/foundation': typeof FoundationRoute
   '/import-youtube': typeof ImportYoutubeRoute
   '/library': typeof LibraryRoute
   '/login': typeof LoginRoute
   '/onboarding': typeof OnboardingRoute
   '/plan': typeof PlanRoute
   '/profile': typeof ProfileRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/story-map': typeof StoryMapRoute
   '/api/content': typeof ApiContentRoute
   '/api/content-library': typeof ApiContentLibraryRoute
+  '/api/foundation': typeof ApiFoundationRoute
   '/api/onboarding': typeof ApiOnboardingRoute
   '/api/plan-content': typeof ApiPlanContentRoute
   '/api/profile': typeof ApiProfileRoute
@@ -207,15 +228,18 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/add-content': typeof AddContentRoute
+  '/foundation': typeof FoundationRoute
   '/import-youtube': typeof ImportYoutubeRoute
   '/library': typeof LibraryRoute
   '/login': typeof LoginRoute
   '/onboarding': typeof OnboardingRoute
   '/plan': typeof PlanRoute
   '/profile': typeof ProfileRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/story-map': typeof StoryMapRoute
   '/api/content': typeof ApiContentRoute
   '/api/content-library': typeof ApiContentLibraryRoute
+  '/api/foundation': typeof ApiFoundationRoute
   '/api/onboarding': typeof ApiOnboardingRoute
   '/api/plan-content': typeof ApiPlanContentRoute
   '/api/profile': typeof ApiProfileRoute
@@ -237,15 +261,18 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/add-content': typeof AddContentRoute
+  '/foundation': typeof FoundationRoute
   '/import-youtube': typeof ImportYoutubeRoute
   '/library': typeof LibraryRoute
   '/login': typeof LoginRoute
   '/onboarding': typeof OnboardingRoute
   '/plan': typeof PlanRoute
   '/profile': typeof ProfileRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/story-map': typeof StoryMapRoute
   '/api/content': typeof ApiContentRoute
   '/api/content-library': typeof ApiContentLibraryRoute
+  '/api/foundation': typeof ApiFoundationRoute
   '/api/onboarding': typeof ApiOnboardingRoute
   '/api/plan-content': typeof ApiPlanContentRoute
   '/api/profile': typeof ApiProfileRoute
@@ -268,15 +295,18 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/add-content'
+    | '/foundation'
     | '/import-youtube'
     | '/library'
     | '/login'
     | '/onboarding'
     | '/plan'
     | '/profile'
+    | '/reset-password'
     | '/story-map'
     | '/api/content'
     | '/api/content-library'
+    | '/api/foundation'
     | '/api/onboarding'
     | '/api/plan-content'
     | '/api/profile'
@@ -297,15 +327,18 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/add-content'
+    | '/foundation'
     | '/import-youtube'
     | '/library'
     | '/login'
     | '/onboarding'
     | '/plan'
     | '/profile'
+    | '/reset-password'
     | '/story-map'
     | '/api/content'
     | '/api/content-library'
+    | '/api/foundation'
     | '/api/onboarding'
     | '/api/plan-content'
     | '/api/profile'
@@ -326,15 +359,18 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/add-content'
+    | '/foundation'
     | '/import-youtube'
     | '/library'
     | '/login'
     | '/onboarding'
     | '/plan'
     | '/profile'
+    | '/reset-password'
     | '/story-map'
     | '/api/content'
     | '/api/content-library'
+    | '/api/foundation'
     | '/api/onboarding'
     | '/api/plan-content'
     | '/api/profile'
@@ -356,15 +392,18 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AddContentRoute: typeof AddContentRoute
+  FoundationRoute: typeof FoundationRoute
   ImportYoutubeRoute: typeof ImportYoutubeRoute
   LibraryRoute: typeof LibraryRoute
   LoginRoute: typeof LoginRoute
   OnboardingRoute: typeof OnboardingRoute
   PlanRoute: typeof PlanRoute
   ProfileRoute: typeof ProfileRoute
+  ResetPasswordRoute: typeof ResetPasswordRoute
   StoryMapRoute: typeof StoryMapRoute
   ApiContentRoute: typeof ApiContentRoute
   ApiContentLibraryRoute: typeof ApiContentLibraryRoute
+  ApiFoundationRoute: typeof ApiFoundationRoute
   ApiOnboardingRoute: typeof ApiOnboardingRoute
   ApiPlanContentRoute: typeof ApiPlanContentRoute
   ApiProfileRoute: typeof ApiProfileRoute
@@ -397,6 +436,13 @@ declare module '@tanstack/react-router' {
       path: '/add-content'
       fullPath: '/add-content'
       preLoaderRoute: typeof AddContentRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/foundation': {
+      id: '/foundation'
+      path: '/foundation'
+      fullPath: '/foundation'
+      preLoaderRoute: typeof FoundationRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/import-youtube': {
@@ -441,6 +487,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ProfileRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/reset-password': {
+      id: '/reset-password'
+      path: '/reset-password'
+      fullPath: '/reset-password'
+      preLoaderRoute: typeof ResetPasswordRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/story-map': {
       id: '/story-map'
       path: '/story-map'
@@ -460,6 +513,13 @@ declare module '@tanstack/react-router' {
       path: '/api/content-library'
       fullPath: '/api/content-library'
       preLoaderRoute: typeof ApiContentLibraryRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/foundation': {
+      id: '/api/foundation'
+      path: '/api/foundation'
+      fullPath: '/api/foundation'
+      preLoaderRoute: typeof ApiFoundationRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/onboarding': {
@@ -580,15 +640,18 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AddContentRoute: AddContentRoute,
+  FoundationRoute: FoundationRoute,
   ImportYoutubeRoute: ImportYoutubeRoute,
   LibraryRoute: LibraryRoute,
   LoginRoute: LoginRoute,
   OnboardingRoute: OnboardingRoute,
   PlanRoute: PlanRoute,
   ProfileRoute: ProfileRoute,
+  ResetPasswordRoute: ResetPasswordRoute,
   StoryMapRoute: StoryMapRoute,
   ApiContentRoute: ApiContentRoute,
   ApiContentLibraryRoute: ApiContentLibraryRoute,
+  ApiFoundationRoute: ApiFoundationRoute,
   ApiOnboardingRoute: ApiOnboardingRoute,
   ApiPlanContentRoute: ApiPlanContentRoute,
   ApiProfileRoute: ApiProfileRoute,

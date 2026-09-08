@@ -1,6 +1,6 @@
 import type { ContentItem, CreatorDNAMatch, CreatorDNANode } from "./types";
 import type { NewContentSubmissionInput } from "./validation";
-import type { CreatorFoundation } from "./validation";
+import { CreatorFoundationSchema, type CreatorFoundation } from "./validation";
 import { supabaseServer } from "@/lib/supabase/server";
 import type {
   ContentItemRow,
@@ -82,7 +82,8 @@ export async function getContentItemByExternalId(
     .eq("external_source", source)
     .eq("external_id", externalId)
     .maybeSingle();
-  if (error) throw new Error(`Failed to check imported content: ${error.message}`);
+  if (error)
+    throw new Error(`Failed to check imported content: ${error.message}`);
   return data ? toContentItem(data) : null;
 }
 
@@ -95,18 +96,17 @@ export async function addContentItemPlaylistAssociations(
   if (!(await getContentItemById(contentId, userId))) {
     throw new Error("Content item not found.");
   }
-  const { error } = await supabaseServer
-    .from("content_item_playlists")
-    .upsert(
-      associations.map((association) => ({
-        content_id: contentId,
-        playlist_id: association.playlistId,
-        playlist_title: association.playlistTitle,
-        playlist_position: association.playlistPosition ?? null,
-      })),
-      { onConflict: "content_id,playlist_id" },
-    );
-  if (error) throw new Error(`Failed to save playlist context: ${error.message}`);
+  const { error } = await supabaseServer.from("content_item_playlists").upsert(
+    associations.map((association) => ({
+      content_id: contentId,
+      playlist_id: association.playlistId,
+      playlist_title: association.playlistTitle,
+      playlist_position: association.playlistPosition ?? null,
+    })),
+    { onConflict: "content_id,playlist_id" },
+  );
+  if (error)
+    throw new Error(`Failed to save playlist context: ${error.message}`);
 }
 
 export async function insertDnaNodes(
@@ -347,6 +347,28 @@ export async function replaceFoundationNodes(
     })),
     userId,
   );
+}
+
+export async function getFoundationForUser(
+  userId: string,
+): Promise<CreatorFoundation | null> {
+  const { data, error } = await supabaseServer
+    .from("content_items")
+    .select("raw_text")
+    .eq("user_id", userId)
+    .eq("title", "Creator Foundation")
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  if (error) throw new Error(error.message);
+  if (!data) return null;
+  try {
+    const parsed: unknown = JSON.parse(data.raw_text);
+    const result = CreatorFoundationSchema.safeParse(parsed);
+    return result.success ? result.data : null;
+  } catch {
+    return null;
+  }
 }
 
 export async function checkDatabaseConnection(): Promise<

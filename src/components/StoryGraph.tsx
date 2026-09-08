@@ -1,15 +1,25 @@
-import { useId } from "react";
+import {
+  useId,
+  useLayoutEffect,
+  useRef,
+  useState,
+  type CSSProperties,
+} from "react";
+import { createPortal } from "react-dom";
+import { DnaTypeIcon } from "@/components/DnaTypeIcon";
 import {
   KIND_META,
+  NODE_TYPE_COLORS,
   type LegacyDnaKind,
   type DnaKind,
   type GraphEdge,
   type GraphNode,
 } from "@/lib/creator-dna";
+import { getDnaIconForeground } from "@/lib/dna-iconography";
 
 function colorFor(kind: GraphNode["kind"]) {
   if (kind === "me") return "var(--midnight)";
-  return KIND_META[kind as DnaKind].color;
+  return NODE_TYPE_COLORS[kind as DnaKind] ?? "#94A3B8";
 }
 
 function curve(a: GraphNode, b: GraphNode) {
@@ -24,6 +34,15 @@ function curve(a: GraphNode, b: GraphNode) {
   return `M ${a.x} ${a.y} Q ${cx} ${cy} ${b.x} ${b.y}`;
 }
 
+function stableMotionDelay(value: string, range = 240) {
+  let hash = 2166136261;
+  for (let index = 0; index < value.length; index++) {
+    hash ^= value.charCodeAt(index);
+    hash = Math.imul(hash, 16777619);
+  }
+  return (hash >>> 0) % range;
+}
+
 type Props = {
   nodes: GraphNode[];
   edges: GraphEdge[];
@@ -31,6 +50,7 @@ type Props = {
   onSelect?: (node: GraphNode) => void;
   className?: string;
   compact?: boolean;
+  zoom?: number;
 };
 
 export function StoryGraph({
@@ -39,111 +59,225 @@ export function StoryGraph({
   selectedId,
   onSelect,
   className = "",
-  compact = false,
+  zoom = 1,
 }: Props) {
   const gid = useId().replace(/:/g, "");
+  const [hovered, setHovered] = useState<{
+    node: GraphNode;
+    x: number;
+    y: number;
+  } | null>(null);
+  const tooltipRef = useRef<HTMLDivElement>(null);
+  const [tooltipSize, setTooltipSize] = useState({ width: 256, height: 72 });
+  useLayoutEffect(() => {
+    if (!hovered || !tooltipRef.current) return;
+    const rect = tooltipRef.current.getBoundingClientRect();
+    setTooltipSize({ width: rect.width, height: rect.height });
+  }, [hovered]);
   const byId = new Map(nodes.map((n) => [n.id, n]));
-
+  const degree = new Map<string, number>();
+  for (const edge of edges) {
+    degree.set(edge.from, (degree.get(edge.from) ?? 0) + 1);
+    degree.set(edge.to, (degree.get(edge.to) ?? 0) + 1);
+  }
   const neighbors = new Set<string>();
-  if (selectedId) {
-    for (const e of edges) {
-      if (e.from === selectedId) neighbors.add(e.to);
-      if (e.to === selectedId) neighbors.add(e.from);
+  const focusId = selectedId ?? hovered?.node.id ?? null;
+  if (focusId) {
+    for (const edge of edges) {
+      if (edge.from === focusId) neighbors.add(edge.to);
+      if (edge.to === focusId) neighbors.add(edge.from);
     }
   }
 
   return (
-    <div className={`relative w-full ${className}`}>
-      <svg
-        className="absolute inset-0 h-full w-full"
-        viewBox="0 0 100 100"
-        preserveAspectRatio="none"
-        aria-hidden="true"
+    <div className={`relative w-full overflow-hidden ${className}`}>
+      <div
+        className="absolute inset-0 origin-center transition-transform duration-200"
+        style={{ transform: `scale(${zoom})` }}
       >
-        <defs>
-          <pattern
-            id={`dots-${gid}`}
-            width="4"
-            height="4"
-            patternUnits="userSpaceOnUse"
-          >
-            <circle cx="0.5" cy="0.5" r="0.28" fill="var(--border)" />
-          </pattern>
-        </defs>
-        <rect
-          width="100"
-          height="100"
-          fill={`url(#dots-${gid})`}
-          opacity="0.9"
-        />
-        {edges.map((e, i) => {
-          const a = byId.get(e.from);
-          const b = byId.get(e.to);
-          if (!a || !b) return null;
-          const active =
-            !!selectedId && (e.from === selectedId || e.to === selectedId);
+        <svg
+          className="absolute inset-0 h-full w-full"
+          viewBox="0 0 100 100"
+          preserveAspectRatio="none"
+          aria-hidden="true"
+        >
+          <defs>
+            <pattern
+              id={`dots-${gid}`}
+              width="4"
+              height="4"
+              patternUnits="userSpaceOnUse"
+            >
+              <circle cx="0.5" cy="0.5" r="0.28" fill="var(--border)" />
+            </pattern>
+          </defs>
+          <rect
+            width="100"
+            height="100"
+            fill={`url(#dots-${gid})`}
+            opacity="0.55"
+          />
+          {edges.map((edge, index) => {
+            const from = byId.get(edge.from);
+            const to = byId.get(edge.to);
+            if (!from || !to) return null;
+            const active =
+              !!focusId && (edge.from === focusId || edge.to === focusId);
+            return (
+              <path
+                key={index}
+                d={curve(from, to)}
+                fill="none"
+                vectorEffect="non-scaling-stroke"
+                stroke={
+                  active
+                    ? colorFor(from.kind === "me" ? to.kind : from.kind)
+                    : "var(--muted-foreground)"
+                }
+                strokeOpacity={
+                  active ? (selectedId ? 0.9 : 0.82) : focusId ? 0.04 : 0.1
+                }
+                strokeWidth={active ? 2.5 : 1.6}
+                strokeLinecap="round"
+                className={`story-graph-edge-enter ${active ? "dash-flow" : ""}`}
+                style={
+                  {
+                    "--edge-delay": `${Math.min(index, 12) * 18}ms`,
+                  } as CSSProperties
+                }
+              />
+            );
+          })}
+        </svg>
+
+        {nodes.map((node) => {
+          const isMe = node.kind === "me";
+          const color = colorFor(node.kind);
+          const selected = node.id === selectedId;
+          const hoveredNode = node.id === hovered?.node.id;
+          const dim = selectedId
+            ? !isMe && !selected && !neighbors.has(node.id)
+            : hovered
+              ? node.id !== hovered.node.id && !neighbors.has(node.id)
+              : false;
+          const interactive = !!onSelect;
+          const Tag = interactive ? "button" : "div";
+          const connected = degree.get(node.id) ?? 0;
+          const size = isMe
+            ? 64
+            : connected >= 3
+              ? 40
+              : connected >= 1
+                ? 32
+                : 24;
           return (
-            <path
-              key={i}
-              d={curve(a, b)}
-              fill="none"
-              vectorEffect="non-scaling-stroke"
-              stroke={
-                active
-                  ? colorFor(a.kind === "me" ? b.kind : a.kind)
-                  : "var(--midnight)"
+            <Tag
+              key={node.id}
+              {...(interactive
+                ? {
+                    type: "button" as const,
+                    "aria-pressed": selected,
+                    onClick: () => onSelect?.(node),
+                  }
+                : {})}
+              aria-label={`${KIND_META[node.kind as DnaKind]?.label ?? "DNA node"}: ${node.label}`}
+              onFocus={(event) =>
+                setHovered({
+                  node,
+                  x: event.currentTarget.getBoundingClientRect().right,
+                  y: event.currentTarget.getBoundingClientRect().top,
+                })
               }
-              strokeOpacity={active ? 0.7 : selectedId ? 0.1 : 0.18}
-              strokeWidth={active ? 2 : 1.25}
-              strokeLinecap="round"
-              className={active ? "dash-flow" : undefined}
-            />
+              onBlur={() => setHovered(null)}
+              onMouseEnter={(event) => {
+                if (!interactive) return;
+                setHovered({ node, x: event.clientX, y: event.clientY });
+              }}
+              onMouseMove={(event) => {
+                if (hovered?.node.id === node.id)
+                  setHovered({ node, x: event.clientX, y: event.clientY });
+              }}
+              onMouseLeave={() => setHovered(null)}
+              style={{ left: `${node.x}%`, top: `${node.y}%` }}
+              className={`group absolute -translate-x-1/2 -translate-y-1/2 ${interactive ? "cursor-pointer" : ""} transition-[opacity,transform] duration-150 hover:scale-110 ${selected || hoveredNode ? "scale-110" : focusId && neighbors.has(node.id) ? "scale-[1.03]" : ""} ${dim ? (selectedId ? "opacity-30" : "opacity-60") : "opacity-100"}`}
+            >
+              {isMe ? (
+                <span
+                  className="story-graph-node-enter grid h-16 w-16 place-items-center rounded-full bg-midnight text-xs font-bold tracking-[0.18em] text-background shadow-lift"
+                  style={
+                    {
+                      "--node-delay": `${stableMotionDelay(node.id)}ms`,
+                    } as CSSProperties
+                  }
+                >
+                  ME
+                </span>
+              ) : (
+                <span
+                  className="story-graph-node-enter relative grid place-items-center rounded-full border-2 shadow-card transition-[box-shadow,transform] hover:shadow-lift"
+                  style={
+                    {
+                      width: size,
+                      height: size,
+                      color: getDnaIconForeground(node.kind as LegacyDnaKind),
+                      backgroundColor: color,
+                      borderColor:
+                        selected || hoveredNode ? "var(--card)" : `${color}CC`,
+                      boxShadow: selected
+                        ? `0 0 0 3px ${color}, 0 0 0 6px ${color}55, 0 0 24px ${color}88`
+                        : hoveredNode
+                          ? `0 0 0 3px ${color}77, 0 0 20px ${color}88`
+                          : `0 0 0 1px ${color}44`,
+                      "--node-delay": `${stableMotionDelay(node.id)}ms`,
+                    } as CSSProperties
+                  }
+                >
+                  <DnaTypeIcon
+                    kind={node.kind as DnaKind}
+                    size={size <= 24 ? 12 : size <= 32 ? 15 : 18}
+                  />
+                </span>
+              )}
+            </Tag>
           );
         })}
-      </svg>
-
-      {nodes.map((n) => {
-        const isMe = n.kind === "me";
-        const color = colorFor(n.kind);
-        const dim =
-          !!selectedId && !isMe && n.id !== selectedId && !neighbors.has(n.id);
-        const selected = n.id === selectedId;
-        const interactive = !!onSelect;
-        const Tag = interactive ? "button" : "div";
-        return (
-          <Tag
-            key={n.id}
-            {...(interactive
-              ? { type: "button" as const, onClick: () => onSelect?.(n) }
-              : {})}
-            style={{ left: `${n.x}%`, top: `${n.y}%` }}
-            className={`absolute -translate-x-1/2 -translate-y-1/2 ${interactive ? "cursor-pointer" : ""} transition-opacity duration-300 ${dim ? "opacity-30" : "opacity-100"}`}
-          >
-            {isMe ? (
-              <span className="grid h-16 w-16 place-items-center rounded-full bg-midnight text-xs font-bold tracking-[0.18em] text-background shadow-lift">
-                ME
-              </span>
-            ) : (
-              <span
-                className="flex items-center gap-2 rounded-full border bg-card py-1.5 pl-2 pr-3.5 shadow-card transition-shadow hover:shadow-lift"
-                style={{ borderColor: selected ? color : "var(--border)" }}
-              >
-                <span
-                  className="grid h-6 w-6 shrink-0 place-items-center rounded-full"
-                  style={{ backgroundColor: color }}
-                >
-                  <span className="h-2 w-2 rounded-full bg-card/80" />
-                </span>
-                <span
-                  className={`whitespace-nowrap font-semibold text-midnight ${compact ? "text-[0.6875rem]" : "text-xs"}`}
-                >
-                  {n.label}
-                </span>
-              </span>
-            )}
-          </Tag>
-        );
-      })}
+      </div>
+      {hovered && typeof document !== "undefined"
+        ? createPortal(
+            <div
+              role="tooltip"
+              ref={tooltipRef}
+              className="graph-tooltip-enter pointer-events-none fixed z-[100] w-64 rounded-xl border border-white/10 bg-midnight px-3.5 py-3 text-left text-white shadow-2xl"
+              style={(() => {
+                const { width, height } = tooltipSize;
+                const left =
+                  hovered.x + 18 + width <= window.innerWidth
+                    ? hovered.x + 18
+                    : hovered.x - width - 18;
+                const top =
+                  hovered.y - height - 18 >= 12
+                    ? hovered.y - height - 18
+                    : hovered.y + 18;
+                return {
+                  left: Math.max(
+                    12,
+                    Math.min(left, window.innerWidth - width - 12),
+                  ),
+                  top: Math.max(
+                    12,
+                    Math.min(top, window.innerHeight - height - 12),
+                  ),
+                };
+              })()}
+            >
+              <p className="text-[0.625rem] font-bold uppercase tracking-[0.16em] text-experience">
+                {KIND_META[hovered.node.kind as DnaKind]?.label ?? "DNA node"}
+              </p>
+              <p className="mt-1 font-bold">{hovered.node.label}</p>
+            </div>,
+            document.body,
+          )
+        : null}
     </div>
   );
 }
@@ -151,16 +285,21 @@ export function StoryGraph({
 export function GraphLegend({ kinds }: { kinds: LegacyDnaKind[] }) {
   return (
     <div className="flex flex-wrap items-center gap-x-5 gap-y-2">
-      {kinds.map((k) => (
+      {kinds.map((kind) => (
         <span
-          key={k}
+          key={kind}
           className="flex items-center gap-2 text-xs font-medium text-muted-foreground"
         >
           <span
-            className="h-2.5 w-2.5 rounded-full"
-            style={{ backgroundColor: KIND_META[k].color }}
-          />
-          {KIND_META[k].plural}
+            className="grid h-6 w-6 place-items-center rounded-full"
+            style={{
+              color: getDnaIconForeground(kind),
+              backgroundColor: KIND_META[kind].color,
+            }}
+          >
+            <DnaTypeIcon kind={kind} size={12} />
+          </span>
+          {KIND_META[kind].plural}
         </span>
       ))}
     </div>

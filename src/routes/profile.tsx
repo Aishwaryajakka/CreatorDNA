@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { authenticatedFetch } from "@/lib/supabase/client";
 import type { Profile } from "@/lib/supabase/profile";
 import { PageHeader, Panel } from "@/components/dna-ui";
+import { ThemeToggle } from "@/components/ThemeProvider";
 export const Route = createFileRoute("/profile")({ component: ProfilePage });
 function ProfilePage() {
   const [profile, setProfile] = useState<Profile | null>(null);
@@ -42,7 +43,16 @@ function ProfilePage() {
         eyebrow="Profile"
         title="Manage how you appear in Creator DNA."
       />
-      <Panel className="max-w-2xl p-6 sm:p-8">
+      <div className="telemetry-edge telemetry-grid mx-auto max-w-3xl rounded-2xl border border-obsidian-border bg-obsidian-card px-6 py-5 sm:px-8">
+        <p className="eyebrow text-midnight/70">Your creator workspace</p>
+        <p className="mt-2 text-lg font-bold text-midnight">
+          Keep your identity and appearance current.
+        </p>
+      </div>
+      <Panel
+        accent="var(--experience)"
+        className="mx-auto max-w-3xl p-6 sm:p-8"
+      >
         <div className="mb-6 flex items-center gap-4">
           <div className="grid h-14 w-14 place-items-center rounded-full bg-experience text-lg font-bold text-midnight">
             {profile?.displayName
@@ -118,10 +128,19 @@ function ProfilePage() {
               (!!profile.profileChangedAt &&
                 Date.now() - Date.parse(profile.profileChangedAt) < 2592000000)
             }
-            className="rounded-xl bg-primary px-5 py-2.5 font-semibold text-primary-foreground disabled:opacity-50"
+            className="motion-cta glow-lime rounded-xl bg-chartreuse px-5 py-2.5 font-semibold text-[#050811] hover:bg-white disabled:opacity-50"
           >
             {saving ? "Saving…" : "Save changes"}
           </button>
+        </div>
+        <div className="mt-8 flex items-center justify-between border-t border-border pt-6">
+          <div>
+            <p className="font-semibold text-midnight">Appearance</p>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Choose the theme for your Creator DNA workspace.
+            </p>
+          </div>
+          <ThemeToggle />
         </div>
       </Panel>
     </div>

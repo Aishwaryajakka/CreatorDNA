@@ -132,19 +132,15 @@ The creator's DNA stays constant; adapt only the expression and framing of the t
 Do not invent platform-specific facts about the creator.`;
 
 const platformGuidance: Record<TargetPlatform, string> = {
-  linkedin:
-    "Personal experience → professional lesson → practical takeaway.",
+  linkedin: "Personal experience → professional lesson → practical takeaway.",
   instagram:
     "Visual or personal hook → relatable story → concise reflection or takeaway.",
-  tiktok:
-    "Immediate hook → mistake or tension → quick story → punchy lesson.",
-  youtube:
-    "Narrative hook → context → journey → turning point → lessons.",
+  tiktok: "Immediate hook → mistake or tension → quick story → punchy lesson.",
+  youtube: "Narrative hook → context → journey → turning point → lessons.",
   youtube_shorts:
     "Fast hook → one tension or insight → compact story → memorable payoff.",
   x: "Strong observation or opinion → concise story or insight → memorable takeaway.",
-  threads:
-    "Conversational observation → personal story → reflection.",
+  threads: "Conversational observation → personal story → reflection.",
 };
 
 function buildUserPrompt(

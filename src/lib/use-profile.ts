@@ -1,12 +1,4 @@
-import { useEffect, useState } from "react";
-import { authenticatedFetch } from "./supabase/client";
-import type { Profile } from "./supabase/profile";
+import { useAuthState } from "./auth-state";
 export function useProfile() {
-  const [profile, setProfile] = useState<Profile | null>(null);
-  useEffect(() => {
-    void authenticatedFetch("/api/profile")
-      .then((r) => (r.ok ? r.json() : null))
-      .then(setProfile);
-  }, []);
-  return profile;
+  return useAuthState().profile;
 }

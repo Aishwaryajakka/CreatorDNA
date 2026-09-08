@@ -22,7 +22,8 @@ const MAX_BATCH_SIZE = 25;
 
 function buildRawText(video: YouTubeVideo): string {
   const lines = [`Title: ${video.title}`];
-  if (video.description.trim()) lines.push(`Description: ${video.description.trim()}`);
+  if (video.description.trim())
+    lines.push(`Description: ${video.description.trim()}`);
   if (video.publishedAt) lines.push(`Published: ${video.publishedAt}`);
   lines.push(`Source: https://www.youtube.com/watch?v=${video.id}`);
   if (video.playlistTitle) lines.push(`Playlist: ${video.playlistTitle}`);
@@ -34,25 +35,37 @@ export async function importYouTubeVideos(
   userId: string,
 ): Promise<YouTubeImportResult> {
   const uniqueSelections = Array.from(
-    new Map(selections.map((selection) => [selection.videoId, selection])).values(),
+    new Map(
+      selections.map((selection) => [selection.videoId, selection]),
+    ).values(),
   );
-  if (!uniqueSelections.length) throw new Error("Select at least one video to import.");
+  if (!uniqueSelections.length)
+    throw new Error("Select at least one video to import.");
   if (uniqueSelections.length > MAX_BATCH_SIZE) {
     throw new Error(`Select no more than ${MAX_BATCH_SIZE} videos at a time.`);
   }
 
-  const videos = await getYouTubeVideosById(uniqueSelections.map((selection) => selection.videoId));
+  const videos = await getYouTubeVideosById(
+    uniqueSelections.map((selection) => selection.videoId),
+  );
   const videosById = new Map(videos.map((video) => [video.id, video]));
   const result: YouTubeImportResult = { imported: [], skipped: [], failed: [] };
 
   for (const selection of uniqueSelections) {
     const video = videosById.get(selection.videoId);
     if (!video) {
-      result.failed.push({ videoId: selection.videoId, error: "Video is unavailable or private." });
+      result.failed.push({
+        videoId: selection.videoId,
+        error: "Video is unavailable or private.",
+      });
       continue;
     }
     try {
-      const existing = await getContentItemByExternalId(userId, "youtube", video.id);
+      const existing = await getContentItemByExternalId(
+        userId,
+        "youtube",
+        video.id,
+      );
       if (existing) {
         result.skipped.push({ videoId: video.id, reason: "already imported" });
         continue;
@@ -83,13 +96,23 @@ export async function importYouTubeVideos(
           },
         ]);
       }
-      result.imported.push({ videoId: video.id, title: video.title, contentId: saved.contentItem.id });
+      result.imported.push({
+        videoId: video.id,
+        title: video.title,
+        contentId: saved.contentItem.id,
+      });
     } catch (error) {
       const message = error instanceof Error ? error.message : "Import failed.";
-      if (message.toLowerCase().includes("duplicate") || message.includes("unique")) {
+      if (
+        message.toLowerCase().includes("duplicate") ||
+        message.includes("unique")
+      ) {
         result.skipped.push({ videoId: video.id, reason: "already imported" });
       } else {
-        result.failed.push({ videoId: video.id, error: "This video could not be imported. Try again later." });
+        result.failed.push({
+          videoId: video.id,
+          error: "This video could not be imported. Try again later.",
+        });
       }
     }
   }

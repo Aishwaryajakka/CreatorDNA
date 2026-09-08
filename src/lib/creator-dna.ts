@@ -12,6 +12,44 @@ import type { DnaKind as DomainDnaKind } from "./creator-dna/types";
 export type DnaKind = DomainDnaKind;
 export type LegacyDnaKind = DnaKind | "evolution";
 
+export const NODE_TYPE_COLORS: Record<DnaKind, string> = {
+  story: "#155EEF",
+  belief: "#E8F31A",
+  theme: "#31D158",
+  experience: "#36D6C5",
+  lesson: "#FFD83D",
+  goal: "#9B6FF2",
+  value: "#FF8A5B",
+  identity: "#4F7CFF",
+  expertise: "#5CC8FF",
+};
+
+export const NODE_TYPE_LABELS: Record<DnaKind, string> = {
+  story: "Story",
+  belief: "Belief",
+  theme: "Theme",
+  experience: "Experience",
+  lesson: "Lesson",
+  goal: "Goal",
+  value: "Value",
+  identity: "Identity",
+  expertise: "Expertise",
+};
+
+export function getNodeTypeColor(type: string) {
+  return NODE_TYPE_COLORS[type as DnaKind] ?? "#94A3B8";
+}
+
+export function getNodeTypeTint(type: string) {
+  return `color-mix(in srgb, ${getNodeTypeColor(type)} 14%, transparent)`;
+}
+
+export function getNodeTypeReadableForeground(type: string) {
+  return type === "belief" || type === "lesson"
+    ? "#08204A"
+    : getNodeTypeColor(type);
+}
+
 export const KIND_META: Record<
   LegacyDnaKind,
   { label: string; plural: string; color: string; token: string }
@@ -19,61 +57,61 @@ export const KIND_META: Record<
   story: {
     label: "Story",
     plural: "Stories",
-    color: "var(--story)",
+    color: NODE_TYPE_COLORS.story,
     token: "story",
   },
   belief: {
     label: "Belief",
     plural: "Beliefs",
-    color: "var(--belief)",
+    color: NODE_TYPE_COLORS.belief,
     token: "belief",
   },
   theme: {
     label: "Theme",
     plural: "Themes",
-    color: "var(--theme-color)",
+    color: NODE_TYPE_COLORS.theme,
     token: "theme",
   },
   experience: {
     label: "Experience",
     plural: "Experiences",
-    color: "var(--experience)",
+    color: NODE_TYPE_COLORS.experience,
     token: "experience",
   },
   evolution: {
     label: "Evolution",
     plural: "Perspective evolution",
-    color: "var(--evolution)",
+    color: NODE_TYPE_COLORS.lesson,
     token: "evolution",
   },
   lesson: {
     label: "Lesson",
     plural: "Lessons",
-    color: "var(--lesson)",
+    color: NODE_TYPE_COLORS.lesson,
     token: "lesson",
   },
   value: {
     label: "Value",
     plural: "Values",
-    color: "var(--belief)",
+    color: NODE_TYPE_COLORS.value,
     token: "value",
   },
   goal: {
     label: "Goal",
     plural: "Goals",
-    color: "var(--lesson)",
+    color: NODE_TYPE_COLORS.goal,
     token: "goal",
   },
   identity: {
     label: "Identity",
     plural: "Identity",
-    color: "var(--story)",
+    color: NODE_TYPE_COLORS.identity,
     token: "identity",
   },
   expertise: {
     label: "Expertise",
     plural: "Expertise",
-    color: "var(--experience)",
+    color: NODE_TYPE_COLORS.expertise,
     token: "expertise",
   },
 };

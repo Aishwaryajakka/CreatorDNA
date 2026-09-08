@@ -17,7 +17,11 @@ export const DnaKindSchema = z.enum([
   "belief",
   "theme",
   "experience",
-  "lesson", "value", "goal", "identity", "expertise",
+  "lesson",
+  "value",
+  "goal",
+  "identity",
+  "expertise",
 ]);
 
 export const CreatorFoundationSchema = z.object({

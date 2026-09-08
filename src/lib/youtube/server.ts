@@ -29,14 +29,21 @@ async function youtubeRequest<T>(
       cause: error,
     });
   }
-  const body = (await response.json().catch(() => null)) as YouTubeErrorBody | T | null;
+  const body = (await response.json().catch(() => null)) as
+    YouTubeErrorBody | T | null;
   if (!response.ok) {
-    const reason = isYouTubeErrorBody(body) ? body.error?.errors?.[0]?.reason : undefined;
+    const reason = isYouTubeErrorBody(body)
+      ? body.error?.errors?.[0]?.reason
+      : undefined;
     if (reason === "quotaExceeded") {
-      throw new YouTubeApiError("YouTube import quota has been reached. Try again later.");
+      throw new YouTubeApiError(
+        "YouTube import quota has been reached. Try again later.",
+      );
     }
     if (response.status === 404 || reason === "playlistNotFound") {
-      throw new YouTubeApiError("That YouTube channel or playlist was not found.");
+      throw new YouTubeApiError(
+        "That YouTube channel or playlist was not found.",
+      );
     }
     throw new YouTubeApiError("YouTube could not return that data right now.");
   }
@@ -66,7 +73,10 @@ type ChannelResponse = {
   }>;
 };
 
-type ThumbnailSet = Record<string, { url: string; width?: number; height?: number }>;
+type ThumbnailSet = Record<
+  string,
+  { url: string; width?: number; height?: number }
+>;
 
 export type YouTubeChannel = {
   id: string;
@@ -77,12 +87,22 @@ export type YouTubeChannel = {
 };
 
 function firstThumbnail(thumbnails?: ThumbnailSet): string | null {
-  return thumbnails?.["high"]?.url ?? thumbnails?.["medium"]?.url ?? thumbnails?.["default"]?.url ?? null;
+  return (
+    thumbnails?.["high"]?.url ??
+    thumbnails?.["medium"]?.url ??
+    thumbnails?.["default"]?.url ??
+    null
+  );
 }
 
-export async function resolveYouTubeChannel(input: string): Promise<YouTubeChannel> {
+export async function resolveYouTubeChannel(
+  input: string,
+): Promise<YouTubeChannel> {
   const identifier = input.trim();
-  if (!identifier) throw new YouTubeApiError("Enter a YouTube channel URL, handle, or channel ID.");
+  if (!identifier)
+    throw new YouTubeApiError(
+      "Enter a YouTube channel URL, handle, or channel ID.",
+    );
 
   let id: string | undefined;
   let handle: string | undefined;
@@ -91,7 +111,10 @@ export async function resolveYouTubeChannel(input: string): Promise<YouTubeChann
     id = identifier;
   } else if (identifier.startsWith("@")) {
     handle = identifier.slice(1);
-  } else if (identifier.startsWith("http://") || identifier.startsWith("https://")) {
+  } else if (
+    identifier.startsWith("http://") ||
+    identifier.startsWith("https://")
+  ) {
     let url: URL;
     try {
       url = new URL(identifier);
@@ -105,21 +128,30 @@ export async function resolveYouTubeChannel(input: string): Promise<YouTubeChann
     if (parts[0] === "channel" && parts[1]) id = parts[1];
     else if (parts[0]?.startsWith("@")) handle = parts[0].slice(1);
     else if (parts[0] === "user" && parts[1]) username = parts[1];
-    else throw new YouTubeApiError("Use a /@handle, /channel/ID, or /user/name URL.");
+    else
+      throw new YouTubeApiError(
+        "Use a /@handle, /channel/ID, or /user/name URL.",
+      );
   } else {
     handle = identifier.replace(/^@/, "");
   }
 
-  const params = id ? { part: "snippet,contentDetails", id } : handle ? { part: "snippet,contentDetails", forHandle: handle } : { part: "snippet,contentDetails", forUsername: username! };
+  const params = id
+    ? { part: "snippet,contentDetails", id }
+    : handle
+      ? { part: "snippet,contentDetails", forHandle: handle }
+      : { part: "snippet,contentDetails", forUsername: username! };
   const response = await youtubeRequest<ChannelResponse>("channels", params);
   const channel = response.items?.[0];
-  if (!channel) throw new YouTubeApiError("No public YouTube channel matched that input.");
+  if (!channel)
+    throw new YouTubeApiError("No public YouTube channel matched that input.");
   return {
     id: channel.id,
     title: channel.snippet.title,
     description: channel.snippet.description ?? "",
     thumbnailUrl: firstThumbnail(channel.snippet.thumbnails),
-    uploadsPlaylistId: channel.contentDetails?.relatedPlaylists?.uploads ?? null,
+    uploadsPlaylistId:
+      channel.contentDetails?.relatedPlaylists?.uploads ?? null,
   };
 }
 
@@ -192,7 +224,13 @@ export type YouTubeVideo = {
 type VideoResponse = {
   items?: Array<{
     id: string;
-    snippet?: { title: string; description?: string; channelTitle?: string; publishedAt?: string; thumbnails?: ThumbnailSet };
+    snippet?: {
+      title: string;
+      description?: string;
+      channelTitle?: string;
+      publishedAt?: string;
+      thumbnails?: ThumbnailSet;
+    };
     contentDetails?: { duration?: string };
   }>;
 };
@@ -228,9 +266,14 @@ async function listPlaylistItems(
       title: item.snippet.title,
       description: item.snippet.description ?? "",
       channelTitle: item.snippet.channelTitle ?? "",
-      publishedAt: item.contentDetails?.videoPublishedAt ?? item.snippet.publishedAt ?? null,
+      publishedAt:
+        item.contentDetails?.videoPublishedAt ??
+        item.snippet.publishedAt ??
+        null,
       thumbnailUrl: firstThumbnail(item.snippet.thumbnails),
-      ...(item.snippet.position !== undefined ? { playlistPosition: item.snippet.position } : {}),
+      ...(item.snippet.position !== undefined
+        ? { playlistPosition: item.snippet.position }
+        : {}),
     });
   }
   const durationById = new Map<string, string | null>();
@@ -240,11 +283,17 @@ async function listPlaylistItems(
       id: raw.map((video) => video.id).join(","),
     });
     for (const video of details.items ?? []) {
-      durationById.set(video.id, formatDuration(video.contentDetails?.duration));
+      durationById.set(
+        video.id,
+        formatDuration(video.contentDetails?.duration),
+      );
     }
   }
   return {
-    videos: raw.map((video) => ({ ...video, duration: durationById.get(video.id) ?? null })),
+    videos: raw.map((video) => ({
+      ...video,
+      duration: durationById.get(video.id) ?? null,
+    })),
     nextPageToken: response.nextPageToken ?? null,
   };
 }
@@ -263,7 +312,9 @@ export async function listYouTubePlaylistVideos(
   return listPlaylistItems(playlistId, pageToken);
 }
 
-export async function getYouTubeVideosById(ids: string[]): Promise<YouTubeVideo[]> {
+export async function getYouTubeVideosById(
+  ids: string[],
+): Promise<YouTubeVideo[]> {
   if (!ids.length) return [];
   const response = await youtubeRequest<VideoResponse>("videos", {
     part: "snippet,contentDetails",

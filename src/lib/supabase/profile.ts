@@ -7,6 +7,7 @@ export type Profile = {
   displayName: string;
   email: string;
   profileChangedAt: string | null;
+  onboardingCompleted: boolean;
 };
 export function toProfile(
   row: {
@@ -14,6 +15,7 @@ export function toProfile(
     username: string;
     display_name: string;
     profile_changed_at: string | null;
+    onboarding_completed: boolean;
   },
   user: User,
 ): Profile {
@@ -23,6 +25,7 @@ export function toProfile(
     displayName: row.display_name,
     email: user.email ?? "",
     profileChangedAt: row.profile_changed_at,
+    onboardingCompleted: row.onboarding_completed,
   };
 }
 export async function getOrCreateProfile(
@@ -31,7 +34,7 @@ export async function getOrCreateProfile(
 ): Promise<Profile> {
   const existing = await supabaseServer
     .from("profiles")
-    .select("id,username,display_name,profile_changed_at")
+    .select("id,username,display_name,profile_changed_at,onboarding_completed")
     .eq("id", user.id)
     .maybeSingle();
   if (existing.error) throw new Error(existing.error.message);
@@ -44,7 +47,7 @@ export async function getOrCreateProfile(
       username: input.username,
       display_name: input.displayName,
     })
-    .select("id,username,display_name,profile_changed_at")
+    .select("id,username,display_name,profile_changed_at,onboarding_completed")
     .single();
   if (created.error) throw new Error(created.error.message);
   return toProfile(created.data, user);
@@ -71,7 +74,7 @@ export async function updateProfile(
       profile_changed_at: new Date().toISOString(),
     })
     .eq("id", user.id)
-    .select("id,username,display_name,profile_changed_at")
+    .select("id,username,display_name,profile_changed_at,onboarding_completed")
     .single();
   if (result.error) throw new Error(result.error.message);
   return toProfile(result.data, user);

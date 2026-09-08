@@ -9,11 +9,13 @@ import {
   useLocation,
   useNavigate,
 } from "@tanstack/react-router";
-import { useEffect, useState, type ReactNode } from "react";
+import { useEffect, type ReactNode } from "react";
 
 import appCss from "../styles.css?url";
 import { AppSidebar } from "@/components/AppSidebar";
-import { supabase } from "@/lib/supabase/client";
+import { ThemeProvider } from "@/components/ThemeProvider";
+import { AuthProvider, useAuthState } from "@/lib/auth-state";
+import { DataPulse } from "@/components/Motion";
 
 function NotFoundComponent() {
   return (
@@ -97,21 +99,11 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         { name: "twitter:card", content: "summary_large_image" },
       ],
       links: [
-        { rel: "preconnect", href: "https://fonts.googleapis.com" },
-        {
-          rel: "preconnect",
-          href: "https://fonts.gstatic.com",
-          crossOrigin: "anonymous",
-        },
-        {
-          rel: "stylesheet",
-          href: "https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap",
-        },
         {
           rel: "stylesheet",
           href: appCss,
         },
-        { rel: "icon", href: "/favicon.ico", type: "image/x-icon" },
+        { rel: "icon", href: "/favicon.svg", type: "image/svg+xml" },
       ],
     }),
 
@@ -126,6 +118,11 @@ function RootShell({ children }: { children: ReactNode }) {
   return (
     <html lang="en">
       <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `(function(){try{var t=localStorage.getItem('creator-dna-public-theme');var d=t==='dark'||(t!=='light'&&matchMedia('(prefers-color-scheme: dark)').matches);document.documentElement.classList.toggle('dark',d)}catch(e){}})()`,
+          }}
+        />
         <HeadContent />
       </head>
       <body>
@@ -138,57 +135,87 @@ function RootShell({ children }: { children: ReactNode }) {
 
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
-  const location = useLocation();
-
-  if (location.pathname === "/login") {
-    return (
-      <QueryClientProvider client={queryClient}>
-        <Outlet />
-      </QueryClientProvider>
-    );
-  }
 
   return (
     <QueryClientProvider client={queryClient}>
-      <ProtectedApp>
-        <div className="flex min-h-screen w-full flex-col lg:flex-row">
-          <AppSidebar />
-          <main className="min-w-0 flex-1 px-5 py-8 sm:px-8 lg:px-12 lg:py-12">
-            <div className="mx-auto max-w-6xl">
-              <Outlet />
-            </div>
-          </main>
-        </div>
-      </ProtectedApp>
+      <AuthProvider>
+        <RootContent />
+      </AuthProvider>
     </QueryClientProvider>
+  );
+}
+
+function RootContent() {
+  const location = useLocation();
+  const { status } = useAuthState();
+  const publicPath = ["/login", "/reset-password"].includes(location.pathname);
+  const landingPath = location.pathname === "/" && status === "unauthenticated";
+  const authenticated = status === "authenticated";
+
+  return (
+    <ThemeProvider
+      key={authenticated ? "app-theme" : "public-theme"}
+      storageKey={
+        authenticated ? "creator-dna-app-theme" : "creator-dna-public-theme"
+      }
+    >
+      {publicPath || landingPath ? (
+        <Outlet />
+      ) : (
+        <ProtectedApp>
+          <AuthenticatedAppShell>
+            <Outlet />
+          </AuthenticatedAppShell>
+        </ProtectedApp>
+      )}
+    </ThemeProvider>
+  );
+}
+
+export function AuthenticatedAppShell({ children }: { children: ReactNode }) {
+  const location = useLocation();
+  return (
+    <div className="flex min-h-screen w-full flex-col lg:flex-row">
+      <AppSidebar />
+      <main className="min-w-0 flex-1 bg-background px-5 py-8 sm:px-8 lg:px-12 lg:py-10">
+        <div key={location.pathname} className="route-enter mx-auto max-w-6xl">
+          {children}
+        </div>
+      </main>
+    </div>
   );
 }
 
 function ProtectedApp({ children }: { children: ReactNode }) {
   const navigate = useNavigate();
-  const [checking, setChecking] = useState(true);
+  const location = useLocation();
+  const { status, session, profile, error } = useAuthState();
   useEffect(() => {
-    let active = true;
-    void supabase.auth.getSession().then(({ data }) => {
-      if (!active) return;
-      if (!data.session) void navigate({ to: "/login", replace: true });
-      else setChecking(false);
-    });
-    const { data: listener } = supabase.auth.onAuthStateChange(
-      (_event, session) => {
-        if (!session) void navigate({ to: "/login", replace: true });
-      },
+    if (status === "unauthenticated")
+      void navigate({ to: "/login", replace: true });
+    if (
+      status === "authenticated" &&
+      location.pathname !== "/onboarding" &&
+      profile &&
+      !profile.onboardingCompleted
+    ) {
+      void navigate({ to: "/onboarding", replace: true });
+    }
+  }, [location.pathname, navigate, profile, status]);
+  if (status === "loading")
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-background text-sm text-muted-foreground">
+        <span className="flex items-center gap-3 font-mono text-xs uppercase tracking-wide">
+          <DataPulse color="aqua" /> Loading Creator DNA…
+        </span>
+      </div>
     );
-    return () => {
-      active = false;
-      listener.subscription.unsubscribe();
-    };
-  }, [navigate]);
-  return checking ? (
-    <div className="flex min-h-screen items-center justify-center bg-background text-sm text-muted-foreground">
-      Loading…
-    </div>
-  ) : (
-    children
-  );
+  if (status === "error")
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-background p-6 text-sm text-destructive">
+        {error ?? "We couldn't load your account."}
+      </div>
+    );
+  if (!session) return null;
+  return children;
 }
