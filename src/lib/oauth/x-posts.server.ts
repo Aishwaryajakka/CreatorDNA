@@ -6,18 +6,19 @@ import {
 } from "@/lib/creator-dna/repository";
 import { saveCreatorContentAndDNA } from "@/lib/creator-dna/server/save-content";
 import { getSocialConnection } from "./repository.server";
+import { isTokenNearExpiry } from "./pkce.server";
 import { getValidXAccessToken } from "./x.server";
 
 const X_API_BASE_URL = "https://api.x.com/2";
 const X_CONTENT_SOURCE = "x";
-export const X_CONTENT_PLATFORM = "X";
+export const X_CONTENT_PLATFORM = "x";
 const MAX_POSTS = 20;
 
 export type XRecentPost = {
   id: string;
   text: string;
   createdAt: string | null;
-  url: string;
+  url: string | null;
   alreadyImported: boolean;
 };
 
@@ -55,15 +56,63 @@ type XPostsResponse = {
   data?: XApiPost[];
 };
 
-function canonicalXPostUrl(username: string, postId: string) {
-  return `https://x.com/${encodeURIComponent(username)}/status/${postId}`;
+function canonicalXPostUrl(username: string | null, postId: string) {
+  return username
+    ? `https://x.com/${encodeURIComponent(username)}/status/${postId}`
+    : null;
 }
 
-function reportProviderFailure(operation: string, status?: number) {
-  console.warn("[x-posts] Provider request failed.", {
-    operation,
-    ...(status === undefined ? {} : { status }),
+function xPostsDiagnostic(details: {
+  step: string;
+  providerUserIdPresent?: boolean;
+  accessTokenPresent?: boolean;
+  tokenRefreshAttempted?: boolean;
+  tokenRefreshStatus?: "not_needed" | "succeeded" | "failed";
+  upstreamStatus?: number;
+  safeUpstreamErrorCode?: string;
+  postsCount?: number;
+}) {
+  if (process.env["NODE_ENV"] === "production") return;
+  console.info("[x-posts]", {
+    step: details.step,
+    ...(details.providerUserIdPresent === undefined
+      ? {}
+      : { providerUserIdPresent: details.providerUserIdPresent }),
+    ...(details.accessTokenPresent === undefined
+      ? {}
+      : { accessTokenPresent: details.accessTokenPresent }),
+    ...(details.tokenRefreshAttempted === undefined
+      ? {}
+      : { tokenRefreshAttempted: details.tokenRefreshAttempted }),
+    ...(details.tokenRefreshStatus
+      ? { tokenRefreshStatus: details.tokenRefreshStatus }
+      : {}),
+    ...(details.upstreamStatus === undefined
+      ? {}
+      : { upstreamStatus: details.upstreamStatus }),
+    ...(details.safeUpstreamErrorCode
+      ? { safeUpstreamErrorCode: details.safeUpstreamErrorCode }
+      : {}),
+    ...(details.postsCount === undefined
+      ? {}
+      : { postsCount: details.postsCount }),
   });
+}
+
+function safeProviderErrorCode(body: unknown): string | undefined {
+  if (!body || typeof body !== "object") return undefined;
+  const record = body as Record<string, unknown>;
+  const direct = record["error"] ?? record["code"] ?? record["title"];
+  if (typeof direct === "string" && /^[a-z0-9_. -]{1,80}$/i.test(direct))
+    return direct;
+  const errors = record["errors"];
+  if (!Array.isArray(errors) || !errors[0] || typeof errors[0] !== "object")
+    return undefined;
+  const nested = errors[0] as Record<string, unknown>;
+  const value = nested["code"] ?? nested["title"] ?? nested["type"];
+  return typeof value === "string" && /^[a-z0-9_.:/ -]{1,120}$/i.test(value)
+    ? value
+    : undefined;
 }
 
 async function requestXPosts(
@@ -77,14 +126,21 @@ async function requestXPosts(
       headers: { authorization: `Bearer ${accessToken}` },
     });
   } catch {
-    reportProviderFailure(operation);
+    xPostsDiagnostic({ step: operation });
     throw new XPostAccessError(
       "x_provider_unavailable",
       "X could not be reached. Please try again later.",
     );
   }
+  const body = (await response.json().catch(() => null)) as
+    XPostsResponse | Record<string, unknown> | null;
+  const safeCode = safeProviderErrorCode(body);
+  xPostsDiagnostic({
+    step: operation,
+    upstreamStatus: response.status,
+    ...(safeCode ? { safeUpstreamErrorCode: safeCode } : {}),
+  });
   if (!response.ok) {
-    reportProviderFailure(operation, response.status);
     if (response.status === 401) {
       throw new XPostAccessError(
         "x_authorization_required",
@@ -102,17 +158,13 @@ async function requestXPosts(
       "X posts are temporarily unavailable. Please try again later.",
     );
   }
-  const body = (await response
-    .json()
-    .catch(() => null)) as XPostsResponse | null;
   if (!body) {
-    reportProviderFailure(operation, response.status);
     throw new XPostAccessError(
       "x_provider_unavailable",
       "X returned an invalid response. Please try again later.",
     );
   }
-  return body;
+  return body as XPostsResponse;
 }
 
 async function getXConnectionContext(userId: string) {
@@ -123,16 +175,35 @@ async function getXConnectionContext(userId: string) {
       "Connect your X account before importing posts.",
     );
   }
-  if (!connection.providerUserId || !connection.providerUsername) {
+  xPostsDiagnostic({
+    step: "connection_loaded",
+    providerUserIdPresent: Boolean(connection.providerUserId),
+  });
+  if (!connection.providerUserId) {
     throw new XPostAccessError(
       "x_authorization_required",
       "Reconnect X so Creator DNA can verify your account.",
     );
   }
+  const tokenRefreshAttempted = isTokenNearExpiry(
+    connection.accessTokenExpiresAt,
+  );
   let accessToken: string;
   try {
     accessToken = await getValidXAccessToken(userId);
+    xPostsDiagnostic({
+      step: "token_ready",
+      accessTokenPresent: Boolean(accessToken),
+      tokenRefreshAttempted,
+      tokenRefreshStatus: tokenRefreshAttempted ? "succeeded" : "not_needed",
+    });
   } catch {
+    xPostsDiagnostic({
+      step: "token_ready",
+      accessTokenPresent: false,
+      tokenRefreshAttempted,
+      tokenRefreshStatus: "failed",
+    });
     throw new XPostAccessError(
       "x_authorization_required",
       "Your X authorization needs to be renewed.",
@@ -146,6 +217,7 @@ async function getXConnectionContext(userId: string) {
 }
 
 export async function getRecentXPosts(userId: string): Promise<XRecentPost[]> {
+  xPostsDiagnostic({ step: "x_posts_fetch_started" });
   const context = await getXConnectionContext(userId);
   const url = new URL(
     `${X_API_BASE_URL}/users/${encodeURIComponent(context.providerUserId)}/tweets`,
@@ -166,13 +238,18 @@ export async function getRecentXPosts(userId: string): Promise<XRecentPost[]> {
     X_CONTENT_SOURCE,
     posts.map((post) => post.id),
   );
-  return posts.slice(0, MAX_POSTS).map((post) => ({
+  const result = posts.slice(0, MAX_POSTS).map((post) => ({
     id: post.id,
     text: post.text,
     createdAt: post.created_at ?? null,
     url: canonicalXPostUrl(context.providerUsername, post.id),
     alreadyImported: importedIds.has(post.id),
   }));
+  xPostsDiagnostic({
+    step: "x_posts_fetch_complete",
+    postsCount: result.length,
+  });
+  return result;
 }
 
 async function refetchOwnedXPosts(userId: string, tweetIds: string[]) {

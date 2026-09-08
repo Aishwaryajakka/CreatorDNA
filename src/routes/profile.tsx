@@ -415,7 +415,7 @@ type RecentXPost = {
   id: string;
   text: string;
   createdAt: string | null;
-  url: string;
+  url: string | null;
   alreadyImported: boolean;
 };
 
@@ -443,11 +443,20 @@ export function XImportPanel({ onClose }: { onClose: () => void }) {
           posts?: RecentXPost[];
           error?: string;
           code?: string;
+          available?: boolean;
+          reason?: string;
+          message?: string;
         };
         if (!response.ok) {
-          if (body.code === "x_api_access_unavailable" && active)
+          if (
+            (body.reason === "x_api_access_unavailable" ||
+              body.code === "x_api_access_unavailable") &&
+            active
+          )
             setCapabilityUnavailable(true);
-          throw new Error(body.error ?? "Unable to load recent X posts.");
+          throw new Error(
+            body.message ?? body.error ?? "Unable to load recent X posts.",
+          );
         }
         if (active) setPosts(body.posts ?? []);
       })
@@ -624,14 +633,16 @@ export function XImportPanel({ onClose }: { onClose: () => void }) {
                       {post.createdAt
                         ? formatXDate(post.createdAt)
                         : "Date unavailable"}
-                      <a
-                        href={post.url}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="inline-flex items-center gap-1 font-semibold text-primary"
-                      >
-                        View on X <ExternalLink className="h-3 w-3" />
-                      </a>
+                      {post.url ? (
+                        <a
+                          href={post.url}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="inline-flex items-center gap-1 font-semibold text-primary"
+                        >
+                          View on X <ExternalLink className="h-3 w-3" />
+                        </a>
+                      ) : null}
                       {post.alreadyImported ? (
                         <span className="inline-flex items-center gap-1 font-semibold text-theme-foreground">
                           <CheckCircle2 className="h-3.5 w-3.5" /> Already

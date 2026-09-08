@@ -28,7 +28,13 @@ export const Route = createFileRoute("/api/integrations/x/posts")({
                   ? 502
                   : 409;
             return Response.json(
-              { error: error.message, code: error.code },
+              error.code === "x_api_access_unavailable"
+                ? {
+                    available: false,
+                    reason: "x_api_access_unavailable",
+                    message: error.message,
+                  }
+                : { error: error.message, code: error.code },
               { status },
             );
           }

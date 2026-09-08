@@ -240,8 +240,9 @@ function LinkedInWorkspace({
             Add LinkedIn content
           </Link>
           <p className="mt-3 text-xs text-muted-foreground">
-            Automatic historical post import depends on LinkedIn API
-            permissions.
+            LinkedIn historical post access requires additional LinkedIn API
+            permissions. You can still add your published LinkedIn posts
+            directly.
           </p>
         </>
       ) : (
