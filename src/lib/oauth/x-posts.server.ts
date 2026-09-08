@@ -1,0 +1,288 @@
+/// <reference types="node" />
+
+import {
+  getContentItemByExternalId,
+  getImportedExternalIds,
+} from "@/lib/creator-dna/repository";
+import { saveCreatorContentAndDNA } from "@/lib/creator-dna/server/save-content";
+import { getSocialConnection } from "./repository.server";
+import { getValidXAccessToken } from "./x.server";
+
+const X_API_BASE_URL = "https://api.x.com/2";
+const X_CONTENT_SOURCE = "x";
+export const X_CONTENT_PLATFORM = "X";
+const MAX_POSTS = 20;
+
+export type XRecentPost = {
+  id: string;
+  text: string;
+  createdAt: string | null;
+  url: string;
+  alreadyImported: boolean;
+};
+
+export type XPostImportResult = {
+  tweetId: string;
+  status: "imported" | "already_imported" | "failed";
+  contentId?: string;
+  error?: string;
+};
+
+export type XPostAccessErrorCode =
+  | "x_not_connected"
+  | "x_authorization_required"
+  | "x_api_access_unavailable"
+  | "x_provider_unavailable";
+
+export class XPostAccessError extends Error {
+  constructor(
+    readonly code: XPostAccessErrorCode,
+    message: string,
+  ) {
+    super(message);
+    this.name = "XPostAccessError";
+  }
+}
+
+type XApiPost = {
+  id?: string;
+  text?: string;
+  created_at?: string;
+  author_id?: string;
+};
+
+type XPostsResponse = {
+  data?: XApiPost[];
+};
+
+function canonicalXPostUrl(username: string, postId: string) {
+  return `https://x.com/${encodeURIComponent(username)}/status/${postId}`;
+}
+
+function reportProviderFailure(operation: string, status?: number) {
+  console.warn("[x-posts] Provider request failed.", {
+    operation,
+    ...(status === undefined ? {} : { status }),
+  });
+}
+
+async function requestXPosts(
+  url: URL,
+  accessToken: string,
+  operation: string,
+): Promise<XPostsResponse> {
+  let response: Response;
+  try {
+    response = await fetch(url, {
+      headers: { authorization: `Bearer ${accessToken}` },
+    });
+  } catch {
+    reportProviderFailure(operation);
+    throw new XPostAccessError(
+      "x_provider_unavailable",
+      "X could not be reached. Please try again later.",
+    );
+  }
+  if (!response.ok) {
+    reportProviderFailure(operation, response.status);
+    if (response.status === 401) {
+      throw new XPostAccessError(
+        "x_authorization_required",
+        "Your X authorization needs to be renewed.",
+      );
+    }
+    if ([402, 403, 429].includes(response.status)) {
+      throw new XPostAccessError(
+        "x_api_access_unavailable",
+        "Your X account is connected, but recent-post access is not available with the current X API plan.",
+      );
+    }
+    throw new XPostAccessError(
+      "x_provider_unavailable",
+      "X posts are temporarily unavailable. Please try again later.",
+    );
+  }
+  const body = (await response
+    .json()
+    .catch(() => null)) as XPostsResponse | null;
+  if (!body) {
+    reportProviderFailure(operation, response.status);
+    throw new XPostAccessError(
+      "x_provider_unavailable",
+      "X returned an invalid response. Please try again later.",
+    );
+  }
+  return body;
+}
+
+async function getXConnectionContext(userId: string) {
+  const connection = await getSocialConnection(userId, "x");
+  if (!connection) {
+    throw new XPostAccessError(
+      "x_not_connected",
+      "Connect your X account before importing posts.",
+    );
+  }
+  if (!connection.providerUserId || !connection.providerUsername) {
+    throw new XPostAccessError(
+      "x_authorization_required",
+      "Reconnect X so Creator DNA can verify your account.",
+    );
+  }
+  let accessToken: string;
+  try {
+    accessToken = await getValidXAccessToken(userId);
+  } catch {
+    throw new XPostAccessError(
+      "x_authorization_required",
+      "Your X authorization needs to be renewed.",
+    );
+  }
+  return {
+    providerUserId: connection.providerUserId,
+    providerUsername: connection.providerUsername,
+    accessToken,
+  };
+}
+
+export async function getRecentXPosts(userId: string): Promise<XRecentPost[]> {
+  const context = await getXConnectionContext(userId);
+  const url = new URL(
+    `${X_API_BASE_URL}/users/${encodeURIComponent(context.providerUserId)}/tweets`,
+  );
+  url.searchParams.set("max_results", String(MAX_POSTS));
+  url.searchParams.set("exclude", "replies,retweets");
+  url.searchParams.set("post.fields", "created_at");
+  url.searchParams.set("expansions", "author_id");
+  const body = await requestXPosts(url, context.accessToken, "recent-posts");
+  const posts = (body.data ?? []).filter(
+    (post): post is XApiPost & { id: string; text: string } =>
+      typeof post.id === "string" &&
+      typeof post.text === "string" &&
+      (!post.author_id || post.author_id === context.providerUserId),
+  );
+  const importedIds = await getImportedExternalIds(
+    userId,
+    X_CONTENT_SOURCE,
+    posts.map((post) => post.id),
+  );
+  return posts.slice(0, MAX_POSTS).map((post) => ({
+    id: post.id,
+    text: post.text,
+    createdAt: post.created_at ?? null,
+    url: canonicalXPostUrl(context.providerUsername, post.id),
+    alreadyImported: importedIds.has(post.id),
+  }));
+}
+
+async function refetchOwnedXPosts(userId: string, tweetIds: string[]) {
+  const context = await getXConnectionContext(userId);
+  const url = new URL(`${X_API_BASE_URL}/tweets`);
+  url.searchParams.set("ids", tweetIds.join(","));
+  url.searchParams.set("post.fields", "created_at");
+  url.searchParams.set("expansions", "author_id");
+  const body = await requestXPosts(url, context.accessToken, "post-refetch");
+  const posts = new Map<string, XRecentPost>();
+  for (const post of body.data ?? []) {
+    if (
+      typeof post.id !== "string" ||
+      typeof post.text !== "string" ||
+      post.author_id !== context.providerUserId
+    ) {
+      continue;
+    }
+    posts.set(post.id, {
+      id: post.id,
+      text: post.text,
+      createdAt: post.created_at ?? null,
+      url: canonicalXPostUrl(context.providerUsername, post.id),
+      alreadyImported: false,
+    });
+  }
+  return posts;
+}
+
+function buildXPostTitle(text: string) {
+  const normalized = text.replace(/\s+/g, " ").trim();
+  if (normalized.length <= 72) return normalized;
+  return `${normalized.slice(0, 71).trimEnd()}…`;
+}
+
+export async function importXPosts(
+  tweetIds: string[],
+  userId: string,
+): Promise<{ results: XPostImportResult[] }> {
+  const refetchedPosts = await refetchOwnedXPosts(userId, tweetIds);
+  const importedIds = await getImportedExternalIds(
+    userId,
+    X_CONTENT_SOURCE,
+    tweetIds,
+  );
+  const results: XPostImportResult[] = [];
+
+  for (const tweetId of tweetIds) {
+    const post = refetchedPosts.get(tweetId);
+    if (!post) {
+      results.push({
+        tweetId,
+        status: "failed",
+        error:
+          "This post is unavailable or does not belong to the connected X account.",
+      });
+      continue;
+    }
+    if (importedIds.has(tweetId)) {
+      results.push({ tweetId, status: "already_imported" });
+      continue;
+    }
+    if (!post.createdAt) {
+      results.push({
+        tweetId,
+        status: "failed",
+        error: "X did not provide this post's publication date.",
+      });
+      continue;
+    }
+    try {
+      const saved = await saveCreatorContentAndDNA(
+        {
+          title: buildXPostTitle(post.text),
+          platform: X_CONTENT_PLATFORM,
+          publishedAt: post.createdAt,
+          rawText: post.text,
+          external: {
+            source: X_CONTENT_SOURCE,
+            id: post.id,
+            url: post.url,
+          },
+        },
+        userId,
+      );
+      results.push({
+        tweetId,
+        status: "imported",
+        contentId: saved.contentItem.id,
+      });
+    } catch {
+      const existing = await getContentItemByExternalId(
+        userId,
+        X_CONTENT_SOURCE,
+        tweetId,
+      ).catch(() => null);
+      results.push(
+        existing
+          ? {
+              tweetId,
+              status: "already_imported",
+              contentId: existing.id,
+            }
+          : {
+              tweetId,
+              status: "failed",
+              error: "This post could not be imported. Please try again later.",
+            },
+      );
+    }
+  }
+  return { results };
+}

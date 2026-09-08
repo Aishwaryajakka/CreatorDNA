@@ -13,6 +13,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AddContentRouteImport } from './routes/add-content'
 import { Route as BrandTerritoriesRouteImport } from './routes/brand-territories'
 import { Route as FoundationRouteImport } from './routes/foundation'
+import { Route as ImportRouteImport } from './routes/import'
 import { Route as ImportYoutubeRouteImport } from './routes/import-youtube'
 import { Route as LibraryRouteImport } from './routes/library'
 import { Route as LoginRouteImport } from './routes/login'
@@ -26,6 +27,7 @@ import { Route as ApiBrandTerritoriesRouteImport } from './routes/api/brand-terr
 import { Route as ApiContentRouteImport } from './routes/api/content'
 import { Route as ApiContentLibraryRouteImport } from './routes/api/content-library'
 import { Route as ApiFoundationRouteImport } from './routes/api/foundation'
+import { Route as ApiIntegrationsRouteImport } from './routes/api/integrations'
 import { Route as ApiOnboardingRouteImport } from './routes/api/onboarding'
 import { Route as ApiPlanContentRouteImport } from './routes/api/plan-content'
 import { Route as ApiProfileRouteImport } from './routes/api/profile'
@@ -36,12 +38,20 @@ import { Route as ApiDevSaveContentTestRouteImport } from './routes/api/dev/save
 import { Route as ApiDevSearchDnaTestRouteImport } from './routes/api/dev/search-dna-test'
 import { Route as ApiDevStoryIntelligenceTestRouteImport } from './routes/api/dev/story-intelligence-test'
 import { Route as ApiDevSupabaseTestRouteImport } from './routes/api/dev/supabase-test'
+import { Route as ApiIntegrationsLinkedinRouteImport } from './routes/api/integrations/linkedin'
+import { Route as ApiIntegrationsXRouteImport } from './routes/api/integrations/x'
 import { Route as ApiYoutubeChannelRouteImport } from './routes/api/youtube/channel'
 import { Route as ApiYoutubeImportRouteImport } from './routes/api/youtube/import'
 import { Route as ApiYoutubeImportedRouteImport } from './routes/api/youtube/imported'
 import { Route as ApiYoutubePlaylistVideosRouteImport } from './routes/api/youtube/playlist-videos'
 import { Route as ApiYoutubePlaylistsRouteImport } from './routes/api/youtube/playlists'
 import { Route as ApiYoutubeVideosRouteImport } from './routes/api/youtube/videos'
+import { Route as ApiIntegrationsLinkedinCallbackRouteImport } from './routes/api/integrations/linkedin/callback'
+import { Route as ApiIntegrationsLinkedinConnectRouteImport } from './routes/api/integrations/linkedin/connect'
+import { Route as ApiIntegrationsXCallbackRouteImport } from './routes/api/integrations/x/callback'
+import { Route as ApiIntegrationsXConnectRouteImport } from './routes/api/integrations/x/connect'
+import { Route as ApiIntegrationsXImportRouteImport } from './routes/api/integrations/x/import'
+import { Route as ApiIntegrationsXPostsRouteImport } from './routes/api/integrations/x/posts'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -61,6 +71,11 @@ const BrandTerritoriesRoute = BrandTerritoriesRouteImport.update({
 const FoundationRoute = FoundationRouteImport.update({
   id: '/foundation',
   path: '/foundation',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ImportRoute = ImportRouteImport.update({
+  id: '/import',
+  path: '/import',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ImportYoutubeRoute = ImportYoutubeRouteImport.update({
@@ -128,6 +143,11 @@ const ApiFoundationRoute = ApiFoundationRouteImport.update({
   path: '/api/foundation',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiIntegrationsRoute = ApiIntegrationsRouteImport.update({
+  id: '/api/integrations',
+  path: '/api/integrations',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiOnboardingRoute = ApiOnboardingRouteImport.update({
   id: '/api/onboarding',
   path: '/api/onboarding',
@@ -179,6 +199,16 @@ const ApiDevSupabaseTestRoute = ApiDevSupabaseTestRouteImport.update({
   path: '/api/dev/supabase-test',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiIntegrationsLinkedinRoute = ApiIntegrationsLinkedinRouteImport.update({
+  id: '/linkedin',
+  path: '/linkedin',
+  getParentRoute: () => ApiIntegrationsRoute,
+} as any)
+const ApiIntegrationsXRoute = ApiIntegrationsXRouteImport.update({
+  id: '/x',
+  path: '/x',
+  getParentRoute: () => ApiIntegrationsRoute,
+} as any)
 const ApiYoutubeChannelRoute = ApiYoutubeChannelRouteImport.update({
   id: '/api/youtube/channel',
   path: '/api/youtube/channel',
@@ -210,12 +240,46 @@ const ApiYoutubeVideosRoute = ApiYoutubeVideosRouteImport.update({
   path: '/api/youtube/videos',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiIntegrationsLinkedinCallbackRoute =
+  ApiIntegrationsLinkedinCallbackRouteImport.update({
+    id: '/callback',
+    path: '/callback',
+    getParentRoute: () => ApiIntegrationsLinkedinRoute,
+  } as any)
+const ApiIntegrationsLinkedinConnectRoute =
+  ApiIntegrationsLinkedinConnectRouteImport.update({
+    id: '/connect',
+    path: '/connect',
+    getParentRoute: () => ApiIntegrationsLinkedinRoute,
+  } as any)
+const ApiIntegrationsXCallbackRoute =
+  ApiIntegrationsXCallbackRouteImport.update({
+    id: '/callback',
+    path: '/callback',
+    getParentRoute: () => ApiIntegrationsXRoute,
+  } as any)
+const ApiIntegrationsXConnectRoute = ApiIntegrationsXConnectRouteImport.update({
+  id: '/connect',
+  path: '/connect',
+  getParentRoute: () => ApiIntegrationsXRoute,
+} as any)
+const ApiIntegrationsXImportRoute = ApiIntegrationsXImportRouteImport.update({
+  id: '/import',
+  path: '/import',
+  getParentRoute: () => ApiIntegrationsXRoute,
+} as any)
+const ApiIntegrationsXPostsRoute = ApiIntegrationsXPostsRouteImport.update({
+  id: '/posts',
+  path: '/posts',
+  getParentRoute: () => ApiIntegrationsXRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/add-content': typeof AddContentRoute
   '/brand-territories': typeof BrandTerritoriesRoute
   '/foundation': typeof FoundationRoute
+  '/import': typeof ImportRoute
   '/import-youtube': typeof ImportYoutubeRoute
   '/library': typeof LibraryRoute
   '/login': typeof LoginRoute
@@ -229,6 +293,7 @@ export interface FileRoutesByFullPath {
   '/api/content': typeof ApiContentRoute
   '/api/content-library': typeof ApiContentLibraryRoute
   '/api/foundation': typeof ApiFoundationRoute
+  '/api/integrations': typeof ApiIntegrationsRouteWithChildren
   '/api/onboarding': typeof ApiOnboardingRoute
   '/api/plan-content': typeof ApiPlanContentRoute
   '/api/profile': typeof ApiProfileRoute
@@ -239,18 +304,27 @@ export interface FileRoutesByFullPath {
   '/api/dev/search-dna-test': typeof ApiDevSearchDnaTestRoute
   '/api/dev/story-intelligence-test': typeof ApiDevStoryIntelligenceTestRoute
   '/api/dev/supabase-test': typeof ApiDevSupabaseTestRoute
+  '/api/integrations/linkedin': typeof ApiIntegrationsLinkedinRouteWithChildren
+  '/api/integrations/x': typeof ApiIntegrationsXRouteWithChildren
   '/api/youtube/channel': typeof ApiYoutubeChannelRoute
   '/api/youtube/import': typeof ApiYoutubeImportRoute
   '/api/youtube/imported': typeof ApiYoutubeImportedRoute
   '/api/youtube/playlist-videos': typeof ApiYoutubePlaylistVideosRoute
   '/api/youtube/playlists': typeof ApiYoutubePlaylistsRoute
   '/api/youtube/videos': typeof ApiYoutubeVideosRoute
+  '/api/integrations/linkedin/callback': typeof ApiIntegrationsLinkedinCallbackRoute
+  '/api/integrations/linkedin/connect': typeof ApiIntegrationsLinkedinConnectRoute
+  '/api/integrations/x/callback': typeof ApiIntegrationsXCallbackRoute
+  '/api/integrations/x/connect': typeof ApiIntegrationsXConnectRoute
+  '/api/integrations/x/import': typeof ApiIntegrationsXImportRoute
+  '/api/integrations/x/posts': typeof ApiIntegrationsXPostsRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/add-content': typeof AddContentRoute
   '/brand-territories': typeof BrandTerritoriesRoute
   '/foundation': typeof FoundationRoute
+  '/import': typeof ImportRoute
   '/import-youtube': typeof ImportYoutubeRoute
   '/library': typeof LibraryRoute
   '/login': typeof LoginRoute
@@ -264,6 +338,7 @@ export interface FileRoutesByTo {
   '/api/content': typeof ApiContentRoute
   '/api/content-library': typeof ApiContentLibraryRoute
   '/api/foundation': typeof ApiFoundationRoute
+  '/api/integrations': typeof ApiIntegrationsRouteWithChildren
   '/api/onboarding': typeof ApiOnboardingRoute
   '/api/plan-content': typeof ApiPlanContentRoute
   '/api/profile': typeof ApiProfileRoute
@@ -274,12 +349,20 @@ export interface FileRoutesByTo {
   '/api/dev/search-dna-test': typeof ApiDevSearchDnaTestRoute
   '/api/dev/story-intelligence-test': typeof ApiDevStoryIntelligenceTestRoute
   '/api/dev/supabase-test': typeof ApiDevSupabaseTestRoute
+  '/api/integrations/linkedin': typeof ApiIntegrationsLinkedinRouteWithChildren
+  '/api/integrations/x': typeof ApiIntegrationsXRouteWithChildren
   '/api/youtube/channel': typeof ApiYoutubeChannelRoute
   '/api/youtube/import': typeof ApiYoutubeImportRoute
   '/api/youtube/imported': typeof ApiYoutubeImportedRoute
   '/api/youtube/playlist-videos': typeof ApiYoutubePlaylistVideosRoute
   '/api/youtube/playlists': typeof ApiYoutubePlaylistsRoute
   '/api/youtube/videos': typeof ApiYoutubeVideosRoute
+  '/api/integrations/linkedin/callback': typeof ApiIntegrationsLinkedinCallbackRoute
+  '/api/integrations/linkedin/connect': typeof ApiIntegrationsLinkedinConnectRoute
+  '/api/integrations/x/callback': typeof ApiIntegrationsXCallbackRoute
+  '/api/integrations/x/connect': typeof ApiIntegrationsXConnectRoute
+  '/api/integrations/x/import': typeof ApiIntegrationsXImportRoute
+  '/api/integrations/x/posts': typeof ApiIntegrationsXPostsRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -287,6 +370,7 @@ export interface FileRoutesById {
   '/add-content': typeof AddContentRoute
   '/brand-territories': typeof BrandTerritoriesRoute
   '/foundation': typeof FoundationRoute
+  '/import': typeof ImportRoute
   '/import-youtube': typeof ImportYoutubeRoute
   '/library': typeof LibraryRoute
   '/login': typeof LoginRoute
@@ -300,6 +384,7 @@ export interface FileRoutesById {
   '/api/content': typeof ApiContentRoute
   '/api/content-library': typeof ApiContentLibraryRoute
   '/api/foundation': typeof ApiFoundationRoute
+  '/api/integrations': typeof ApiIntegrationsRouteWithChildren
   '/api/onboarding': typeof ApiOnboardingRoute
   '/api/plan-content': typeof ApiPlanContentRoute
   '/api/profile': typeof ApiProfileRoute
@@ -310,12 +395,20 @@ export interface FileRoutesById {
   '/api/dev/search-dna-test': typeof ApiDevSearchDnaTestRoute
   '/api/dev/story-intelligence-test': typeof ApiDevStoryIntelligenceTestRoute
   '/api/dev/supabase-test': typeof ApiDevSupabaseTestRoute
+  '/api/integrations/linkedin': typeof ApiIntegrationsLinkedinRouteWithChildren
+  '/api/integrations/x': typeof ApiIntegrationsXRouteWithChildren
   '/api/youtube/channel': typeof ApiYoutubeChannelRoute
   '/api/youtube/import': typeof ApiYoutubeImportRoute
   '/api/youtube/imported': typeof ApiYoutubeImportedRoute
   '/api/youtube/playlist-videos': typeof ApiYoutubePlaylistVideosRoute
   '/api/youtube/playlists': typeof ApiYoutubePlaylistsRoute
   '/api/youtube/videos': typeof ApiYoutubeVideosRoute
+  '/api/integrations/linkedin/callback': typeof ApiIntegrationsLinkedinCallbackRoute
+  '/api/integrations/linkedin/connect': typeof ApiIntegrationsLinkedinConnectRoute
+  '/api/integrations/x/callback': typeof ApiIntegrationsXCallbackRoute
+  '/api/integrations/x/connect': typeof ApiIntegrationsXConnectRoute
+  '/api/integrations/x/import': typeof ApiIntegrationsXImportRoute
+  '/api/integrations/x/posts': typeof ApiIntegrationsXPostsRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -324,6 +417,7 @@ export interface FileRouteTypes {
     | '/add-content'
     | '/brand-territories'
     | '/foundation'
+    | '/import'
     | '/import-youtube'
     | '/library'
     | '/login'
@@ -337,6 +431,7 @@ export interface FileRouteTypes {
     | '/api/content'
     | '/api/content-library'
     | '/api/foundation'
+    | '/api/integrations'
     | '/api/onboarding'
     | '/api/plan-content'
     | '/api/profile'
@@ -347,18 +442,27 @@ export interface FileRouteTypes {
     | '/api/dev/search-dna-test'
     | '/api/dev/story-intelligence-test'
     | '/api/dev/supabase-test'
+    | '/api/integrations/linkedin'
+    | '/api/integrations/x'
     | '/api/youtube/channel'
     | '/api/youtube/import'
     | '/api/youtube/imported'
     | '/api/youtube/playlist-videos'
     | '/api/youtube/playlists'
     | '/api/youtube/videos'
+    | '/api/integrations/linkedin/callback'
+    | '/api/integrations/linkedin/connect'
+    | '/api/integrations/x/callback'
+    | '/api/integrations/x/connect'
+    | '/api/integrations/x/import'
+    | '/api/integrations/x/posts'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/add-content'
     | '/brand-territories'
     | '/foundation'
+    | '/import'
     | '/import-youtube'
     | '/library'
     | '/login'
@@ -372,6 +476,7 @@ export interface FileRouteTypes {
     | '/api/content'
     | '/api/content-library'
     | '/api/foundation'
+    | '/api/integrations'
     | '/api/onboarding'
     | '/api/plan-content'
     | '/api/profile'
@@ -382,18 +487,27 @@ export interface FileRouteTypes {
     | '/api/dev/search-dna-test'
     | '/api/dev/story-intelligence-test'
     | '/api/dev/supabase-test'
+    | '/api/integrations/linkedin'
+    | '/api/integrations/x'
     | '/api/youtube/channel'
     | '/api/youtube/import'
     | '/api/youtube/imported'
     | '/api/youtube/playlist-videos'
     | '/api/youtube/playlists'
     | '/api/youtube/videos'
+    | '/api/integrations/linkedin/callback'
+    | '/api/integrations/linkedin/connect'
+    | '/api/integrations/x/callback'
+    | '/api/integrations/x/connect'
+    | '/api/integrations/x/import'
+    | '/api/integrations/x/posts'
   id:
     | '__root__'
     | '/'
     | '/add-content'
     | '/brand-territories'
     | '/foundation'
+    | '/import'
     | '/import-youtube'
     | '/library'
     | '/login'
@@ -407,6 +521,7 @@ export interface FileRouteTypes {
     | '/api/content'
     | '/api/content-library'
     | '/api/foundation'
+    | '/api/integrations'
     | '/api/onboarding'
     | '/api/plan-content'
     | '/api/profile'
@@ -417,12 +532,20 @@ export interface FileRouteTypes {
     | '/api/dev/search-dna-test'
     | '/api/dev/story-intelligence-test'
     | '/api/dev/supabase-test'
+    | '/api/integrations/linkedin'
+    | '/api/integrations/x'
     | '/api/youtube/channel'
     | '/api/youtube/import'
     | '/api/youtube/imported'
     | '/api/youtube/playlist-videos'
     | '/api/youtube/playlists'
     | '/api/youtube/videos'
+    | '/api/integrations/linkedin/callback'
+    | '/api/integrations/linkedin/connect'
+    | '/api/integrations/x/callback'
+    | '/api/integrations/x/connect'
+    | '/api/integrations/x/import'
+    | '/api/integrations/x/posts'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -430,6 +553,7 @@ export interface RootRouteChildren {
   AddContentRoute: typeof AddContentRoute
   BrandTerritoriesRoute: typeof BrandTerritoriesRoute
   FoundationRoute: typeof FoundationRoute
+  ImportRoute: typeof ImportRoute
   ImportYoutubeRoute: typeof ImportYoutubeRoute
   LibraryRoute: typeof LibraryRoute
   LoginRoute: typeof LoginRoute
@@ -443,6 +567,7 @@ export interface RootRouteChildren {
   ApiContentRoute: typeof ApiContentRoute
   ApiContentLibraryRoute: typeof ApiContentLibraryRoute
   ApiFoundationRoute: typeof ApiFoundationRoute
+  ApiIntegrationsRoute: typeof ApiIntegrationsRouteWithChildren
   ApiOnboardingRoute: typeof ApiOnboardingRoute
   ApiPlanContentRoute: typeof ApiPlanContentRoute
   ApiProfileRoute: typeof ApiProfileRoute
@@ -489,6 +614,13 @@ declare module '@tanstack/react-router' {
       path: '/foundation'
       fullPath: '/foundation'
       preLoaderRoute: typeof FoundationRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/import': {
+      id: '/import'
+      path: '/import'
+      fullPath: '/import'
+      preLoaderRoute: typeof ImportRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/import-youtube': {
@@ -582,6 +714,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiFoundationRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/integrations': {
+      id: '/api/integrations'
+      path: '/api/integrations'
+      fullPath: '/api/integrations'
+      preLoaderRoute: typeof ApiIntegrationsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/onboarding': {
       id: '/api/onboarding'
       path: '/api/onboarding'
@@ -652,6 +791,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiDevSupabaseTestRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/integrations/linkedin': {
+      id: '/api/integrations/linkedin'
+      path: '/linkedin'
+      fullPath: '/api/integrations/linkedin'
+      preLoaderRoute: typeof ApiIntegrationsLinkedinRouteImport
+      parentRoute: typeof ApiIntegrationsRoute
+    }
+    '/api/integrations/x': {
+      id: '/api/integrations/x'
+      path: '/x'
+      fullPath: '/api/integrations/x'
+      preLoaderRoute: typeof ApiIntegrationsXRouteImport
+      parentRoute: typeof ApiIntegrationsRoute
+    }
     '/api/youtube/channel': {
       id: '/api/youtube/channel'
       path: '/api/youtube/channel'
@@ -694,14 +847,104 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiYoutubeVideosRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/integrations/linkedin/callback': {
+      id: '/api/integrations/linkedin/callback'
+      path: '/callback'
+      fullPath: '/api/integrations/linkedin/callback'
+      preLoaderRoute: typeof ApiIntegrationsLinkedinCallbackRouteImport
+      parentRoute: typeof ApiIntegrationsLinkedinRoute
+    }
+    '/api/integrations/linkedin/connect': {
+      id: '/api/integrations/linkedin/connect'
+      path: '/connect'
+      fullPath: '/api/integrations/linkedin/connect'
+      preLoaderRoute: typeof ApiIntegrationsLinkedinConnectRouteImport
+      parentRoute: typeof ApiIntegrationsLinkedinRoute
+    }
+    '/api/integrations/x/callback': {
+      id: '/api/integrations/x/callback'
+      path: '/callback'
+      fullPath: '/api/integrations/x/callback'
+      preLoaderRoute: typeof ApiIntegrationsXCallbackRouteImport
+      parentRoute: typeof ApiIntegrationsXRoute
+    }
+    '/api/integrations/x/connect': {
+      id: '/api/integrations/x/connect'
+      path: '/connect'
+      fullPath: '/api/integrations/x/connect'
+      preLoaderRoute: typeof ApiIntegrationsXConnectRouteImport
+      parentRoute: typeof ApiIntegrationsXRoute
+    }
+    '/api/integrations/x/import': {
+      id: '/api/integrations/x/import'
+      path: '/import'
+      fullPath: '/api/integrations/x/import'
+      preLoaderRoute: typeof ApiIntegrationsXImportRouteImport
+      parentRoute: typeof ApiIntegrationsXRoute
+    }
+    '/api/integrations/x/posts': {
+      id: '/api/integrations/x/posts'
+      path: '/posts'
+      fullPath: '/api/integrations/x/posts'
+      preLoaderRoute: typeof ApiIntegrationsXPostsRouteImport
+      parentRoute: typeof ApiIntegrationsXRoute
+    }
   }
 }
+
+interface ApiIntegrationsLinkedinRouteChildren {
+  ApiIntegrationsLinkedinCallbackRoute: typeof ApiIntegrationsLinkedinCallbackRoute
+  ApiIntegrationsLinkedinConnectRoute: typeof ApiIntegrationsLinkedinConnectRoute
+}
+
+const ApiIntegrationsLinkedinRouteChildren: ApiIntegrationsLinkedinRouteChildren =
+  {
+    ApiIntegrationsLinkedinCallbackRoute: ApiIntegrationsLinkedinCallbackRoute,
+    ApiIntegrationsLinkedinConnectRoute: ApiIntegrationsLinkedinConnectRoute,
+  }
+
+const ApiIntegrationsLinkedinRouteWithChildren =
+  ApiIntegrationsLinkedinRoute._addFileChildren(
+    ApiIntegrationsLinkedinRouteChildren,
+  )
+
+interface ApiIntegrationsXRouteChildren {
+  ApiIntegrationsXCallbackRoute: typeof ApiIntegrationsXCallbackRoute
+  ApiIntegrationsXConnectRoute: typeof ApiIntegrationsXConnectRoute
+  ApiIntegrationsXImportRoute: typeof ApiIntegrationsXImportRoute
+  ApiIntegrationsXPostsRoute: typeof ApiIntegrationsXPostsRoute
+}
+
+const ApiIntegrationsXRouteChildren: ApiIntegrationsXRouteChildren = {
+  ApiIntegrationsXCallbackRoute: ApiIntegrationsXCallbackRoute,
+  ApiIntegrationsXConnectRoute: ApiIntegrationsXConnectRoute,
+  ApiIntegrationsXImportRoute: ApiIntegrationsXImportRoute,
+  ApiIntegrationsXPostsRoute: ApiIntegrationsXPostsRoute,
+}
+
+const ApiIntegrationsXRouteWithChildren =
+  ApiIntegrationsXRoute._addFileChildren(ApiIntegrationsXRouteChildren)
+
+interface ApiIntegrationsRouteChildren {
+  ApiIntegrationsLinkedinRoute: typeof ApiIntegrationsLinkedinRouteWithChildren
+  ApiIntegrationsXRoute: typeof ApiIntegrationsXRouteWithChildren
+}
+
+const ApiIntegrationsRouteChildren: ApiIntegrationsRouteChildren = {
+  ApiIntegrationsLinkedinRoute: ApiIntegrationsLinkedinRouteWithChildren,
+  ApiIntegrationsXRoute: ApiIntegrationsXRouteWithChildren,
+}
+
+const ApiIntegrationsRouteWithChildren = ApiIntegrationsRoute._addFileChildren(
+  ApiIntegrationsRouteChildren,
+)
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AddContentRoute: AddContentRoute,
   BrandTerritoriesRoute: BrandTerritoriesRoute,
   FoundationRoute: FoundationRoute,
+  ImportRoute: ImportRoute,
   ImportYoutubeRoute: ImportYoutubeRoute,
   LibraryRoute: LibraryRoute,
   LoginRoute: LoginRoute,
@@ -715,6 +958,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiContentRoute: ApiContentRoute,
   ApiContentLibraryRoute: ApiContentLibraryRoute,
   ApiFoundationRoute: ApiFoundationRoute,
+  ApiIntegrationsRoute: ApiIntegrationsRouteWithChildren,
   ApiOnboardingRoute: ApiOnboardingRoute,
   ApiPlanContentRoute: ApiPlanContentRoute,
   ApiProfileRoute: ApiProfileRoute,

@@ -1,5 +1,11 @@
 import type { ReactNode } from "react";
-import { FileText, Linkedin, Youtube } from "lucide-react";
+import {
+  AtSign,
+  ExternalLink,
+  FileText,
+  Linkedin,
+  Youtube,
+} from "lucide-react";
 import { DnaTypeIcon } from "@/components/DnaTypeIcon";
 import {
   KIND_META,
@@ -74,10 +80,12 @@ export function SourceProvenance({
   title,
   platform,
   date,
+  url,
 }: {
   title?: string | null | undefined;
   platform?: string | null | undefined;
   date?: string | null | undefined;
+  url?: string | null | undefined;
 }) {
   const source =
     title === "Creator Foundation"
@@ -88,11 +96,25 @@ export function SourceProvenance({
       ? Youtube
       : source.toLowerCase() === "linkedin"
         ? Linkedin
-        : FileText;
+        : source.toLowerCase() === "x"
+          ? AtSign
+          : FileText;
   return (
     <div className="flex items-center gap-2 text-xs text-muted-foreground">
       <Icon className="h-3.5 w-3.5 shrink-0" />
-      <span className="font-semibold text-midnight">{title || source}</span>
+      {url ? (
+        <a
+          href={url}
+          target="_blank"
+          rel="noreferrer"
+          className="inline-flex items-center gap-1 font-semibold text-midnight hover:text-primary focus-visible:ring-2 focus-visible:ring-ring"
+        >
+          {title || source}
+          <ExternalLink className="h-3 w-3" />
+        </a>
+      ) : (
+        <span className="font-semibold text-midnight">{title || source}</span>
+      )}
       <span>{source}</span>
       {date ? <span>· {new Date(date).toLocaleDateString()}</span> : null}
     </div>

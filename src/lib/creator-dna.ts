@@ -609,7 +609,7 @@ export const libraryItems: LibraryItem[] = [
   },
 ];
 
-export const platforms = ["LinkedIn", "Newsletter", "Podcast", "YouTube"];
+export const platforms = ["LinkedIn", "X", "Newsletter", "Podcast", "YouTube"];
 export const allThemes = [
   "Entrepreneurship",
   "Career growth",

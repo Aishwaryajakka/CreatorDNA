@@ -87,6 +87,28 @@ export async function getContentItemByExternalId(
   return data ? toContentItem(data) : null;
 }
 
+export async function getImportedExternalIds(
+  userId: string,
+  source: string,
+  externalIds: string[],
+): Promise<Set<string>> {
+  const uniqueIds = [...new Set(externalIds)];
+  if (!uniqueIds.length) return new Set();
+  const { data, error } = await supabaseServer
+    .from("content_items")
+    .select("external_id")
+    .eq("user_id", userId)
+    .eq("external_source", source)
+    .in("external_id", uniqueIds);
+  if (error)
+    throw new Error(`Failed to check imported content: ${error.message}`);
+  return new Set(
+    data
+      .map((row) => row.external_id)
+      .filter((id): id is string => Boolean(id)),
+  );
+}
+
 export async function addContentItemPlaylistAssociations(
   contentId: string,
   userId: string,
@@ -236,12 +258,18 @@ export async function getDnaNodesForUser(
 ): Promise<CreatorDNANode[]> {
   const { data: content, error: contentError } = await supabaseServer
     .from("content_items")
-    .select("id")
+    .select("id,platform,external_url")
     .eq("user_id", userId);
   if (contentError)
     throw new Error(`Failed to fetch content items: ${contentError.message}`);
   const contentIds = content.map((item) => item.id);
   if (contentIds.length === 0) return [];
+  const sourcesByContentId = new Map(
+    content.map((item) => [
+      item.id,
+      { platform: item.platform, url: item.external_url },
+    ]),
+  );
   const { data, error } = await supabaseServer
     .from("dna_nodes")
     .select(
@@ -251,7 +279,17 @@ export async function getDnaNodesForUser(
     .order("created_at", { ascending: true });
   if (error)
     throw new Error(`Failed to fetch Story Map nodes: ${error.message}`);
-  return data.map(toDnaNode);
+  return data.map((row) => {
+    const node = toDnaNode(row);
+    const source = row.content_id
+      ? sourcesByContentId.get(row.content_id)
+      : undefined;
+    return {
+      ...node,
+      sourcePlatform: source?.platform ?? null,
+      sourceUrl: source?.url ?? null,
+    };
+  });
 }
 
 export async function replaceFoundationNodes(

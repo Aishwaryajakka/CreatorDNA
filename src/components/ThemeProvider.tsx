@@ -6,44 +6,29 @@ import {
   type ReactNode,
 } from "react";
 import { Moon, Sun } from "lucide-react";
+import { THEME_COOKIE_NAME, type ResolvedTheme } from "@/lib/theme";
 
-export type ThemePreference = "system" | "light" | "dark";
+export type ThemePreference = ResolvedTheme;
 
 const PUBLIC_STORAGE_KEY = "creator-dna-public-theme";
-const APP_STORAGE_KEY = "creator-dna-app-theme";
-
-function resolveTheme(preference: ThemePreference): "light" | "dark" {
-  if (preference !== "system") return preference;
-  return window.matchMedia("(prefers-color-scheme: dark)").matches
-    ? "dark"
-    : "light";
-}
 
 export function ThemeProvider({
   children,
+  initialTheme,
   storageKey = PUBLIC_STORAGE_KEY,
 }: {
   children: ReactNode;
+  initialTheme: ResolvedTheme;
   storageKey?: string;
 }) {
-  const [preference, setPreference] = useState<ThemePreference>(() => {
-    if (typeof window === "undefined") return "system";
-    const stored = window.localStorage.getItem(storageKey);
-    return stored === "light" || stored === "dark" || stored === "system"
-      ? stored
-      : "system";
-  });
+  const [preference, setPreference] = useState<ThemePreference>(initialTheme);
 
   useEffect(() => {
     const root = document.documentElement;
-    const apply = () =>
-      root.classList.toggle("dark", resolveTheme(preference) === "dark");
-    apply();
+    root.classList.toggle("dark", preference === "dark");
     window.localStorage.setItem(storageKey, preference);
-    if (preference !== "system") return;
-    const media = window.matchMedia("(prefers-color-scheme: dark)");
-    media.addEventListener("change", apply);
-    return () => media.removeEventListener("change", apply);
+    const secure = window.location.protocol === "https:" ? "; Secure" : "";
+    document.cookie = `${THEME_COOKIE_NAME}=${preference}; Path=/; SameSite=Lax; Max-Age=31536000${secure}`;
   }, [preference, storageKey]);
 
   return (
@@ -56,7 +41,7 @@ export function ThemeProvider({
 const ThemeContext = createContext<{
   preference: ThemePreference;
   setPreference: (preference: ThemePreference) => void;
-}>({ preference: "system", setPreference: () => undefined });
+}>({ preference: "light", setPreference: () => undefined });
 
 export function useTheme() {
   return useContext(ThemeContext);
@@ -67,11 +52,7 @@ export function ThemeToggle({
   variant = "slider",
 }: { className?: string; variant?: "slider" | "icon" } = {}) {
   const { preference, setPreference } = useTheme();
-  const isDark =
-    preference === "dark" ||
-    (preference === "system" &&
-      typeof window !== "undefined" &&
-      window.matchMedia("(prefers-color-scheme: dark)").matches);
+  const isDark = preference === "dark";
   const label = isDark ? "Switch to light mode" : "Switch to dark mode";
   const toggleTheme = () => {
     const update = () => setPreference(isDark ? "light" : "dark");

@@ -11,6 +11,66 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      oauth_states: {
+        Relationships: [];
+        Row: {
+          id: string;
+          user_id: string;
+          provider: "linkedin" | "x";
+          state_hash: string;
+          pkce_verifier_encrypted: string | null;
+          expires_at: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          provider: "linkedin" | "x";
+          state_hash: string;
+          pkce_verifier_encrypted?: string | null;
+          expires_at: string;
+          created_at?: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["oauth_states"]["Insert"]>;
+      };
+      social_connections: {
+        Relationships: [];
+        Row: {
+          id: string;
+          user_id: string;
+          provider: "linkedin" | "x";
+          provider_user_id: string | null;
+          provider_username: string | null;
+          provider_display_name: string | null;
+          provider_avatar_url: string | null;
+          scopes: Json;
+          access_token_encrypted: string;
+          refresh_token_encrypted: string | null;
+          access_token_expires_at: string | null;
+          metadata: Json;
+          connected_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          provider: "linkedin" | "x";
+          provider_user_id?: string | null;
+          provider_username?: string | null;
+          provider_display_name?: string | null;
+          provider_avatar_url?: string | null;
+          scopes?: Json;
+          access_token_encrypted: string;
+          refresh_token_encrypted?: string | null;
+          access_token_expires_at?: string | null;
+          metadata?: Json;
+          connected_at?: string;
+          updated_at?: string;
+        };
+        Update: Partial<
+          Database["public"]["Tables"]["social_connections"]["Insert"]
+        >;
+      };
       brand_territories: {
         Relationships: [];
         Row: {

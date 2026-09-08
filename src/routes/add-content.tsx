@@ -8,6 +8,12 @@ import { authenticatedFetch } from "@/lib/supabase/client";
 import { DataPulse, DNAStrandGraphic } from "@/components/Motion";
 
 export const Route = createFileRoute("/add-content")({
+  validateSearch: (
+    search: Record<string, unknown>,
+  ): { platform?: "linkedin" | "x" } =>
+    search["platform"] === "linkedin" || search["platform"] === "x"
+      ? { platform: search["platform"] }
+      : {},
   head: () => ({
     meta: [
       { title: "Build your Creator DNA — Add content" },
@@ -28,10 +34,17 @@ export const Route = createFileRoute("/add-content")({
 });
 
 function AddContent() {
+  const search = Route.useSearch();
   const [state, setState] = useState<"idle" | "working" | "done">("idle");
   const [title, setTitle] = useState("");
   const [rawText, setRawText] = useState("");
-  const [platform, setPlatform] = useState(platforms[0] ?? "");
+  const [platform, setPlatform] = useState(
+    search.platform === "linkedin"
+      ? "LinkedIn"
+      : search.platform === "x"
+        ? "X"
+        : (platforms[0] ?? ""),
+  );
   const [publishedAt, setPublishedAt] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<IngestionResponse | null>(null);

@@ -2,6 +2,7 @@ import { useEffect, useRef, useState, type ReactNode } from "react";
 import { Link, useLocation, useNavigate } from "@tanstack/react-router";
 import {
   Home,
+  Import,
   Library,
   LogOut,
   Menu,
@@ -11,7 +12,6 @@ import {
   Settings,
   Sparkle,
   UserRound,
-  Youtube,
   X,
   type LucideIcon,
 } from "lucide-react";
@@ -51,7 +51,7 @@ function SidebarLink({
     | "/foundation"
     | "/brand-territories"
     | "/library"
-    | "/import-youtube"
+    | "/import"
     | "/add-content"
     | "/plan";
   label: string;
@@ -184,11 +184,7 @@ export function AppSidebar() {
             <SidebarLink to="/library" label="Content Library" icon={Library} />
           </SidebarGroup>
           <SidebarGroup title="GROW">
-            <SidebarLink
-              to="/import-youtube"
-              label="Import YouTube"
-              icon={Youtube}
-            />
+            <SidebarLink to="/import" label="Import Content" icon={Import} />
             <SidebarLink to="/add-content" label="Add Content" icon={Sparkle} />
           </SidebarGroup>
           <SidebarGroup title="RESEARCH">

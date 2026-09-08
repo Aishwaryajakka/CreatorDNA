@@ -164,10 +164,11 @@ function Onboarding() {
           </p>
           <div className="mt-8 flex flex-col justify-center gap-3 sm:flex-row">
             <Link
-              to="/import-youtube"
+              to="/import"
+              search={{ source: "youtube" }}
               className="motion-cta glow-lime inline-flex items-center justify-center gap-2 rounded-xl bg-chartreuse px-5 py-3 text-sm font-bold text-[#050811] hover:bg-white"
             >
-              <Youtube className="h-4 w-4" /> Import YouTube
+              <Youtube className="h-4 w-4" /> Import Content
             </Link>
             <Link
               to="/add-content"

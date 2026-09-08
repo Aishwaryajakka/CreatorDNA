@@ -2,7 +2,7 @@
 
 import type { User } from "@supabase/supabase-js";
 
-import { supabaseServer } from "./server";
+import { supabaseAuthServer } from "./server";
 
 export class AuthenticationError extends Error {
   constructor(message = "Authentication required.") {
@@ -20,7 +20,7 @@ export async function getAuthenticatedUser(
   const token = authorization.slice("Bearer ".length).trim();
   if (!token) return null;
 
-  const { data, error } = await supabaseServer.auth.getUser(token);
+  const { data, error } = await supabaseAuthServer.auth.getUser(token);
   return error ? null : data.user;
 }
 

@@ -16,6 +16,7 @@ import { AppSidebar } from "@/components/AppSidebar";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { AuthProvider, useAuthState } from "@/lib/auth-state";
 import { DataPulse } from "@/components/Motion";
+import { getInitialTheme } from "@/lib/theme-initial";
 
 function NotFoundComponent() {
   return (
@@ -107,6 +108,8 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       ],
     }),
 
+    loader: async () => ({ initialTheme: await getInitialTheme() }),
+
     shellComponent: RootShell,
     component: RootComponent,
     notFoundComponent: NotFoundComponent,
@@ -115,17 +118,14 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
 );
 
 function RootShell({ children }: { children: ReactNode }) {
+  const { initialTheme } = Route.useLoaderData();
+
   return (
-    <html lang="en">
+    <html lang="en" className={initialTheme === "dark" ? "dark" : undefined}>
       <head>
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `(function(){try{var t=localStorage.getItem('creator-dna-public-theme');var d=t==='dark'||(t!=='light'&&matchMedia('(prefers-color-scheme: dark)').matches);document.documentElement.classList.toggle('dark',d)}catch(e){}})()`,
-          }}
-        />
         <HeadContent />
       </head>
-      <body>
+      <body suppressHydrationWarning>
         {children}
         <Scripts />
       </body>
@@ -146,6 +146,7 @@ function RootComponent() {
 }
 
 function RootContent() {
+  const { initialTheme } = Route.useLoaderData();
   const location = useLocation();
   const { status } = useAuthState();
   const publicPath = ["/login", "/reset-password"].includes(location.pathname);
@@ -154,7 +155,7 @@ function RootContent() {
 
   return (
     <ThemeProvider
-      key={authenticated ? "app-theme" : "public-theme"}
+      initialTheme={initialTheme}
       storageKey={
         authenticated ? "creator-dna-app-theme" : "creator-dna-public-theme"
       }

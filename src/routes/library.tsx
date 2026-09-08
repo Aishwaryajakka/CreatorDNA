@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
-import { Search } from "lucide-react";
+import { ExternalLink, Search } from "lucide-react";
 import { PageHeader, Panel } from "@/components/dna-ui";
 import { authenticatedFetch } from "@/lib/supabase/client";
 import {
@@ -42,6 +42,7 @@ type LibraryRow = {
   title: string;
   platform: string;
   date: string;
+  sourceUrl?: string | null;
   counts: Record<string, number>;
 };
 
@@ -167,7 +168,19 @@ function LibraryPage() {
                     className="border-b border-border transition-[background-color,box-shadow] duration-[160ms] last:border-0 hover:bg-aqua-accent/5 hover:shadow-[inset_3px_0_0_var(--aqua-accent)]"
                   >
                     <td className="px-5 py-4 font-semibold text-midnight">
-                      {i.title}
+                      {i.sourceUrl ? (
+                        <a
+                          href={i.sourceUrl}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="inline-flex items-center gap-1.5 hover:text-primary focus-visible:ring-2 focus-visible:ring-ring"
+                        >
+                          {i.title}
+                          <ExternalLink className="h-3.5 w-3.5 shrink-0" />
+                        </a>
+                      ) : (
+                        i.title
+                      )}
                     </td>
                     <td className="px-5 py-4 text-muted-foreground">
                       {i.platform === "Manual" &&

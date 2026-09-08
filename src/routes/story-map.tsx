@@ -790,7 +790,12 @@ function Detail({
         <div>
           <dt className="eyebrow">Source</dt>
           <dd className="mt-1">
-            <SourceProvenance title={node.sourceTitle} date={node.sourceDate} />
+            <SourceProvenance
+              title={node.sourceTitle}
+              platform={node.sourcePlatform}
+              date={node.sourceDate}
+              url={node.sourceUrl}
+            />
           </dd>
         </div>
         {node.confidence != null && (

@@ -52,6 +52,8 @@ export type CreatorDNANode = {
   confidence?: number | null;
   sourceTitle?: string | null;
   sourceDate?: string | null;
+  sourcePlatform?: string | null;
+  sourceUrl?: string | null;
   embedding?: number[] | null;
   createdAt?: string;
 };

@@ -3,13 +3,20 @@ import {
   requireAuthenticatedUser,
   AuthenticationError,
 } from "@/lib/supabase/auth";
-import { listRecentYouTubeVideos, YouTubeApiError } from "@/lib/youtube/server";
+import { listRecentYouTubeVideos } from "@/lib/youtube/server";
 
 export const Route = createFileRoute("/api/youtube/videos")({
   server: {
     handlers: {
       GET: async ({ request }) => {
         try {
+          if (process.env["NODE_ENV"] !== "production")
+            console.info("[youtube]", {
+              step: "videos_route_reached",
+              uploadsPlaylistIdPresent: new URL(request.url).searchParams.has(
+                "uploadsPlaylistId",
+              ),
+            });
           await requireAuthenticatedUser(request);
           const params = new URL(request.url).searchParams;
           const uploadsPlaylistId = params.get("uploadsPlaylistId");
@@ -32,10 +39,7 @@ export const Route = createFileRoute("/api/youtube/videos")({
             );
           return Response.json(
             {
-              error:
-                error instanceof YouTubeApiError
-                  ? error.message
-                  : "Unable to load recent videos.",
+              error: "Could not load YouTube videos.",
             },
             { status: 502 },
           );

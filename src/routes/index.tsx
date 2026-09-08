@@ -857,7 +857,7 @@ function LandingPage() {
                 </li>
                 <li>
                   <Link to="/login" className="hover:text-chartreuse">
-                    Import YouTube
+                    Import Content
                   </Link>
                 </li>
                 <li>

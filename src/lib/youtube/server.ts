@@ -3,10 +3,26 @@
 const YOUTUBE_API_BASE = "https://www.googleapis.com/youtube/v3";
 
 export class YouTubeApiError extends Error {
-  constructor(message: string, options?: ErrorOptions) {
+  readonly status: number | undefined;
+  readonly reason: string | undefined;
+
+  constructor(
+    message: string,
+    options?: ErrorOptions & { status?: number; reason?: string },
+  ) {
     super(message, options);
     this.name = "YouTubeApiError";
+    this.status = options?.status;
+    this.reason = options?.reason;
   }
+}
+
+function youtubeDiagnostic(
+  step: string,
+  details: { status?: number; reason?: string; message?: string } = {},
+): void {
+  if (process.env["NODE_ENV"] === "production") return;
+  console.info("[youtube]", { step, ...details });
 }
 
 function getApiKey(): string {
@@ -21,6 +37,7 @@ async function youtubeRequest<T>(
 ): Promise<T> {
   const url = new URL(`${YOUTUBE_API_BASE}/${resource}`);
   url.search = new URLSearchParams({ ...params, key: getApiKey() }).toString();
+  youtubeDiagnostic("upstream_request", { message: url.pathname });
   let response: Response;
   try {
     response = await fetch(url);
@@ -35,26 +52,46 @@ async function youtubeRequest<T>(
     const reason = isYouTubeErrorBody(body)
       ? body.error?.errors?.[0]?.reason
       : undefined;
+    const upstreamMessage = isYouTubeErrorBody(body)
+      ? body.error?.message
+      : undefined;
+    youtubeDiagnostic("upstream_error", {
+      status: response.status,
+      ...(reason ? { reason } : {}),
+      ...(upstreamMessage
+        ? { message: upstreamMessage.replace(/[\r\n\t]+/g, " ").slice(0, 240) }
+        : {}),
+    });
     if (reason === "quotaExceeded") {
       throw new YouTubeApiError(
         "YouTube import quota has been reached. Try again later.",
+        { status: response.status, reason },
       );
     }
     if (response.status === 404 || reason === "playlistNotFound") {
       throw new YouTubeApiError(
         "That YouTube channel or playlist was not found.",
+        {
+          status: response.status,
+          ...(reason ? { reason } : {}),
+        },
       );
     }
-    throw new YouTubeApiError("YouTube could not return that data right now.");
+    throw new YouTubeApiError("YouTube could not return that data right now.", {
+      status: response.status,
+      ...(reason ? { reason } : {}),
+    });
   }
   if (!body || isYouTubeErrorBody(body)) {
+    youtubeDiagnostic("response_parse_failed", { status: response.status });
     throw new YouTubeApiError("YouTube returned an invalid response.");
   }
+  youtubeDiagnostic("response_parse_succeeded", { status: response.status });
   return body;
 }
 
 type YouTubeErrorBody = {
-  error?: { errors?: Array<{ reason?: string }> };
+  error?: { errors?: Array<{ reason?: string }>; message?: string };
 };
 
 function isYouTubeErrorBody(value: unknown): value is YouTubeErrorBody {
@@ -302,7 +339,22 @@ export async function listRecentYouTubeVideos(
   uploadsPlaylistId: string,
   pageToken?: string,
 ) {
-  return listPlaylistItems(uploadsPlaylistId, pageToken);
+  try {
+    return await listPlaylistItems(uploadsPlaylistId, pageToken);
+  } catch (error) {
+    if (
+      error instanceof YouTubeApiError &&
+      error.reason === "playlistNotFound" &&
+      uploadsPlaylistId.startsWith("UU")
+    ) {
+      youtubeDiagnostic("uploads_playlist_empty", {
+        ...(error.status === undefined ? {} : { status: error.status }),
+        reason: error.reason,
+      });
+      return { videos: [], nextPageToken: null };
+    }
+    throw error;
+  }
 }
 
 export async function listYouTubePlaylistVideos(
