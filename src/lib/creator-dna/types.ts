@@ -103,6 +103,19 @@ export type BrandEvidenceNode = Omit<CreatorDNANode, "embedding">;
 
 export type PlanningCreatorContext = {
   intendedBrandTerritories: BrandTerritory[];
+  creatorFoundation?: {
+    whatYouDo: string;
+    mainTopics: string;
+    expertise: string[];
+    beliefs: string[];
+    goals: string[];
+  };
+  externalResearch?: {
+    headline: string;
+    summary: string;
+    sources: Array<{ title: string; url: string; publisher: string }>;
+    whyItMatters: string;
+  };
 };
 
 export type CreatorDNAMatch = {
@@ -138,7 +151,44 @@ export type StoryIntelligenceAngle = {
   supportingNodeIds: string[];
 };
 
+export type AlignmentState =
+  "strong" | "mixed" | "weak" | "insufficient_evidence";
+
+export type AlignmentEvidence = {
+  text: string;
+  supportingNodeIds: string[];
+};
+
+export type StoryIntelligenceAlignment = {
+  state: AlignmentState;
+  why: AlignmentEvidence[];
+  watchOut: AlignmentEvidence[];
+  opportunity: string;
+};
+
+export type ReshapeMode =
+  "closer_to_story" | "stronger_point_of_view" | "fresh_angle";
+
+export type ReshapeResult = {
+  title: string;
+  angle: string;
+  platformPrep: {
+    platform: TargetPlatform;
+    hook?: string;
+    structure?: string[];
+    notes?: string[];
+  };
+  groundedIn: Array<{
+    nodeId: string;
+    type: CreatorDNANode["type"];
+    label: string;
+    summary?: string;
+    sourceTitle?: string | null;
+  }>;
+};
+
 export type StoryIntelligenceResult = {
+  alignment: StoryIntelligenceAlignment;
   relevantStories: Array<{
     summary: string;
     supportingNodeIds: string[];

@@ -11,6 +11,52 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      research_items: {
+        Relationships: [];
+        Row: {
+          id: string;
+          user_id: string;
+          headline: string;
+          summary: string;
+          published_at: string | null;
+          category: string | null;
+          source_data: Json;
+          query_context: Json;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          headline: string;
+          summary: string;
+          published_at?: string | null;
+          category?: string | null;
+          source_data?: Json;
+          query_context?: Json;
+          created_at?: string;
+        };
+        Update: Partial<
+          Database["public"]["Tables"]["research_items"]["Insert"]
+        >;
+      };
+      research_item_dna_links: {
+        Relationships: [];
+        Row: {
+          research_item_id: string;
+          dna_node_id: string;
+          relevance_summary: string;
+          created_at: string;
+        };
+        Insert: {
+          research_item_id: string;
+          dna_node_id: string;
+          relevance_summary: string;
+          created_at?: string;
+        };
+        Update: Partial<
+          Database["public"]["Tables"]["research_item_dna_links"]["Insert"]
+        >;
+      };
       oauth_states: {
         Relationships: [];
         Row: {

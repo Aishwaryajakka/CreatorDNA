@@ -53,6 +53,7 @@ function SidebarLink({
     | "/library"
     | "/import"
     | "/add-content"
+    | "/research"
     | "/plan";
   label: string;
   icon: LucideIcon;
@@ -68,27 +69,6 @@ function SidebarLink({
       />
       <span className="truncate">{label}</span>
     </Link>
-  );
-}
-
-function DisabledSidebarLink({
-  label,
-  icon: Icon,
-}: {
-  label: string;
-  icon: LucideIcon;
-}) {
-  return (
-    <div
-      aria-disabled="true"
-      className="flex items-center gap-3 rounded-lg border border-transparent px-3 py-2.5 text-sm font-medium text-sidebar-foreground/35"
-    >
-      <Icon
-        className="h-[18px] w-[18px] shrink-0 opacity-55"
-        strokeWidth={1.9}
-      />
-      <span>{label}</span>
-    </div>
   );
 }
 
@@ -188,7 +168,7 @@ export function AppSidebar() {
             <SidebarLink to="/add-content" label="Add Content" icon={Sparkle} />
           </SidebarGroup>
           <SidebarGroup title="RESEARCH">
-            <DisabledSidebarLink label="Research · Coming soon" icon={Search} />
+            <SidebarLink to="/research" label="Research" icon={Search} />
             <SidebarLink to="/plan" label="Plan Content" icon={Sparkle} />
           </SidebarGroup>
         </nav>

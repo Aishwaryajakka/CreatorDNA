@@ -24,6 +24,44 @@ const storyIntelligenceSchema = {
   type: "object",
   additionalProperties: false,
   properties: {
+    alignment: {
+      type: "object",
+      additionalProperties: false,
+      properties: {
+        state: {
+          type: "string",
+          enum: ["strong", "mixed", "weak", "insufficient_evidence"],
+        },
+        why: {
+          type: "array",
+          maxItems: 3,
+          items: {
+            type: "object",
+            additionalProperties: false,
+            properties: {
+              text: { type: "string" },
+              supportingNodeIds: { type: "array", items: { type: "string" } },
+            },
+            required: ["text", "supportingNodeIds"],
+          },
+        },
+        watchOut: {
+          type: "array",
+          maxItems: 3,
+          items: {
+            type: "object",
+            additionalProperties: false,
+            properties: {
+              text: { type: "string" },
+              supportingNodeIds: { type: "array", items: { type: "string" } },
+            },
+            required: ["text", "supportingNodeIds"],
+          },
+        },
+        opportunity: { type: "string" },
+      },
+      required: ["state", "why", "watchOut", "opportunity"],
+    },
     relevantStories: {
       type: "array",
       items: {
@@ -99,6 +137,7 @@ const storyIntelligenceSchema = {
     },
   },
   required: [
+    "alignment",
     "relevantStories",
     "previousPositions",
     "possiblePerspectiveEvolution",
@@ -130,7 +169,17 @@ Every supportingNodeIds value must contain only IDs from the supplied nodes.
 Create exactly three meaningfully different authentic angles, and ground every angle in retrieved nodes.
 Do not add any node IDs that are not supplied.
 The creator's DNA stays constant; adapt only the expression and framing of the three angles for the requested target platform.
-Do not invent platform-specific facts about the creator.`;
+Do not invent platform-specific facts about the creator.
+
+Assess alignment without percentages or scores:
+- strong: multiple historical DNA signals support the idea, it fits the current Foundation and intended territories, and no major contradiction or repetition risk dominates.
+- mixed: some evidence supports it, but there is meaningful tension, evolution, repetition risk, or intended direction with thinner historical grounding.
+- weak: historical support is slight or the idea conflicts with current beliefs/identity; intended territory alone is not proof.
+- insufficient_evidence: relevant Creator DNA is too thin to judge.
+Historical DNA is evidence of who the creator has been. Foundation is creator-declared current context. Brand Territories are intended direction, not proof of past authenticity.
+Every alignment why/watchOut claim must cite supplied node IDs. Return 1-3 why reasons when evidence exists. Return no watchOut items when there is no meaningful risk. Do not manufacture criticism.
+Perspective evolution is not automatically weak alignment: it can be the story opportunity. Authenticity and novelty are distinct, so a strongly aligned idea may still carry repetition risk.
+The opportunity must be one concise sentence explaining how to make the idea more authentic, differentiated, or useful.`;
 
 const platformGuidance: Record<TargetPlatform, string> = {
   linkedin: "Personal experience → professional lesson → practical takeaway.",
@@ -178,7 +227,15 @@ ${JSON.stringify(
 Intended Brand Territories (declared future direction, not historical evidence):
 ${JSON.stringify(creatorContext?.intendedBrandTerritories ?? [], null, 2)}
 
+Creator Foundation (creator-declared context, not external fact):
+${JSON.stringify(creatorContext?.creatorFoundation ?? null, null, 2)}
+
+External research (source-backed current facts, not creator history):
+${JSON.stringify(creatorContext?.externalResearch ?? null, null, 2)}
+
 Use this context only for alignment, opportunity, or future direction. Retrieved historical Creator DNA remains authoritative. Never let an intended territory overwrite contrary historical evidence or present it as something the creator has already discussed or believed. Supporting node IDs must still refer only to Retrieved Creator DNA.
+
+When external research is supplied, use only its stated facts and citations. Keep those external facts distinct from claims about the creator. Do not present external research as something the creator previously said or believed.
 
 Return the requested structured Story Intelligence result only.`;
 }
@@ -255,21 +312,101 @@ export async function analyzeContentIdea(
     threeAuthenticAngles: [firstAngle, secondAngle, thirdAngle],
   };
   const validNodeIds = new Set(retrievedDNA.map((node) => node.id));
-  const references = collectSupportingNodeIds(normalizedResult);
-  if (references.some((id) => !validNodeIds.has(id))) {
-    throw new CreatorDNAProviderError(
-      "Story Intelligence returned an unsupported evidence reference.",
-    );
-  }
-  return normalizedResult;
+  return sanitizeStoryIntelligence(normalizedResult, validNodeIds);
 }
 
-function collectSupportingNodeIds(result: StoryIntelligenceResult): string[] {
-  return [
-    ...result.relevantStories.flatMap((item) => item.supportingNodeIds),
-    ...result.previousPositions.flatMap((item) => item.supportingNodeIds),
-    ...result.possiblePerspectiveEvolution.supportingNodeIds,
-    ...result.possibleRepetition.supportingNodeIds,
-    ...result.threeAuthenticAngles.flatMap((item) => item.supportingNodeIds),
+function sanitizeStoryIntelligence(
+  result: StoryIntelligenceResult,
+  validNodeIds: Set<string>,
+): StoryIntelligenceResult {
+  const filterIds = (ids: string[]) => [
+    ...new Set(ids.filter((id) => validNodeIds.has(id))),
   ];
+  const relevantStories = result.relevantStories.flatMap((item) => {
+    const supportingNodeIds = filterIds(item.supportingNodeIds);
+    return supportingNodeIds.length ? [{ ...item, supportingNodeIds }] : [];
+  });
+  const previousPositions = result.previousPositions.flatMap((item) => {
+    const supportingNodeIds = filterIds(item.supportingNodeIds);
+    return supportingNodeIds.length ? [{ ...item, supportingNodeIds }] : [];
+  });
+  const evolutionIds = filterIds(
+    result.possiblePerspectiveEvolution.supportingNodeIds,
+  );
+  const repetitionIds = filterIds(result.possibleRepetition.supportingNodeIds);
+  const [firstAngle, secondAngle, thirdAngle] = result.threeAuthenticAngles.map(
+    (angle) => ({
+      ...angle,
+      supportingNodeIds: filterIds(angle.supportingNodeIds),
+    }),
+  );
+  if (!firstAngle || !secondAngle || !thirdAngle)
+    throw new CreatorDNAProviderError(
+      "Story Intelligence returned fewer than three angles.",
+    );
+  return {
+    ...result,
+    alignment: sanitizeAlignment(result.alignment, validNodeIds),
+    relevantStories,
+    previousPositions,
+    possiblePerspectiveEvolution:
+      result.possiblePerspectiveEvolution.status === "identified" &&
+      evolutionIds.length === 0
+        ? {
+            status: "insufficient evidence",
+            summary:
+              "There is not enough validated dated evidence to identify a meaningful perspective change.",
+            supportingNodeIds: [],
+          }
+        : {
+            ...result.possiblePerspectiveEvolution,
+            supportingNodeIds: evolutionIds,
+          },
+    possibleRepetition:
+      result.possibleRepetition.status === "identified" &&
+      repetitionIds.length === 0
+        ? {
+            status: "insufficient evidence",
+            summary:
+              "There is not enough validated evidence to assess repetition.",
+            supportingNodeIds: [],
+          }
+        : {
+            ...result.possibleRepetition,
+            supportingNodeIds: repetitionIds,
+          },
+    threeAuthenticAngles: [firstAngle, secondAngle, thirdAngle],
+  };
+}
+
+function sanitizeAlignment(
+  alignment: StoryIntelligenceResult["alignment"],
+  validNodeIds: Set<string>,
+): StoryIntelligenceResult["alignment"] {
+  const validateClaims = (claims: typeof alignment.why) =>
+    claims.flatMap((claim) => {
+      const supportingNodeIds = claim.supportingNodeIds.filter((id) =>
+        validNodeIds.has(id),
+      );
+      return supportingNodeIds.length ? [{ ...claim, supportingNodeIds }] : [];
+    });
+  const why = validateClaims(alignment.why);
+  const watchOut = validateClaims(alignment.watchOut);
+  const evidenceCount = new Set(why.flatMap((item) => item.supportingNodeIds))
+    .size;
+  const state =
+    why.length === 0
+      ? "insufficient_evidence"
+      : alignment.state === "strong" && evidenceCount < 2
+        ? "mixed"
+        : alignment.state;
+  return {
+    state,
+    why,
+    watchOut,
+    opportunity:
+      state === "insufficient_evidence"
+        ? "Add a relevant story, experience, or current belief to ground this idea before developing it further."
+        : alignment.opportunity,
+  };
 }

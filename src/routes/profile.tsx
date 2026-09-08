@@ -569,8 +569,8 @@ export function XImportPanel({ onClose }: { onClose: () => void }) {
           <p className="text-sm text-midnight">{error}</p>
           {capabilityUnavailable ? (
             <p className="mt-2 text-xs text-muted-foreground">
-              Your connection remains active. Your X API plan may not include
-              recent-post access.
+              Your connection remains active. Your current X API access level
+              does not include recent-post access.
             </p>
           ) : null}
           <Link

@@ -95,10 +95,28 @@ export type NewContentSubmissionInput = z.infer<
 export const PlanContentInputSchema = z.object({
   idea: nonEmptyString,
   targetPlatform: TargetPlatformSchema,
+  researchItemId: z.string().uuid().optional(),
+});
+
+export const ReshapeModeSchema = z.enum([
+  "closer_to_story",
+  "stronger_point_of_view",
+  "fresh_angle",
+]);
+
+export const ReshapeContentInputSchema = z.object({
+  idea: nonEmptyString,
+  targetPlatform: TargetPlatformSchema,
+  directionIndex: z.number().int().min(0).max(2),
+  reshapeMode: ReshapeModeSchema,
 });
 
 const supportingNodeIdsSchema = z.array(nonEmptyString);
 const statusSchema = z.enum(["identified", "insufficient evidence"]);
+const alignmentEvidenceSchema = z.object({
+  text: nonEmptyString,
+  supportingNodeIds: supportingNodeIdsSchema,
+});
 
 export const StoryIntelligenceAngleSchema = z.object({
   title: nonEmptyString,
@@ -116,6 +134,12 @@ export const StoryIntelligenceAngleSchema = z.object({
 });
 
 export const StoryIntelligenceSchema = z.object({
+  alignment: z.object({
+    state: z.enum(["strong", "mixed", "weak", "insufficient_evidence"]),
+    why: z.array(alignmentEvidenceSchema).max(3),
+    watchOut: z.array(alignmentEvidenceSchema).max(3),
+    opportunity: nonEmptyString,
+  }),
   relevantStories: z.array(
     z.object({
       summary: nonEmptyString,

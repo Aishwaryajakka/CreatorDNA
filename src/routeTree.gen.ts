@@ -20,6 +20,7 @@ import { Route as LoginRouteImport } from './routes/login'
 import { Route as OnboardingRouteImport } from './routes/onboarding'
 import { Route as PlanRouteImport } from './routes/plan'
 import { Route as ProfileRouteImport } from './routes/profile'
+import { Route as ResearchRouteImport } from './routes/research'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as StoryMapRouteImport } from './routes/story-map'
 import { Route as ApiBrandEvolutionRouteImport } from './routes/api/brand-evolution'
@@ -31,6 +32,8 @@ import { Route as ApiIntegrationsRouteImport } from './routes/api/integrations'
 import { Route as ApiOnboardingRouteImport } from './routes/api/onboarding'
 import { Route as ApiPlanContentRouteImport } from './routes/api/plan-content'
 import { Route as ApiProfileRouteImport } from './routes/api/profile'
+import { Route as ApiResearchRouteImport } from './routes/api/research'
+import { Route as ApiReshapeContentRouteImport } from './routes/api/reshape-content'
 import { Route as ApiStoryMapRouteImport } from './routes/api/story-map'
 import { Route as ApiAuthUsernameLoginRouteImport } from './routes/api/auth/username-login'
 import { Route as ApiDevExtractTestRouteImport } from './routes/api/dev/extract-test'
@@ -40,6 +43,7 @@ import { Route as ApiDevStoryIntelligenceTestRouteImport } from './routes/api/de
 import { Route as ApiDevSupabaseTestRouteImport } from './routes/api/dev/supabase-test'
 import { Route as ApiIntegrationsLinkedinRouteImport } from './routes/api/integrations/linkedin'
 import { Route as ApiIntegrationsXRouteImport } from './routes/api/integrations/x'
+import { Route as ApiResearchPulseRouteImport } from './routes/api/research/pulse'
 import { Route as ApiYoutubeChannelRouteImport } from './routes/api/youtube/channel'
 import { Route as ApiYoutubeImportRouteImport } from './routes/api/youtube/import'
 import { Route as ApiYoutubeImportedRouteImport } from './routes/api/youtube/imported'
@@ -108,6 +112,11 @@ const ProfileRoute = ProfileRouteImport.update({
   path: '/profile',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ResearchRoute = ResearchRouteImport.update({
+  id: '/research',
+  path: '/research',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ResetPasswordRoute = ResetPasswordRouteImport.update({
   id: '/reset-password',
   path: '/reset-password',
@@ -163,6 +172,16 @@ const ApiProfileRoute = ApiProfileRouteImport.update({
   path: '/api/profile',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiResearchRoute = ApiResearchRouteImport.update({
+  id: '/api/research',
+  path: '/api/research',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiReshapeContentRoute = ApiReshapeContentRouteImport.update({
+  id: '/api/reshape-content',
+  path: '/api/reshape-content',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiStoryMapRoute = ApiStoryMapRouteImport.update({
   id: '/api/story-map',
   path: '/api/story-map',
@@ -208,6 +227,11 @@ const ApiIntegrationsXRoute = ApiIntegrationsXRouteImport.update({
   id: '/x',
   path: '/x',
   getParentRoute: () => ApiIntegrationsRoute,
+} as any)
+const ApiResearchPulseRoute = ApiResearchPulseRouteImport.update({
+  id: '/pulse',
+  path: '/pulse',
+  getParentRoute: () => ApiResearchRoute,
 } as any)
 const ApiYoutubeChannelRoute = ApiYoutubeChannelRouteImport.update({
   id: '/api/youtube/channel',
@@ -286,6 +310,7 @@ export interface FileRoutesByFullPath {
   '/onboarding': typeof OnboardingRoute
   '/plan': typeof PlanRoute
   '/profile': typeof ProfileRoute
+  '/research': typeof ResearchRoute
   '/reset-password': typeof ResetPasswordRoute
   '/story-map': typeof StoryMapRoute
   '/api/brand-evolution': typeof ApiBrandEvolutionRoute
@@ -297,6 +322,8 @@ export interface FileRoutesByFullPath {
   '/api/onboarding': typeof ApiOnboardingRoute
   '/api/plan-content': typeof ApiPlanContentRoute
   '/api/profile': typeof ApiProfileRoute
+  '/api/research': typeof ApiResearchRouteWithChildren
+  '/api/reshape-content': typeof ApiReshapeContentRoute
   '/api/story-map': typeof ApiStoryMapRoute
   '/api/auth/username-login': typeof ApiAuthUsernameLoginRoute
   '/api/dev/extract-test': typeof ApiDevExtractTestRoute
@@ -306,6 +333,7 @@ export interface FileRoutesByFullPath {
   '/api/dev/supabase-test': typeof ApiDevSupabaseTestRoute
   '/api/integrations/linkedin': typeof ApiIntegrationsLinkedinRouteWithChildren
   '/api/integrations/x': typeof ApiIntegrationsXRouteWithChildren
+  '/api/research/pulse': typeof ApiResearchPulseRoute
   '/api/youtube/channel': typeof ApiYoutubeChannelRoute
   '/api/youtube/import': typeof ApiYoutubeImportRoute
   '/api/youtube/imported': typeof ApiYoutubeImportedRoute
@@ -331,6 +359,7 @@ export interface FileRoutesByTo {
   '/onboarding': typeof OnboardingRoute
   '/plan': typeof PlanRoute
   '/profile': typeof ProfileRoute
+  '/research': typeof ResearchRoute
   '/reset-password': typeof ResetPasswordRoute
   '/story-map': typeof StoryMapRoute
   '/api/brand-evolution': typeof ApiBrandEvolutionRoute
@@ -342,6 +371,8 @@ export interface FileRoutesByTo {
   '/api/onboarding': typeof ApiOnboardingRoute
   '/api/plan-content': typeof ApiPlanContentRoute
   '/api/profile': typeof ApiProfileRoute
+  '/api/research': typeof ApiResearchRouteWithChildren
+  '/api/reshape-content': typeof ApiReshapeContentRoute
   '/api/story-map': typeof ApiStoryMapRoute
   '/api/auth/username-login': typeof ApiAuthUsernameLoginRoute
   '/api/dev/extract-test': typeof ApiDevExtractTestRoute
@@ -351,6 +382,7 @@ export interface FileRoutesByTo {
   '/api/dev/supabase-test': typeof ApiDevSupabaseTestRoute
   '/api/integrations/linkedin': typeof ApiIntegrationsLinkedinRouteWithChildren
   '/api/integrations/x': typeof ApiIntegrationsXRouteWithChildren
+  '/api/research/pulse': typeof ApiResearchPulseRoute
   '/api/youtube/channel': typeof ApiYoutubeChannelRoute
   '/api/youtube/import': typeof ApiYoutubeImportRoute
   '/api/youtube/imported': typeof ApiYoutubeImportedRoute
@@ -377,6 +409,7 @@ export interface FileRoutesById {
   '/onboarding': typeof OnboardingRoute
   '/plan': typeof PlanRoute
   '/profile': typeof ProfileRoute
+  '/research': typeof ResearchRoute
   '/reset-password': typeof ResetPasswordRoute
   '/story-map': typeof StoryMapRoute
   '/api/brand-evolution': typeof ApiBrandEvolutionRoute
@@ -388,6 +421,8 @@ export interface FileRoutesById {
   '/api/onboarding': typeof ApiOnboardingRoute
   '/api/plan-content': typeof ApiPlanContentRoute
   '/api/profile': typeof ApiProfileRoute
+  '/api/research': typeof ApiResearchRouteWithChildren
+  '/api/reshape-content': typeof ApiReshapeContentRoute
   '/api/story-map': typeof ApiStoryMapRoute
   '/api/auth/username-login': typeof ApiAuthUsernameLoginRoute
   '/api/dev/extract-test': typeof ApiDevExtractTestRoute
@@ -397,6 +432,7 @@ export interface FileRoutesById {
   '/api/dev/supabase-test': typeof ApiDevSupabaseTestRoute
   '/api/integrations/linkedin': typeof ApiIntegrationsLinkedinRouteWithChildren
   '/api/integrations/x': typeof ApiIntegrationsXRouteWithChildren
+  '/api/research/pulse': typeof ApiResearchPulseRoute
   '/api/youtube/channel': typeof ApiYoutubeChannelRoute
   '/api/youtube/import': typeof ApiYoutubeImportRoute
   '/api/youtube/imported': typeof ApiYoutubeImportedRoute
@@ -424,6 +460,7 @@ export interface FileRouteTypes {
     | '/onboarding'
     | '/plan'
     | '/profile'
+    | '/research'
     | '/reset-password'
     | '/story-map'
     | '/api/brand-evolution'
@@ -435,6 +472,8 @@ export interface FileRouteTypes {
     | '/api/onboarding'
     | '/api/plan-content'
     | '/api/profile'
+    | '/api/research'
+    | '/api/reshape-content'
     | '/api/story-map'
     | '/api/auth/username-login'
     | '/api/dev/extract-test'
@@ -444,6 +483,7 @@ export interface FileRouteTypes {
     | '/api/dev/supabase-test'
     | '/api/integrations/linkedin'
     | '/api/integrations/x'
+    | '/api/research/pulse'
     | '/api/youtube/channel'
     | '/api/youtube/import'
     | '/api/youtube/imported'
@@ -469,6 +509,7 @@ export interface FileRouteTypes {
     | '/onboarding'
     | '/plan'
     | '/profile'
+    | '/research'
     | '/reset-password'
     | '/story-map'
     | '/api/brand-evolution'
@@ -480,6 +521,8 @@ export interface FileRouteTypes {
     | '/api/onboarding'
     | '/api/plan-content'
     | '/api/profile'
+    | '/api/research'
+    | '/api/reshape-content'
     | '/api/story-map'
     | '/api/auth/username-login'
     | '/api/dev/extract-test'
@@ -489,6 +532,7 @@ export interface FileRouteTypes {
     | '/api/dev/supabase-test'
     | '/api/integrations/linkedin'
     | '/api/integrations/x'
+    | '/api/research/pulse'
     | '/api/youtube/channel'
     | '/api/youtube/import'
     | '/api/youtube/imported'
@@ -514,6 +558,7 @@ export interface FileRouteTypes {
     | '/onboarding'
     | '/plan'
     | '/profile'
+    | '/research'
     | '/reset-password'
     | '/story-map'
     | '/api/brand-evolution'
@@ -525,6 +570,8 @@ export interface FileRouteTypes {
     | '/api/onboarding'
     | '/api/plan-content'
     | '/api/profile'
+    | '/api/research'
+    | '/api/reshape-content'
     | '/api/story-map'
     | '/api/auth/username-login'
     | '/api/dev/extract-test'
@@ -534,6 +581,7 @@ export interface FileRouteTypes {
     | '/api/dev/supabase-test'
     | '/api/integrations/linkedin'
     | '/api/integrations/x'
+    | '/api/research/pulse'
     | '/api/youtube/channel'
     | '/api/youtube/import'
     | '/api/youtube/imported'
@@ -560,6 +608,7 @@ export interface RootRouteChildren {
   OnboardingRoute: typeof OnboardingRoute
   PlanRoute: typeof PlanRoute
   ProfileRoute: typeof ProfileRoute
+  ResearchRoute: typeof ResearchRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
   StoryMapRoute: typeof StoryMapRoute
   ApiBrandEvolutionRoute: typeof ApiBrandEvolutionRoute
@@ -571,6 +620,8 @@ export interface RootRouteChildren {
   ApiOnboardingRoute: typeof ApiOnboardingRoute
   ApiPlanContentRoute: typeof ApiPlanContentRoute
   ApiProfileRoute: typeof ApiProfileRoute
+  ApiResearchRoute: typeof ApiResearchRouteWithChildren
+  ApiReshapeContentRoute: typeof ApiReshapeContentRoute
   ApiStoryMapRoute: typeof ApiStoryMapRoute
   ApiAuthUsernameLoginRoute: typeof ApiAuthUsernameLoginRoute
   ApiDevExtractTestRoute: typeof ApiDevExtractTestRoute
@@ -665,6 +716,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ProfileRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/research': {
+      id: '/research'
+      path: '/research'
+      fullPath: '/research'
+      preLoaderRoute: typeof ResearchRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/reset-password': {
       id: '/reset-password'
       path: '/reset-password'
@@ -742,6 +800,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiProfileRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/research': {
+      id: '/api/research'
+      path: '/api/research'
+      fullPath: '/api/research'
+      preLoaderRoute: typeof ApiResearchRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/reshape-content': {
+      id: '/api/reshape-content'
+      path: '/api/reshape-content'
+      fullPath: '/api/reshape-content'
+      preLoaderRoute: typeof ApiReshapeContentRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/story-map': {
       id: '/api/story-map'
       path: '/api/story-map'
@@ -804,6 +876,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/api/integrations/x'
       preLoaderRoute: typeof ApiIntegrationsXRouteImport
       parentRoute: typeof ApiIntegrationsRoute
+    }
+    '/api/research/pulse': {
+      id: '/api/research/pulse'
+      path: '/pulse'
+      fullPath: '/api/research/pulse'
+      preLoaderRoute: typeof ApiResearchPulseRouteImport
+      parentRoute: typeof ApiResearchRoute
     }
     '/api/youtube/channel': {
       id: '/api/youtube/channel'
@@ -939,6 +1018,18 @@ const ApiIntegrationsRouteWithChildren = ApiIntegrationsRoute._addFileChildren(
   ApiIntegrationsRouteChildren,
 )
 
+interface ApiResearchRouteChildren {
+  ApiResearchPulseRoute: typeof ApiResearchPulseRoute
+}
+
+const ApiResearchRouteChildren: ApiResearchRouteChildren = {
+  ApiResearchPulseRoute: ApiResearchPulseRoute,
+}
+
+const ApiResearchRouteWithChildren = ApiResearchRoute._addFileChildren(
+  ApiResearchRouteChildren,
+)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AddContentRoute: AddContentRoute,
@@ -951,6 +1042,7 @@ const rootRouteChildren: RootRouteChildren = {
   OnboardingRoute: OnboardingRoute,
   PlanRoute: PlanRoute,
   ProfileRoute: ProfileRoute,
+  ResearchRoute: ResearchRoute,
   ResetPasswordRoute: ResetPasswordRoute,
   StoryMapRoute: StoryMapRoute,
   ApiBrandEvolutionRoute: ApiBrandEvolutionRoute,
@@ -962,6 +1054,8 @@ const rootRouteChildren: RootRouteChildren = {
   ApiOnboardingRoute: ApiOnboardingRoute,
   ApiPlanContentRoute: ApiPlanContentRoute,
   ApiProfileRoute: ApiProfileRoute,
+  ApiResearchRoute: ApiResearchRouteWithChildren,
+  ApiReshapeContentRoute: ApiReshapeContentRoute,
   ApiStoryMapRoute: ApiStoryMapRoute,
   ApiAuthUsernameLoginRoute: ApiAuthUsernameLoginRoute,
   ApiDevExtractTestRoute: ApiDevExtractTestRoute,

@@ -150,7 +150,7 @@ async function requestXPosts(
     if ([402, 403, 429].includes(response.status)) {
       throw new XPostAccessError(
         "x_api_access_unavailable",
-        "Your X account is connected, but recent-post access is not available with the current X API plan.",
+        "Your X account is connected, but recent-post access is not available with the current X API access level.",
       );
     }
     throw new XPostAccessError(

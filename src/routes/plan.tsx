@@ -13,13 +13,20 @@ import {
 } from "@/components/dna-ui";
 import type {
   CreatorDNAMatch,
+  ReshapeMode,
+  ReshapeResult,
+  StoryIntelligenceAngle,
   StoryIntelligenceResult,
   TargetPlatform,
 } from "@/lib/creator-dna/types";
 import { authenticatedFetch } from "@/lib/supabase/client";
+import type { ResearchItem } from "@/lib/research/types";
 
 export const Route = createFileRoute("/plan")({
-  validateSearch: z.object({ topic: z.string().optional() }),
+  validateSearch: z.object({
+    topic: z.string().optional(),
+    research: z.string().uuid().optional(),
+  }),
   head: () => ({
     meta: [
       { title: "Plan Content — Creator DNA" },
@@ -50,12 +57,27 @@ const platformLabels = Object.fromEntries(
 ) as Record<TargetPlatform, string>;
 
 function PlanPage() {
-  const { topic: initial } = Route.useSearch();
+  const { topic: initial, research: researchId } = Route.useSearch();
   const [topic, setTopic] = useState(initial ?? "");
+  const [researchItem, setResearchItem] = useState<ResearchItem | null>(null);
   const [targetPlatform, setTargetPlatform] = useState<TargetPlatform | "">("");
   const [result, setResult] = useState<PlanningResponse | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!researchId) return;
+    void authenticatedFetch("/api/research")
+      .then((response) => response.json())
+      .then((body: { items?: ResearchItem[] }) => {
+        const item = body.items?.find(
+          (candidate) => candidate.id === researchId,
+        );
+        if (!item) return;
+        setResearchItem(item);
+        setTopic((current) => current || item.headline);
+      });
+  }, [researchId]);
 
   async function submitIdea(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -80,6 +102,7 @@ function PlanPage() {
         body: JSON.stringify({
           idea: topic.trim(),
           targetPlatform,
+          ...(researchId ? { researchItemId: researchId } : {}),
         }),
       });
       const payload = (await response.json()) as
@@ -113,6 +136,15 @@ function PlanPage() {
         title="What do you want to talk about?"
         subtitle="Creator DNA looks through everything you've made, then offers a few directions grounded in your own material. You choose."
       />
+
+      {researchItem ? (
+        <Panel accent="var(--aqua-accent)" className="p-4 sm:p-5">
+          <p className="eyebrow">Planning from Research Pulse</p>
+          <p className="mt-1 font-semibold text-midnight">
+            {researchItem.headline}
+          </p>
+        </Panel>
+      ) : null}
 
       <Panel accent="var(--evolution)" className="plan-prompt p-6 sm:p-8">
         <form className="flex flex-col gap-3" onSubmit={submitIdea}>
@@ -175,22 +207,32 @@ function PlanningResults({ result }: { result: PlanningResponse }) {
 
   if (result.retrievedDNA.length === 0) {
     return (
-      <Panel className="p-8 sm:p-10">
-        <p className="eyebrow">Not enough memory yet</p>
-        <h2 className="mt-2 text-xl font-bold text-midnight">
-          Creator DNA needs more of your history to make this analysis reliable.
-        </h2>
-        <p className="mt-3 max-w-2xl text-sm leading-relaxed text-muted-foreground">
-          Add more of your published content so your planning results can be
-          grounded in real stories, positions, and evidence.
-        </p>
-        <a
-          href="/add-content"
-          className="motion-cta glow-lime mt-5 inline-flex rounded-xl bg-chartreuse px-5 py-2.5 text-sm font-bold text-[#050811] hover:bg-white"
-        >
-          Add Content
-        </a>
-      </Panel>
+      <div className="result-reveal space-y-8">
+        <Panel accent="var(--story)" className="plan-result-intro p-5 sm:p-6">
+          <p className="eyebrow">Story Intelligence</p>
+          <h2 className="mt-2 text-xl font-bold text-midnight">
+            Planning for: {platformLabels[result.targetPlatform]}
+          </h2>
+        </Panel>
+        <AlignmentPanel result={result} nodes={nodesById} />
+        <Panel className="p-8 sm:p-10">
+          <p className="eyebrow">Not enough memory yet</p>
+          <h2 className="mt-2 text-xl font-bold text-midnight">
+            Creator DNA needs more of your history to make this analysis
+            reliable.
+          </h2>
+          <p className="mt-3 max-w-2xl text-sm leading-relaxed text-muted-foreground">
+            Add more of your published content so future directions can be
+            grounded in real stories, positions, and evidence.
+          </p>
+          <a
+            href="/add-content"
+            className="motion-cta glow-lime mt-5 inline-flex rounded-xl bg-chartreuse px-5 py-2.5 text-sm font-bold text-[#050811] hover:bg-white"
+          >
+            Add Content
+          </a>
+        </Panel>
+      </div>
     );
   }
 
@@ -202,6 +244,9 @@ function PlanningResults({ result }: { result: PlanningResponse }) {
           Planning for: {platformLabels[result.targetPlatform]}
         </h2>
       </Panel>
+
+      <AlignmentPanel result={result} nodes={nodesById} />
+
       <section>
         <p className="eyebrow">Relevant history</p>
         <h2 className="mt-2 text-2xl font-extrabold text-midnight sm:text-3xl">
@@ -323,40 +368,258 @@ function PlanningResults({ result }: { result: PlanningResponse }) {
         </p>
         <div className="mt-6 grid gap-5 lg:grid-cols-3">
           {result.threeAuthenticAngles.map((angle, index) => (
-            <Panel
+            <DirectionCard
               key={`${angle.title}-${index}`}
-              accent="var(--story)"
-              className="creative-direction flex flex-col p-6 transition-shadow hover:shadow-lift"
-            >
-              <span className="eyebrow">
-                Direction {String.fromCharCode(65 + index)}
-              </span>
-              <span className="direction-framing eyebrow">
-                {angle.framingType}
-              </span>
-              <h3 className="mt-3 text-lg font-bold leading-snug text-midnight">
-                {angle.title}
-              </h3>
-              <p className="mt-3 text-sm font-semibold leading-relaxed text-midnight">
-                {angle.hook}
-              </p>
-              <p className="mt-3 flex-1 text-sm leading-relaxed text-muted-foreground">
-                {angle.rationale}
-              </p>
-              <div className="mt-6 rounded-xl bg-muted/70 p-4">
-                <EvidenceNote>Grounded in your Creator DNA</EvidenceNote>
-                <EvidenceList ids={angle.supportingNodeIds} nodes={nodesById} />
-              </div>
-              <button
-                type="button"
-                className="mt-5 w-full rounded-xl bg-midnight px-4 py-3 text-sm font-semibold text-background transition-opacity hover:opacity-90"
-              >
-                Develop this angle
-              </button>
-            </Panel>
+              angle={angle}
+              index={index}
+              idea={result.idea}
+              targetPlatform={result.targetPlatform}
+              nodes={nodesById}
+            />
           ))}
         </div>
       </section>
+    </div>
+  );
+}
+
+const alignmentLabels = {
+  strong: "Strong",
+  mixed: "Mixed",
+  weak: "Weak",
+  insufficient_evidence: "Insufficient evidence",
+} as const;
+
+function AlignmentPanel({
+  result,
+  nodes,
+}: {
+  result: PlanningResponse;
+  nodes: Map<string, CreatorDNAMatch>;
+}) {
+  const { alignment } = result;
+  return (
+    <Panel accent="var(--creator-green)" className="p-6 sm:p-8">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <p className="eyebrow">Alignment</p>
+        <span className="rounded-full border border-border bg-muted px-3 py-1 text-sm font-bold text-midnight">
+          {alignmentLabels[alignment.state]}
+        </span>
+      </div>
+      <div className="mt-6 grid gap-6 lg:grid-cols-2">
+        <div>
+          <p className="eyebrow">Why</p>
+          {alignment.why.length ? (
+            <div className="mt-3 space-y-4">
+              {alignment.why.map((reason, index) => (
+                <div key={`${reason.text}-${index}`}>
+                  <p className="text-sm leading-relaxed text-midnight">
+                    {reason.text}
+                  </p>
+                  <EvidenceList ids={reason.supportingNodeIds} nodes={nodes} />
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p className="mt-3 text-sm text-muted-foreground">
+              Creator DNA doesn&apos;t yet have enough relevant history to judge
+              this idea confidently.
+            </p>
+          )}
+        </div>
+        <div>
+          <p className="eyebrow">Watch out</p>
+          {alignment.watchOut.length ? (
+            <div className="mt-3 space-y-4">
+              {alignment.watchOut.map((risk, index) => (
+                <div key={`${risk.text}-${index}`}>
+                  <p className="text-sm leading-relaxed text-midnight">
+                    {risk.text}
+                  </p>
+                  <EvidenceList ids={risk.supportingNodeIds} nodes={nodes} />
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p className="mt-3 text-sm text-muted-foreground">
+              No meaningful evidence-backed risk was found.
+            </p>
+          )}
+        </div>
+      </div>
+      <div className="mt-6 border-t border-border pt-5">
+        <p className="eyebrow">Opportunity</p>
+        <p className="mt-2 text-sm font-medium leading-relaxed text-midnight">
+          {alignment.opportunity}
+        </p>
+      </div>
+    </Panel>
+  );
+}
+
+const reshapeOptions: Array<{ mode: ReshapeMode; label: string }> = [
+  { mode: "closer_to_story", label: "Closer to my story" },
+  { mode: "stronger_point_of_view", label: "Stronger point of view" },
+  {
+    mode: "fresh_angle",
+    label: "Fresh angle without repeating myself",
+  },
+];
+
+function DirectionCard({
+  angle,
+  index,
+  idea,
+  targetPlatform,
+  nodes,
+}: {
+  angle: StoryIntelligenceAngle;
+  index: number;
+  idea: string;
+  targetPlatform: TargetPlatform;
+  nodes: Map<string, CreatorDNAMatch>;
+}) {
+  const [reshapeOpen, setReshapeOpen] = useState(false);
+  const [loadingMode, setLoadingMode] = useState<ReshapeMode | null>(null);
+  const [reshaped, setReshaped] = useState<ReshapeResult | null>(null);
+  const [reshapeError, setReshapeError] = useState("");
+
+  async function reshape(mode: ReshapeMode) {
+    if (loadingMode) return;
+    setLoadingMode(mode);
+    setReshapeError("");
+    try {
+      const response = await authenticatedFetch("/api/reshape-content", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          idea,
+          targetPlatform,
+          directionIndex: index,
+          reshapeMode: mode,
+        }),
+      });
+      const body = (await response.json()) as ReshapeResult | ErrorResponse;
+      if (!response.ok || "error" in body)
+        throw new Error(
+          "error" in body
+            ? body.error
+            : "Couldn't reshape this direction right now.",
+        );
+      setReshaped(body);
+      setReshapeOpen(false);
+    } catch {
+      setReshapeError("Couldn't reshape this direction right now.");
+    } finally {
+      setLoadingMode(null);
+    }
+  }
+
+  return (
+    <Panel
+      accent="var(--story)"
+      className="creative-direction flex flex-col p-6 transition-shadow hover:shadow-lift"
+    >
+      <span className="eyebrow">
+        Direction {String.fromCharCode(65 + index)}
+      </span>
+      <span className="direction-framing eyebrow">{angle.framingType}</span>
+      <h3 className="mt-3 text-lg font-bold leading-snug text-midnight">
+        {angle.title}
+      </h3>
+      <p className="mt-3 text-sm font-semibold leading-relaxed text-midnight">
+        {angle.hook}
+      </p>
+      <p className="mt-3 flex-1 text-sm leading-relaxed text-muted-foreground">
+        {angle.rationale}
+      </p>
+      <div className="mt-6 rounded-xl bg-muted/70 p-4">
+        <EvidenceNote>Grounded in your Creator DNA</EvidenceNote>
+        <EvidenceList ids={angle.supportingNodeIds} nodes={nodes} />
+      </div>
+      <button
+        type="button"
+        aria-expanded={reshapeOpen}
+        onClick={() => setReshapeOpen((open) => !open)}
+        className="mt-5 w-full rounded-xl bg-midnight px-4 py-3 text-sm font-semibold text-background transition-opacity hover:opacity-90 disabled:opacity-60"
+        disabled={Boolean(loadingMode)}
+      >
+        {loadingMode ? "Reshaping…" : "Reshape"}
+      </button>
+      {reshapeOpen ? (
+        <div className="popover-enter mt-2 space-y-1 rounded-xl border border-border bg-card p-2">
+          {reshapeOptions.map((option) => (
+            <button
+              key={option.mode}
+              type="button"
+              disabled={Boolean(loadingMode)}
+              onClick={() => void reshape(option.mode)}
+              className="w-full rounded-lg px-3 py-2 text-left text-sm font-medium text-midnight transition-colors hover:bg-muted disabled:opacity-60"
+            >
+              {option.label}
+            </button>
+          ))}
+        </div>
+      ) : null}
+      {reshapeError ? (
+        <p role="alert" className="mt-3 text-sm text-destructive">
+          {reshapeError}
+        </p>
+      ) : null}
+      {reshaped ? <ReshapedDirection result={reshaped} /> : null}
+    </Panel>
+  );
+}
+
+function ReshapedDirection({ result }: { result: ReshapeResult }) {
+  return (
+    <div className="result-reveal mt-5 border-t border-border pt-5">
+      <p className="eyebrow">Reshaped direction</p>
+      <h4 className="mt-2 text-base font-bold text-midnight">{result.title}</h4>
+      <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
+        {result.angle}
+      </p>
+      <div className="mt-4 rounded-xl bg-muted/70 p-4">
+        <p className="eyebrow">Platform prep</p>
+        {result.platformPrep.hook ? (
+          <p className="mt-2 text-sm font-semibold text-midnight">
+            {result.platformPrep.hook}
+          </p>
+        ) : null}
+        {result.platformPrep.structure?.length ? (
+          <ol className="mt-3 list-inside list-decimal space-y-1 text-xs text-muted-foreground">
+            {result.platformPrep.structure.map((beat) => (
+              <li key={beat}>{beat}</li>
+            ))}
+          </ol>
+        ) : null}
+        {result.platformPrep.notes?.map((note) => (
+          <p key={note} className="mt-2 text-xs text-muted-foreground">
+            {note}
+          </p>
+        ))}
+      </div>
+      <div className="mt-4">
+        <EvidenceNote>Grounded in your DNA</EvidenceNote>
+        <div className="mt-2 space-y-2">
+          {result.groundedIn.map((node) => (
+            <div
+              key={node.nodeId}
+              className="rounded-xl border border-border bg-muted/50 p-3"
+            >
+              <KindBadge kind={node.type} />
+              <p className="mt-2 text-sm font-semibold text-midnight">
+                {node.label}
+              </p>
+              {node.sourceTitle ? (
+                <p className="mt-1 text-xs text-muted-foreground">
+                  Source: {node.sourceTitle}
+                </p>
+              ) : null}
+            </div>
+          ))}
+        </div>
+      </div>
     </div>
   );
 }
