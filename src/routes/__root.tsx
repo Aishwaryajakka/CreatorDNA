@@ -174,11 +174,17 @@ function RootContent() {
 
 export function AuthenticatedAppShell({ children }: { children: ReactNode }) {
   const location = useLocation();
+  const isStoryMap = location.pathname === "/story-map";
   return (
     <div className="flex min-h-screen w-full flex-col lg:flex-row">
       <AppSidebar />
-      <main className="min-w-0 flex-1 bg-background px-5 py-8 sm:px-8 lg:px-12 lg:py-10">
-        <div key={location.pathname} className="route-enter mx-auto max-w-6xl">
+      <main
+        className={`creative-workspace min-w-0 flex-1 bg-background px-5 sm:px-8 ${isStoryMap ? "py-6 lg:py-7" : "py-8 lg:px-12 lg:py-10"}`}
+      >
+        <div
+          key={location.pathname}
+          className={`route-enter mx-auto ${isStoryMap ? "max-w-none" : "max-w-6xl"}`}
+        >
           {children}
         </div>
       </main>

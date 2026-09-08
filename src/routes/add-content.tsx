@@ -93,7 +93,7 @@ function AddContent() {
         subtitle="Add content you've already created. We'll identify the stories, beliefs, themes and experiences that make your perspective yours."
       />
 
-      <div className="telemetry-grid rounded-xl border border-border bg-card px-6 py-5 sm:px-8">
+      <div className="memory-intro telemetry-grid rounded-xl border border-border bg-card px-6 py-5 sm:px-8">
         <p className="eyebrow flex items-center gap-2 text-muted-foreground">
           <span className="h-2 w-2 rounded-full bg-theme shadow-[0_0_12px_#31D158]" />
           Build from your history
@@ -104,18 +104,18 @@ function AddContent() {
       </div>
 
       <div className="flex">
-        <span className="rounded-lg border border-aqua-accent/40 bg-aqua-accent/10 px-3 py-2 font-mono text-xs font-bold uppercase tracking-wide text-aqua-accent">
+        <span className="ingestion-label rounded-lg border border-aqua-accent/40 bg-aqua-accent/10 px-3 py-2 font-mono text-xs font-bold uppercase tracking-wide text-aqua-accent">
           Manual content ingestion
         </span>
       </div>
 
-      <Panel accent="var(--theme-color)" className="p-6 sm:p-8">
+      <Panel accent="var(--theme-color)" className="memory-composer p-6 sm:p-8">
         <textarea
           value={rawText}
           onChange={(e) => setRawText(e.target.value)}
           rows={9}
           placeholder="Paste a LinkedIn post, newsletter, transcript, script, or other content..."
-          className="w-full resize-none rounded-xl border border-input bg-background p-4 text-sm leading-relaxed outline-none placeholder:text-muted-foreground focus:border-primary"
+          className="memory-textarea w-full resize-none rounded-xl border border-input bg-background p-4 text-sm leading-relaxed outline-none placeholder:text-muted-foreground focus:border-primary"
         />
         <div className="mt-5 grid gap-4 sm:grid-cols-3">
           <Field label="Content title">

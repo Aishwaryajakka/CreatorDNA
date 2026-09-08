@@ -99,10 +99,10 @@ export function ThemeToggle({
       aria-label={label}
       title={label}
       onClick={toggleTheme}
-      className={
+      className={`transition-[color,background-color,border-color,transform] duration-200 active:translate-y-px active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
         className ??
-        "relative grid h-8 w-16 grid-cols-2 rounded-lg border border-sidebar-border bg-sidebar-accent p-0.5 text-sidebar-foreground/55 transition-colors focus-visible:ring-2 focus-visible:ring-sidebar-ring"
-      }
+        "relative grid h-8 w-16 grid-cols-2 rounded-lg border border-sidebar-border bg-sidebar-accent p-0.5 text-sidebar-foreground/55 hover:border-sidebar-ring/60"
+      }`}
     >
       {variant === "icon" ? (
         isDark ? (

@@ -29,7 +29,7 @@ import { authenticatedFetch } from "@/lib/supabase/client";
 import { useAuthState } from "@/lib/auth-state";
 import { AdaptiveCreatorDNALogo } from "@/components/Logo";
 import { DnaTypeIcon } from "@/components/DnaTypeIcon";
-import { getDnaIconForeground } from "@/lib/dna-iconography";
+import { getDnaBorderColor, getDnaIconForeground } from "@/lib/dna-iconography";
 import { ThemeToggle } from "@/components/ThemeProvider";
 import {
   DataPulse,
@@ -82,7 +82,7 @@ function Home() {
 
 function LandingPage() {
   return (
-    <div className="min-h-screen bg-obsidian-base text-foreground">
+    <div className="public-page min-h-screen bg-obsidian-base text-foreground">
       <div className="relative z-50 flex min-h-8 items-center justify-between overflow-hidden border-b border-obsidian-border bg-obsidian-base px-4 py-2 font-mono text-[0.6875rem] font-medium tracking-wide text-muted-foreground">
         <div className="hidden items-center gap-2 sm:flex">
           <DataPulse color="green" className="h-1.5 w-1.5" />
@@ -109,7 +109,7 @@ function LandingPage() {
           <Link
             to="/"
             aria-label="Creator DNA home"
-            className="inline-flex rounded-lg focus-visible:ring-2 focus-visible:ring-primary"
+            className="logo-link inline-flex rounded-lg"
           >
             <AdaptiveCreatorDNALogo
               showTagline={false}
@@ -193,10 +193,16 @@ function LandingPage() {
         </div>
       </header>
       <main>
-        <section className="telemetry-grid reveal relative overflow-hidden bg-obsidian-base px-4 pb-28 pt-16 sm:px-6 lg:px-8">
+        <section className="public-hero telemetry-grid reveal relative overflow-hidden bg-obsidian-base px-4 pb-28 pt-16 sm:px-6 lg:px-8">
           <div className="hero-ambient ambient-drift-a pointer-events-none absolute left-1/2 top-0 h-[34rem] w-[75rem] -translate-x-1/2 rounded-full bg-gradient-to-b from-primary/20 via-aqua-accent/10 to-transparent blur-[140px]" />
           <div className="hero-ambient pointer-events-none absolute -right-32 top-1/4 h-96 w-96 rounded-full bg-chartreuse/10 blur-[120px]" />
           <div className="pointer-events-none absolute -left-32 bottom-10 h-96 w-96 rounded-full bg-creator-green/10 blur-[130px]" />
+          <NodeConstellation className="hero-line-one pointer-events-none absolute -left-12 top-40 hidden w-72 -rotate-12 opacity-60 md:block" />
+          <NodeConstellation className="hero-line-two pointer-events-none absolute -right-16 top-72 hidden w-80 rotate-[165deg] opacity-50 md:block" />
+          <TelemetryOrbit
+            animated
+            className="hero-ambient absolute -right-20 top-20 hidden h-72 w-72 opacity-35 lg:block"
+          />
           <div className="relative mx-auto mb-16 max-w-4xl text-center">
             <p className="hero-badge telemetry-card inline-flex items-center gap-2.5 rounded-full border border-obsidian-border bg-obsidian-surface px-4 py-1.5 font-mono text-xs font-bold uppercase tracking-wide text-aqua-accent">
               <span className="h-2 w-2 rounded-full bg-chartreuse shadow-[0_0_10px_#E8F31A]" />
@@ -204,7 +210,7 @@ function LandingPage() {
             </p>
             <h1 className="marketing-display mt-8 text-foreground">
               <span className="hero-line-one block">Same stories.</span>
-              <span className="hero-line-two block bg-[linear-gradient(90deg,var(--chartreuse),var(--aqua-accent),var(--creator-green),var(--story))] bg-clip-text text-transparent drop-shadow-[0_0_35px_rgba(54,214,197,0.3)]">
+              <span className="hero-line-two public-gradient-text block bg-[linear-gradient(90deg,var(--story),var(--aqua-accent),var(--creator-green),var(--chartreuse))] bg-clip-text text-transparent">
                 Bigger possibilities.
               </span>
             </h1>
@@ -748,7 +754,7 @@ function LandingPage() {
               ].map(([question, answer]) => (
                 <details
                   key={question}
-                  className="telemetry-edge group cursor-pointer rounded-2xl border border-obsidian-border bg-obsidian-card p-6 transition-all open:border-aqua-accent/50 hover:border-aqua-accent/50 [&_summary::-webkit-details-marker]:hidden"
+                  className="landing-faq-card telemetry-edge group cursor-pointer rounded-2xl border border-obsidian-border bg-obsidian-card p-6 transition-all [&_summary::-webkit-details-marker]:hidden"
                 >
                   <summary className="flex list-none items-center justify-between gap-4 font-display text-base font-bold text-foreground">
                     {question}
@@ -804,7 +810,7 @@ function LandingPage() {
               <Link
                 to="/"
                 aria-label="Creator DNA home"
-                className="inline-flex rounded-lg focus-visible:ring-2 focus-visible:ring-primary"
+                className="logo-link inline-flex rounded-lg"
               >
                 <AdaptiveCreatorDNALogo className="h-16 w-64" />
               </Link>
@@ -924,7 +930,7 @@ function LandingGraph() {
             <span className="hidden sm:block">Stories · Beliefs · Themes</span>
           </div>
         </div>
-        <div className="circuit-lines relative flex min-h-[460px] items-center justify-center overflow-hidden rounded-xl border border-obsidian-border bg-obsidian-base p-6 sm:min-h-[520px]">
+        <div className="landing-graph-canvas circuit-lines relative flex min-h-[460px] items-center justify-center overflow-hidden rounded-xl border border-obsidian-border bg-obsidian-base p-6 sm:min-h-[520px]">
           <div className="absolute inset-0 bg-gradient-to-tr from-primary/15 via-transparent to-aqua-accent/15" />
           <TelemetryOrbit className="absolute left-1/2 top-1/2 h-[30rem] w-[30rem] -translate-x-1/2 -translate-y-1/2 opacity-55" />
           <svg
@@ -1031,15 +1037,16 @@ function LandingGraph() {
                 [795, 150, 7, "#E8F31A"],
               ] as const
             ).map(([cx, cy, r, fill], index) => (
-              <circle
-                key={index}
-                className={`graph-node-enter graph-node-delay-${(index % 3) + 1}`}
-                cx={cx}
-                cy={cy}
-                r={r}
-                fill={fill}
-                filter="url(#landing-glow)"
-              />
+              <g key={index} className={`landing-node-drift-${index % 3}`}>
+                <circle
+                  className={`graph-node-enter graph-node-delay-${(index % 3) + 1}`}
+                  cx={cx}
+                  cy={cy}
+                  r={r}
+                  fill={fill}
+                  filter="url(#landing-glow)"
+                />
+              </g>
             ))}
           </svg>
           <SignalPath className="absolute left-[14%] top-[29%] h-36 w-[72%] opacity-75" />
@@ -1142,10 +1149,11 @@ function GraphLegendItem({ kind }: { kind: DnaKind }) {
   return (
     <span className="flex items-center gap-2">
       <span
-        className="grid h-6 w-6 place-items-center rounded-full"
+        className="semantic-node-marker grid h-6 w-6 place-items-center rounded-full"
         style={{
           color: getDnaIconForeground(kind),
           backgroundColor: KIND_META[kind].color,
+          borderColor: getDnaBorderColor(kind),
         }}
       >
         <DnaTypeIcon kind={kind} size={12} />
@@ -1224,9 +1232,9 @@ function Dashboard() {
         title="Your story, remembered."
         subtitle="A living memory of what you've experienced, believed, learned, and shared."
       />
-      <Panel accent="var(--belief)" className="order-4 p-6 sm:p-8">
+      <Panel accent="var(--primary)" className="order-4 p-6 sm:p-8">
         <div className="flex items-center gap-3">
-          <Sparkles className="h-5 w-5 text-belief" />
+          <Sparkles className="h-5 w-5 text-primary" />
           <p className="eyebrow text-muted-foreground">
             What do you want to create next?
           </p>
@@ -1242,14 +1250,14 @@ function Dashboard() {
             value={topic}
             onChange={(event) => setTopic(event.target.value)}
             placeholder="I want to create something about…"
-            className="min-h-14 min-w-0 flex-1 rounded-lg border border-input bg-background px-5 py-4 text-base text-midnight outline-none transition-shadow placeholder:text-muted-foreground focus:border-belief focus:shadow-lift"
+            className="min-h-14 min-w-0 flex-1 rounded-lg border border-input bg-background px-5 py-4 text-base text-midnight outline-none transition-shadow placeholder:text-muted-foreground focus:border-primary focus:shadow-lift"
           />
-          <button className="glow-lime inline-flex items-center justify-center gap-2 rounded-lg bg-belief px-5 py-3.5 text-sm font-black text-[#050811] transition-transform hover:-translate-y-0.5">
+          <button className="motion-cta inline-flex items-center justify-center gap-2 rounded-lg bg-primary px-5 py-3.5 text-sm font-black text-primary-foreground transition-transform hover:bg-[#2563FF] hover:-translate-y-0.5">
             Start planning <ArrowRight className="h-4 w-4" />
           </button>
         </form>
       </Panel>
-      <section className="telemetry-edge order-3 rounded-xl border border-border bg-card px-6 py-7 sm:px-8">
+      <section className="home-knowledge telemetry-edge order-3 rounded-xl border border-border bg-card px-6 py-7 sm:px-8">
         <div className="flex items-end justify-between gap-4">
           <div>
             <p className="eyebrow">What Creator DNA knows</p>
@@ -1261,7 +1269,7 @@ function Dashboard() {
             Explore map →
           </Link>
         </div>
-        <div className="mt-5 flex flex-wrap gap-x-8 gap-y-4 border-y border-border py-5">
+        <div className="home-knowledge-counts mt-5 flex flex-wrap gap-x-8 gap-y-4 border-y border-border py-5">
           {dataLoading
             ? Array.from({ length: 4 }).map((_, index) => (
                 <div
@@ -1277,10 +1285,11 @@ function Dashboard() {
                   className="group flex items-center gap-2 rounded-xl px-2 py-1 transition-colors hover:bg-muted"
                 >
                   <span
-                    className="grid h-7 w-7 place-items-center rounded-full"
+                    className="semantic-node-marker grid h-7 w-7 place-items-center rounded-full"
                     style={{
                       color: getDnaIconForeground(kind),
                       backgroundColor: KIND_META[kind].color,
+                      borderColor: getDnaBorderColor(kind),
                     }}
                   >
                     <DnaTypeIcon kind={kind} size={13} />
@@ -1305,13 +1314,19 @@ function Dashboard() {
                 key={node.id}
                 to="/story-map"
                 search={{ node: node.id }}
-                className="rounded-2xl border border-border bg-card p-4 transition-[transform,box-shadow] hover:-translate-y-0.5 hover:shadow-card"
+                className="memory-fragment rounded-2xl border border-border bg-card p-4 transition-[transform,box-shadow] hover:-translate-y-0.5 hover:shadow-card"
+                style={
+                  {
+                    "--memory-accent": KIND_META[node.type].color,
+                  } as React.CSSProperties
+                }
               >
                 <span
-                  className="grid h-7 w-7 place-items-center rounded-full"
+                  className="semantic-node-marker grid h-7 w-7 place-items-center rounded-full"
                   style={{
                     color: getDnaIconForeground(node.type),
                     backgroundColor: KIND_META[node.type].color,
+                    borderColor: getDnaBorderColor(node.type),
                   }}
                 >
                   <DnaTypeIcon kind={node.type} size={13} />
@@ -1327,7 +1342,7 @@ function Dashboard() {
           </div>
         </section>
       ) : null}
-      <Panel className="telemetry-grid order-2 p-6 sm:p-8">
+      <Panel className="story-preview-panel telemetry-grid order-2 p-6 sm:p-8">
         <div className="flex items-center justify-between">
           <div>
             <p className="eyebrow">Story Graph preview</p>

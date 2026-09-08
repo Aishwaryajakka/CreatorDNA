@@ -1,7 +1,11 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { createPortal } from "react-dom";
 import { createFileRoute } from "@tanstack/react-router";
 import { z } from "zod";
 import {
+  CalendarDays,
+  ChevronDown,
+  ListFilter,
   Maximize2,
   Minimize2,
   Minus,
@@ -28,7 +32,7 @@ import type { CreatorDNANode } from "@/lib/creator-dna/types";
 import { authenticatedFetch } from "@/lib/supabase/client";
 import { DataPulse, NodeConstellation } from "@/components/Motion";
 import { DnaTypeIcon } from "@/components/DnaTypeIcon";
-import { getDnaIconForeground } from "@/lib/dna-iconography";
+import { getDnaBorderColor, getDnaIconForeground } from "@/lib/dna-iconography";
 
 export const Route = createFileRoute("/story-map")({
   validateSearch: z.object({
@@ -74,16 +78,40 @@ function StoryMapPage() {
   const [zoom, setZoom] = useState(1);
   const [query, setQuery] = useState("");
   const [searchOpen, setSearchOpen] = useState(false);
+  const [legendOpen, setLegendOpen] = useState(false);
   const [activeSearchIndex, setActiveSearchIndex] = useState(0);
   const [expanded, setExpanded] = useState(false);
+  const [graphSize, setGraphSize] = useState({ width: 0, height: 0 });
   const searchBoxRef = useRef<HTMLDivElement>(null);
+  const legendRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (!legendOpen) return;
+    const closeOnOutsidePointer = (event: PointerEvent) => {
+      if (!legendRef.current?.contains(event.target as Node))
+        setLegendOpen(false);
+    };
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setLegendOpen(false);
+    };
+    document.addEventListener("pointerdown", closeOnOutsidePointer);
+    document.addEventListener("keydown", closeOnEscape);
+    return () => {
+      document.removeEventListener("pointerdown", closeOnOutsidePointer);
+      document.removeEventListener("keydown", closeOnEscape);
+    };
+  }, [legendOpen]);
   useEffect(() => {
     if (!expanded) return;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Escape") setExpanded(false);
     };
     window.addEventListener("keydown", onKeyDown);
-    return () => window.removeEventListener("keydown", onKeyDown);
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      window.removeEventListener("keydown", onKeyDown);
+    };
   }, [expanded]);
   useEffect(() => {
     void authenticatedFetch("/api/story-map")
@@ -151,7 +179,7 @@ function StoryMapPage() {
       degrees.set(edge.from, (degrees.get(edge.from) ?? 0) + 1);
       degrees.set(edge.to, (degrees.get(edge.to) ?? 0) + 1);
     }
-    const positions = forceLayout(visible, edges);
+    const positions = forceLayout(visible, edges, graphSize);
     if (visible.length === 1) {
       const node = visible[0]!;
       return [
@@ -184,7 +212,7 @@ function StoryMapPage() {
         y: position.y,
       } satisfies GraphNode;
     });
-  }, [edges, visible]);
+  }, [edges, graphSize, visible]);
   const searchMatches = useMemo(() => {
     const needle = query.trim().toLowerCase();
     if (!needle) return [];
@@ -241,89 +269,17 @@ function StoryMapPage() {
       </Panel>
     );
   return (
-    <div className="space-y-8">
-      <PageHeader
-        title="Your Story Map"
-        subtitle="A living visualization of your ideas, beliefs, experiences, and evolution."
-      />
-      {rawNodes.length === 0 ? (
-        <Panel className="telemetry-grid p-10 text-center">
-          <NodeConstellation className="mx-auto mb-4 w-44" />
-          <h2 className="text-lg font-bold text-midnight">
-            Your Story Map is empty.
-          </h2>
-          <p className="mt-2 text-sm text-muted-foreground">
-            Your story map starts with your first piece of content.
-          </p>
-          <a
-            href="/add-content"
-            className="motion-cta glow-lime mt-5 inline-flex rounded-xl bg-chartreuse px-5 py-2.5 text-sm font-bold text-[#050811] hover:bg-white"
-          >
-            Add Content
-          </a>
-        </Panel>
-      ) : (
-        <>
-          <div className="grid gap-4 pb-2 xl:grid-cols-[minmax(0,1fr)_23rem] xl:items-start">
-            <div className="grid grid-cols-2 gap-2 sm:grid-cols-5">
-              {["all", ...kinds.slice(0, 4)].map((k) => (
-                <button
-                  key={k}
-                  type="button"
-                  aria-pressed={filter === k}
-                  onClick={() => changeFilter(k as DnaKind | "all")}
-                  className={`mono-label flex h-10 items-center gap-2 rounded-lg border px-3 text-left transition-colors ${filter === k ? "border-primary bg-primary/15 text-primary" : "border-border bg-card text-muted-foreground hover:border-primary/40 hover:text-foreground"}`}
-                >
-                  {k === "all" ? (
-                    <Network
-                      className="h-4 w-4 text-primary"
-                      strokeWidth={1.9}
-                    />
-                  ) : (
-                    <span
-                      className="shrink-0"
-                      style={{ color: NODE_TYPE_COLORS[k as DnaKind] }}
-                    >
-                      <DnaTypeIcon kind={k as DnaKind} size={15} />
-                    </span>
-                  )}
-                  <span>
-                    {k === "all" ? "All" : KIND_META[k as DnaKind].plural}
-                  </span>
-                  <span className="ml-auto tabular-nums opacity-70">
-                    {
-                      rawNodes.filter((node) => k === "all" || node.type === k)
-                        .length
-                    }
-                  </span>
-                </button>
-              ))}
-            </div>
-            <div className="grid grid-cols-2 gap-2 sm:grid-cols-5 xl:col-start-1">
-              {kinds.slice(4).map((k) => (
-                <button
-                  key={k}
-                  type="button"
-                  aria-pressed={filter === k}
-                  onClick={() => changeFilter(k)}
-                  className={`mono-label flex h-10 items-center gap-2 rounded-lg border px-3 text-left transition-colors ${filter === k ? "border-primary bg-primary/15 text-primary" : "border-border bg-card text-muted-foreground hover:border-primary/40 hover:text-foreground"}`}
-                >
-                  <span
-                    className="shrink-0"
-                    style={{ color: NODE_TYPE_COLORS[k] }}
-                  >
-                    <DnaTypeIcon kind={k} size={15} />
-                  </span>
-                  <span>{KIND_META[k].plural}</span>
-                  <span className="ml-auto tabular-nums opacity-70">
-                    {rawNodes.filter((node) => node.type === k).length}
-                  </span>
-                </button>
-              ))}
-            </div>
+    <div className="space-y-4">
+      <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_minmax(30rem,38rem)] xl:items-start">
+        <PageHeader
+          title="Your Story Map"
+          subtitle="A living visualization of your ideas, beliefs, experiences, and evolution."
+        />
+        {rawNodes.length > 0 ? (
+          <div className="flex min-w-0 items-center gap-3 xl:pt-1">
             <div
               ref={searchBoxRef}
-              className="relative xl:col-start-2 xl:row-span-2"
+              className="relative min-w-0 flex-1"
               onBlur={(event) => {
                 if (
                   !event.relatedTarget ||
@@ -332,8 +288,8 @@ function StoryMapPage() {
                   setSearchOpen(false);
               }}
             >
-              <label className="flex min-w-0 items-center gap-2 rounded-lg border border-border bg-card px-3 py-2.5 text-sm text-muted-foreground">
-                <Search className="h-4 w-4 shrink-0" />
+              <label className="story-map-search-control flex h-12 min-w-0 items-center gap-3 rounded-full border border-border bg-card px-5 text-sm text-muted-foreground shadow-sm transition-[border-color,box-shadow] duration-200 focus-within:border-primary focus-within:ring-2 focus-within:ring-ring/30">
+                <Search className="h-4 w-4 shrink-0 text-primary" />
                 <input
                   value={query}
                   role="combobox"
@@ -388,7 +344,7 @@ function StoryMapPage() {
                   id="story-map-search-results"
                   role="listbox"
                   aria-label="Story Map search results"
-                  className="search-results-enter absolute inset-x-0 top-full z-20 mt-2 max-h-[min(24rem,55dvh)] overflow-y-auto rounded-xl border border-border bg-card p-1.5 shadow-lift"
+                  className="search-results-enter absolute inset-x-0 top-full z-30 mt-2 max-h-[min(24rem,55dvh)] overflow-y-auto rounded-xl border border-border bg-card p-1.5 shadow-lift"
                 >
                   {searchMatches.map((node, index) => (
                     <button
@@ -399,13 +355,14 @@ function StoryMapPage() {
                       aria-selected={index === activeSearchIndex}
                       onMouseEnter={() => setActiveSearchIndex(index)}
                       onClick={() => selectSearchResult(node)}
-                      className={`flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left text-sm transition-colors ${index === activeSearchIndex ? "bg-muted" : "hover:bg-muted/70"}`}
+                      className={`flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left text-sm transition-[background-color,transform] duration-150 active:scale-[0.99] focus-visible:ring-2 focus-visible:ring-ring ${index === activeSearchIndex ? "bg-muted" : "hover:bg-muted/70"}`}
                     >
                       <span
-                        className="grid h-8 w-8 shrink-0 place-items-center rounded-full"
+                        className="semantic-node-marker grid h-8 w-8 shrink-0 place-items-center rounded-full"
                         style={{
                           color: getDnaIconForeground(node.type),
                           backgroundColor: NODE_TYPE_COLORS[node.type],
+                          borderColor: getDnaBorderColor(node.type),
                         }}
                       >
                         <DnaTypeIcon kind={node.type} size={15} />
@@ -431,46 +388,101 @@ function StoryMapPage() {
                 <p
                   id="story-map-search-results"
                   role="status"
-                  className="search-results-enter absolute inset-x-0 top-full z-20 mt-2 rounded-xl border border-border bg-card px-4 py-3 text-xs text-muted-foreground shadow-lift"
+                  className="search-results-enter absolute inset-x-0 top-full z-30 mt-2 rounded-xl border border-border bg-card px-4 py-3 text-xs text-muted-foreground shadow-lift"
                 >
-                  No Story Map results for “{query.trim()}”
+                  No matches for “{query.trim()}”
                 </p>
               ) : null}
             </div>
+            <div className="story-map-time-control flex h-12 shrink-0 items-center gap-2 rounded-full border border-border bg-card px-4 text-sm font-semibold text-midnight shadow-sm">
+              <CalendarDays className="h-4 w-4 text-primary" />
+              <span>All time</span>
+              <ChevronDown className="h-3.5 w-3.5 text-primary" />
+            </div>
           </div>
-          <div
-            className={`${expanded ? "graph-overlay-enter fixed inset-4 z-50 overflow-auto bg-background p-4 shadow-2xl sm:inset-6" : ""} grid gap-5 xl:grid-cols-[minmax(0,1fr)_23rem]`}
+        ) : null}
+      </div>
+      {rawNodes.length === 0 ? (
+        <Panel className="telemetry-grid p-10 text-center">
+          <NodeConstellation className="mx-auto mb-4 w-44" />
+          <h2 className="text-lg font-bold text-midnight">
+            Your Story Map is empty.
+          </h2>
+          <p className="mt-2 text-sm text-muted-foreground">
+            Your story map starts with your first piece of content.
+          </p>
+          <a
+            href="/add-content"
+            className="motion-cta glow-lime mt-5 inline-flex rounded-xl bg-chartreuse px-5 py-2.5 text-sm font-bold text-[#050811] hover:bg-white"
           >
-            <Panel className="telemetry-grid p-4 sm:p-6">
-              <div className="flex items-center justify-between gap-3 px-1 pb-3">
-                <p className="mono-label text-muted-foreground">
-                  Select a node to reveal its evidence
-                </p>
-                <div className="flex items-center gap-1">
-                  <button
-                    type="button"
-                    aria-label="Zoom out"
-                    title="Zoom out"
-                    onClick={() =>
-                      setZoom((value) => Math.max(0.8, value - 0.1))
-                    }
-                    className="grid h-8 w-8 place-items-center rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground"
+            Add Content
+          </a>
+        </Panel>
+      ) : (
+        <>
+          <div className="story-map-filters -mx-1 flex flex-nowrap items-center gap-1.5 overflow-x-auto px-1 pb-2 [scrollbar-width:thin]">
+            {["all", ...kinds].map((k) => (
+              <button
+                key={k}
+                type="button"
+                aria-pressed={filter === k}
+                onClick={() => changeFilter(k as DnaKind | "all")}
+                className={`flex h-9 shrink-0 items-center gap-1.5 rounded-full border px-2.5 text-xs font-semibold transition-[color,background-color,border-color,transform] duration-200 active:scale-[0.98] focus-visible:ring-2 focus-visible:ring-ring ${filter === k && k === "all" ? "border-primary bg-primary text-primary-foreground" : filter === k ? "text-midnight" : "border-border bg-card text-midnight hover:border-primary/40"}`}
+                style={
+                  filter === k && k !== "all"
+                    ? {
+                        borderColor: NODE_TYPE_COLORS[k as DnaKind],
+                        backgroundColor: `color-mix(in srgb, ${NODE_TYPE_COLORS[k as DnaKind]} 13%, var(--card))`,
+                      }
+                    : undefined
+                }
+              >
+                {k === "all" ? (
+                  <Network
+                    className={`h-4 w-4 ${filter === "all" ? "text-primary-foreground" : "text-primary"}`}
+                    strokeWidth={1.9}
+                  />
+                ) : (
+                  <span
+                    className="semantic-node-marker grid h-5 w-5 shrink-0 place-items-center rounded-full"
+                    style={{
+                      color: getDnaIconForeground(k as DnaKind),
+                      backgroundColor: NODE_TYPE_COLORS[k as DnaKind],
+                      borderColor: getDnaBorderColor(k as DnaKind),
+                    }}
                   >
-                    <Minus className="h-4 w-4" />
-                  </button>
-                  <button
-                    type="button"
-                    aria-label="Fit graph"
-                    title={expanded ? "Collapse graph" : "Expand graph"}
-                    onClick={() => setExpanded((value) => !value)}
-                    className="grid h-8 w-8 place-items-center rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground"
-                  >
-                    {expanded ? (
-                      <Minimize2 className="h-3.5 w-3.5" />
-                    ) : (
-                      <Maximize2 className="h-3.5 w-3.5" />
-                    )}
-                  </button>
+                    <DnaTypeIcon kind={k as DnaKind} size={11} />
+                  </span>
+                )}
+                <span>
+                  {k === "all" ? "All" : KIND_META[k as DnaKind].plural}
+                </span>
+                <span
+                  className={`rounded-full px-1.5 py-0.5 tabular-nums ${filter === k && k === "all" ? "bg-white/20" : "bg-muted text-muted-foreground"}`}
+                >
+                  {
+                    rawNodes.filter((node) => k === "all" || node.type === k)
+                      .length
+                  }
+                </span>
+              </button>
+            ))}
+          </div>
+          <ExpandedPortal active={expanded}>
+            <div
+              role={expanded ? "dialog" : undefined}
+              aria-modal={expanded || undefined}
+              aria-label={expanded ? "Expanded Story Map" : undefined}
+              className={
+                expanded
+                  ? "graph-overlay-enter fixed inset-0 z-[100] h-dvh w-screen overflow-hidden bg-background p-3 shadow-2xl sm:p-5"
+                  : "grid gap-5 xl:grid-cols-[minmax(0,1fr)_340px]"
+              }
+            >
+              <Panel
+                className={`relative flex min-h-0 flex-col overflow-hidden p-0 ${expanded ? "h-full" : "h-[var(--story-workspace-height)]"}`}
+              >
+                <div className="story-map-zoom-controls absolute left-4 top-1/2 z-20 flex -translate-y-1/2 flex-col items-center rounded-xl border border-border bg-card/95 p-1 shadow-card backdrop-blur">
                   <button
                     type="button"
                     aria-label="Zoom in"
@@ -478,87 +490,141 @@ function StoryMapPage() {
                     onClick={() =>
                       setZoom((value) => Math.min(1.25, value + 0.1))
                     }
-                    className="grid h-8 w-8 place-items-center rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground"
+                    className="story-map-control grid h-9 w-9 place-items-center rounded-lg text-midnight transition-[background-color,transform] duration-200 hover:bg-muted active:scale-95 focus-visible:ring-2 focus-visible:ring-ring"
                   >
                     <Plus className="h-4 w-4" />
                   </button>
-                </div>
-              </div>
-              {visible.length ? (
-                <div
-                  className="relative rounded-2xl border border-border bg-background p-3 transition-colors duration-300 sm:p-4"
-                  style={{
-                    backgroundImage:
-                      "radial-gradient(circle at 15% 18%, color-mix(in srgb, var(--story) 8%, transparent), transparent 32%), radial-gradient(circle at 82% 80%, color-mix(in srgb, var(--experience) 10%, transparent), transparent 30%), radial-gradient(circle at 76% 24%, color-mix(in srgb, var(--theme-color) 8%, transparent), transparent 24%)",
-                  }}
-                >
-                  <div className="pointer-events-none absolute left-5 top-4 z-10 flex items-center gap-2 font-mono text-[0.625rem] text-aqua-accent">
-                    <DataPulse color="aqua" /> MEMORY GRAPH / LIVE
-                  </div>
-                  <span className="pointer-events-none absolute right-5 top-4 z-10 font-mono text-[0.625rem] text-muted-foreground">
-                    {visible.length} NODES
-                  </span>
-                  <span className="pointer-events-none absolute bottom-4 left-5 z-10 font-mono text-[0.625rem] text-muted-foreground">
-                    SOURCE LINKAGE / GROUNDED
-                  </span>
-                  <StoryGraph
-                    nodes={graphNodes}
-                    edges={edges}
-                    selectedId={selected?.id ?? null}
-                    onSelect={(n) =>
-                      setSelected(rawNodes.find((x) => x.id === n.id) ?? null)
+                  <button
+                    type="button"
+                    aria-label="Zoom out"
+                    title="Zoom out"
+                    onClick={() =>
+                      setZoom((value) => Math.max(0.8, value - 0.1))
                     }
-                    className="h-[var(--story-workspace-h)]"
-                    compact
-                    zoom={zoom}
-                  />
+                    className="story-map-control grid h-9 w-9 place-items-center rounded-lg text-midnight transition-[background-color,transform] duration-200 hover:bg-muted active:scale-95 focus-visible:ring-2 focus-visible:ring-ring"
+                  >
+                    <Minus className="h-4 w-4" />
+                  </button>
+                  <button
+                    type="button"
+                    aria-label={
+                      expanded ? "Exit graph focus mode" : "Expand graph"
+                    }
+                    aria-expanded={expanded}
+                    title={expanded ? "Collapse graph" : "Expand graph"}
+                    onClick={() => setExpanded((value) => !value)}
+                    className="story-map-control grid h-9 w-9 place-items-center rounded-lg text-midnight transition-[background-color,transform] duration-200 hover:bg-muted active:scale-95 focus-visible:ring-2 focus-visible:ring-ring"
+                  >
+                    {expanded ? (
+                      <Minimize2 className="h-3.5 w-3.5" />
+                    ) : (
+                      <Maximize2 className="h-3.5 w-3.5" />
+                    )}
+                  </button>
                 </div>
-              ) : (
-                <div className="grid min-h-72 place-items-center rounded-2xl border border-dashed border-border bg-background p-8 text-center">
-                  <div>
-                    <p className="text-sm font-semibold text-midnight">
-                      {filter === "all"
-                        ? "No nodes yet"
-                        : `No ${KIND_META[filter].label.toLowerCase()} nodes yet`}
-                    </p>
-                    <p className="mt-2 text-xs text-muted-foreground">
-                      Try another filter to explore your Story Graph.
-                    </p>
+                <div ref={legendRef} className="absolute right-4 top-4 z-20">
+                  <button
+                    type="button"
+                    aria-expanded={legendOpen}
+                    aria-controls="story-map-legend"
+                    onClick={() => setLegendOpen((open) => !open)}
+                    className="story-map-control flex items-center gap-2 rounded-full border border-border bg-card/95 px-4 py-2 text-xs font-semibold text-midnight shadow-card backdrop-blur transition-[background-color,transform] duration-200 hover:bg-muted active:scale-[0.98] focus-visible:ring-2 focus-visible:ring-ring"
+                  >
+                    <ListFilter className="h-4 w-4 text-primary" /> Legend
+                  </button>
+                  {legendOpen ? (
+                    <div
+                      id="story-map-legend"
+                      className="popover-enter absolute right-0 top-full mt-2 w-64 rounded-xl border border-border bg-card p-3 shadow-lift"
+                    >
+                      <GraphLegend kinds={kinds} />
+                    </div>
+                  ) : null}
+                </div>
+                {visible.length ? (
+                  <div className="story-map-canvas relative flex min-h-0 flex-1 flex-col bg-background transition-colors duration-300">
+                    <StoryGraph
+                      nodes={graphNodes}
+                      edges={edges}
+                      selectedId={selected?.id ?? null}
+                      onSelect={(n) =>
+                        setSelected(rawNodes.find((x) => x.id === n.id) ?? null)
+                      }
+                      className="h-full min-h-0"
+                      compact
+                      zoom={zoom}
+                      onResize={setGraphSize}
+                    />
                   </div>
-                </div>
-              )}
-              <div className="mt-5">
-                <GraphLegend kinds={kinds} />
-              </div>
-            </Panel>
-            {selected ? (
-              <DetailTransition
-                node={selected}
-                close={() => setSelected(null)}
-                onSelect={setSelected}
-                edges={edges}
-                nodes={rawNodes}
-              />
-            ) : (
-              <Panel className="telemetry-grid grid p-6 xl:h-full xl:place-items-center">
-                <div>
-                  <NodeConstellation className="mb-5 w-32 opacity-70" compact />
-                  <p className="eyebrow">Pick a node</p>
-                  <h2 className="card-title mt-3 text-midnight">
-                    Inspect grounded evidence.
-                  </h2>
-                  <p className="mt-2 max-w-xs text-sm leading-relaxed text-muted-foreground">
-                    Select a node to inspect its grounded evidence and
-                    connections. Search above or choose a node in the graph.
-                  </p>
+                ) : (
+                  <div className="grid min-h-0 flex-1 place-items-center bg-background p-8 text-center">
+                    <div>
+                      <p className="text-sm font-semibold text-midnight">
+                        {filter === "all"
+                          ? "No nodes yet"
+                          : `No ${KIND_META[filter].label.toLowerCase()} nodes yet`}
+                      </p>
+                      <p className="mt-2 text-xs text-muted-foreground">
+                        Try another filter to explore your Story Graph.
+                      </p>
+                    </div>
+                  </div>
+                )}
+                <div className="story-map-status flex h-12 shrink-0 items-center justify-center gap-3 border-t border-border bg-card px-4 text-xs text-muted-foreground sm:gap-5">
+                  <span className="font-semibold text-primary">
+                    {visible.length} nodes
+                  </span>
+                  <span aria-hidden="true">•</span>
+                  <span>{edges.length} connections</span>
+                  <span className="hidden h-5 w-px bg-border sm:block" />
+                  <span className="hidden sm:inline">
+                    Your ideas are connected.
+                  </span>
                 </div>
               </Panel>
-            )}
-          </div>
+              {!expanded && selected ? (
+                <DetailTransition
+                  node={selected}
+                  close={() => setSelected(null)}
+                  onSelect={setSelected}
+                  edges={edges}
+                  nodes={rawNodes}
+                />
+              ) : !expanded ? (
+                <Panel className="telemetry-grid grid p-6 xl:h-[var(--story-workspace-height)] xl:place-items-center">
+                  <div>
+                    <NodeConstellation
+                      className="mb-5 w-32 opacity-70"
+                      compact
+                    />
+                    <p className="eyebrow">Pick a node</p>
+                    <h2 className="card-title mt-3 text-midnight">
+                      Inspect grounded evidence.
+                    </h2>
+                    <p className="mt-2 max-w-xs text-sm leading-relaxed text-muted-foreground">
+                      Select a node to inspect its evidence and connections.
+                    </p>
+                  </div>
+                </Panel>
+              ) : null}
+            </div>
+          </ExpandedPortal>
         </>
       )}
     </div>
   );
+}
+
+function ExpandedPortal({
+  active,
+  children,
+}: {
+  active: boolean;
+  children: ReactNode;
+}) {
+  return active && typeof document !== "undefined"
+    ? createPortal(children, document.body)
+    : children;
 }
 
 function DetailTransition({
@@ -623,8 +689,16 @@ function stableSeed(value: string) {
   return (hash >>> 0) / 4294967295;
 }
 
-function forceLayout(nodes: CreatorDNANode[], edges: GraphEdge[]) {
+function forceLayout(
+  nodes: CreatorDNANode[],
+  edges: GraphEdge[],
+  dimensions: { width: number; height: number },
+) {
   if (nodes.length <= 1) return nodes.map(() => ({ x: 50, y: 50 }));
+  const aspect =
+    dimensions.width > 0 && dimensions.height > 0
+      ? Math.max(0.75, Math.min(2.5, dimensions.width / dimensions.height))
+      : 1;
   const positions = nodes.map((node) => ({
     x: 14 + stableSeed(`${node.id}:x`) * 72,
     y: 14 + stableSeed(`${node.id}:y`) * 72,
@@ -642,26 +716,26 @@ function forceLayout(nodes: CreatorDNANode[], edges: GraphEdge[]) {
       for (let j = i + 1; j < positions.length; j++) {
         const a = positions[i]!;
         const b = positions[j]!;
-        const dx = a.x - b.x;
+        const dx = (a.x - b.x) * aspect;
         const dy = a.y - b.y;
         const distance = Math.max(2, Math.hypot(dx, dy));
         const force = Math.min(2.5, 52 / (distance * distance));
-        velocity[i]!.x += (dx / distance) * force;
+        velocity[i]!.x += (dx / distance) * (force / aspect);
         velocity[i]!.y += (dy / distance) * force;
-        velocity[j]!.x -= (dx / distance) * force;
+        velocity[j]!.x -= (dx / distance) * (force / aspect);
         velocity[j]!.y -= (dy / distance) * force;
       }
     }
     for (const [aIndex, bIndex] of links) {
       const a = positions[aIndex]!;
       const b = positions[bIndex]!;
-      const dx = b.x - a.x;
+      const dx = (b.x - a.x) * aspect;
       const dy = b.y - a.y;
       const distance = Math.max(1, Math.hypot(dx, dy));
       const force = (distance - 24) * 0.018;
-      velocity[aIndex]!.x += (dx / distance) * force;
+      velocity[aIndex]!.x += (dx / distance) * (force / aspect);
       velocity[aIndex]!.y += (dy / distance) * force;
-      velocity[bIndex]!.x -= (dx / distance) * force;
+      velocity[bIndex]!.x -= (dx / distance) * (force / aspect);
       velocity[bIndex]!.y -= (dy / distance) * force;
     }
     for (let i = 0; i < positions.length; i++) {
@@ -669,8 +743,8 @@ function forceLayout(nodes: CreatorDNANode[], edges: GraphEdge[]) {
       const centerForce = 0.012;
       velocity[i]!.x += (50 - point.x) * centerForce;
       velocity[i]!.y += (50 - point.y) * centerForce;
-      point.x = Math.max(7, Math.min(93, point.x + velocity[i]!.x));
-      point.y = Math.max(8, Math.min(92, point.y + velocity[i]!.y));
+      point.x = Math.max(5, Math.min(95, point.x + velocity[i]!.x));
+      point.y = Math.max(7, Math.min(93, point.y + velocity[i]!.y));
     }
   }
   return positions;
@@ -692,7 +766,7 @@ function Detail({
   return (
     <Panel
       accent={KIND_META[node.type].color}
-      className={`${transitionClass} fixed inset-x-4 bottom-4 z-40 max-h-[70dvh] overflow-y-auto p-6 xl:static xl:h-full xl:max-h-none`}
+      className={`story-detail-panel ${transitionClass} fixed inset-x-4 bottom-4 z-40 max-h-[70dvh] overflow-y-auto p-6 xl:static xl:h-[var(--story-workspace-height)] xl:max-h-none`}
     >
       <div className="flex items-start justify-between">
         <div>
@@ -709,7 +783,7 @@ function Detail({
       <dl className="mt-6 space-y-4 text-sm">
         <div>
           <dt className="eyebrow">Evidence</dt>
-          <dd className="mt-1 italic text-midnight">
+          <dd className="story-evidence-quote mt-2 rounded-xl bg-muted/60 px-4 py-3 font-display text-[0.9375rem] italic leading-relaxed text-midnight">
             “{node.evidenceQuote || "No evidence quote available."}”
           </dd>
         </div>
@@ -736,15 +810,18 @@ function Detail({
                   key={item.id}
                   type="button"
                   onClick={() => onSelect(item)}
-                  className="group flex w-full items-center justify-between gap-3 rounded-xl border px-3 py-2 text-left text-xs font-medium transition-all duration-150 hover:translate-x-0.5 hover:bg-muted"
-                  style={{ borderColor: `${NODE_TYPE_COLORS[item.type]}66` }}
+                  className="group flex w-full items-center justify-between gap-3 rounded-xl border px-3 py-2 text-left text-xs font-medium transition-[background-color,transform,border-color] duration-150 hover:translate-x-0.5 hover:bg-muted active:translate-x-0 active:scale-[0.99] focus-visible:ring-2 focus-visible:ring-ring"
+                  style={{
+                    borderColor: `color-mix(in srgb, ${NODE_TYPE_COLORS[item.type]} 40%, transparent)`,
+                  }}
                 >
                   <span className="flex min-w-0 items-center gap-2 text-midnight">
                     <span
-                      className="grid h-7 w-7 shrink-0 place-items-center rounded-full transition-[filter,transform] duration-150 group-hover:scale-105 group-hover:brightness-125"
+                      className="semantic-node-marker grid h-7 w-7 shrink-0 place-items-center rounded-full transition-[filter,transform] duration-150 group-hover:scale-105 group-hover:brightness-125"
                       style={{
                         color: getDnaIconForeground(item.type),
                         backgroundColor: NODE_TYPE_COLORS[item.type],
+                        borderColor: getDnaBorderColor(item.type),
                       }}
                     >
                       <DnaTypeIcon kind={item.type} size={13} />

@@ -71,7 +71,7 @@ export function CreatorDNALogo({
             <path
               d="M70 26C55 26 45 42 30 42C15 42 15 58 30 58C45 58 55 74 70 74"
               fill="none"
-              stroke={dark ? "#36D6C5" : "#089E91"}
+              stroke="#36D6C5"
               strokeLinecap="round"
               strokeWidth="4"
               opacity={dark ? 0.85 : 0.95}
@@ -80,14 +80,14 @@ export function CreatorDNALogo({
               cx="70"
               cy="26"
               r="7"
-              fill={dark ? "#E8F31A" : "#C5D000"}
+              fill="#E8F31A"
               filter={dark ? `url(#${glowId})` : undefined}
             />
-            <circle cx="30" cy="26" r="6" fill={dark ? "#FFD83D" : "#F2B900"} />
-            <circle cx="50" cy="42" r="5" fill={dark ? "#31D158" : "#20A947"} />
+            <circle cx="30" cy="26" r="6" fill="#FFD83D" />
+            <circle cx="50" cy="42" r="5" fill="#31D158" />
             <circle cx="70" cy="58" r="6" fill="#155EEF" />
-            <circle cx="30" cy="58" r="7" fill={dark ? "#36D6C5" : "#18BFB0"} />
-            <circle cx="50" cy="74" r="6" fill={dark ? "#E8F31A" : "#C5D000"} />
+            <circle cx="30" cy="58" r="7" fill="#36D6C5" />
+            <circle cx="50" cy="74" r="6" fill="#E8F31A" />
           </g>
         </g>
       ) : null}
@@ -158,10 +158,13 @@ export function AdaptiveCreatorDNALogo({
 }
 
 export function CreatorDNAIcon({
+  variant = "dark",
   className = "h-10 w-10",
 }: {
+  variant?: LogoVariant;
   className?: string;
 }) {
+  const dark = variant === "dark";
   const id = useId().replace(/:/g, "");
   const surface = `${id}-surface`;
   const edge = `${id}-edge`;
@@ -180,9 +183,9 @@ export function CreatorDNAIcon({
     >
       <defs>
         <radialGradient id={surface} cx="42%" cy="32%" r="82%">
-          <stop offset="0" stopColor="#182D4D" />
-          <stop offset="0.52" stopColor="#0B1120" />
-          <stop offset="1" stopColor="#050811" />
+          <stop offset="0" stopColor={dark ? "#182D4D" : "#FFFFFF"} />
+          <stop offset="0.52" stopColor={dark ? "#0B1120" : "#F8FAF5"} />
+          <stop offset="1" stopColor={dark ? "#050811" : "#E7EEF6"} />
         </radialGradient>
         <linearGradient id={edge} x1="0" y1="0" x2="1" y2="1">
           <stop offset="0" stopColor="#155EEF" />
@@ -268,8 +271,8 @@ export function CreatorDNAIcon({
         cx="512"
         cy="512"
         r="326"
-        fill="#08101D"
-        stroke="#1E304F"
+        fill={dark ? "#08101D" : "#FFFFFF"}
+        stroke={dark ? "#1E304F" : "#D8E1EC"}
         strokeWidth="10"
       />
       <circle
@@ -315,7 +318,7 @@ export function CreatorDNAIcon({
         filter={`url(#${nodeGlow})`}
       />
       <circle cx="512" cy="720" r="45" fill="#E8F31A" />
-      <g fill="#FFFFFF" opacity=".36">
+      <g fill={dark ? "#FFFFFF" : "#08204A"} opacity=".36">
         <circle cx="658" cy="286" r="12" />
         <circle cx="336" cy="289" r="10" />
         <circle cx="499" cy="421" r="8" />
@@ -324,5 +327,24 @@ export function CreatorDNAIcon({
         <circle cx="496" cy="704" r="10" />
       </g>
     </svg>
+  );
+}
+
+export function AdaptiveCreatorDNAIcon({
+  className = "h-10 w-10",
+}: {
+  className?: string;
+}) {
+  return (
+    <span className={`inline-grid shrink-0 ${className}`}>
+      <CreatorDNAIcon
+        variant="light"
+        className="col-start-1 row-start-1 h-full w-full dark:hidden"
+      />
+      <CreatorDNAIcon
+        variant="dark"
+        className="col-start-1 row-start-1 hidden h-full w-full dark:block"
+      />
+    </span>
   );
 }

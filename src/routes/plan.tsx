@@ -105,14 +105,16 @@ function PlanPage() {
   }
 
   return (
-    <div className="space-y-10">
+    <div
+      className={`plan-workspace space-y-10 ${result ? "has-plan-results" : ""}`}
+    >
       <PageHeader
         eyebrow="Plan content"
         title="What do you want to talk about?"
         subtitle="Creator DNA looks through everything you've made, then offers a few directions grounded in your own material. You choose."
       />
 
-      <Panel accent="var(--evolution)" className="p-6 sm:p-8">
+      <Panel accent="var(--evolution)" className="plan-prompt p-6 sm:p-8">
         <form className="flex flex-col gap-3" onSubmit={submitIdea}>
           <input
             value={topic}
@@ -194,7 +196,7 @@ function PlanningResults({ result }: { result: PlanningResponse }) {
 
   return (
     <div className="result-reveal space-y-8">
-      <Panel accent="var(--story)" className="p-5 sm:p-6">
+      <Panel accent="var(--story)" className="plan-result-intro p-5 sm:p-6">
         <p className="eyebrow">Story Intelligence</p>
         <h2 className="mt-2 text-xl font-bold text-midnight">
           Planning for: {platformLabels[result.targetPlatform]}
@@ -324,12 +326,14 @@ function PlanningResults({ result }: { result: PlanningResponse }) {
             <Panel
               key={`${angle.title}-${index}`}
               accent="var(--story)"
-              className="flex flex-col p-6 transition-shadow hover:shadow-lift"
+              className="creative-direction flex flex-col p-6 transition-shadow hover:shadow-lift"
             >
               <span className="eyebrow">
                 Direction {String.fromCharCode(65 + index)}
               </span>
-              <span className="eyebrow">{angle.framingType}</span>
+              <span className="direction-framing eyebrow">
+                {angle.framingType}
+              </span>
               <h3 className="mt-3 text-lg font-bold leading-snug text-midnight">
                 {angle.title}
               </h3>

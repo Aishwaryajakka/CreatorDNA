@@ -1,5 +1,5 @@
-import { useState, type ReactNode } from "react";
-import { Link, useNavigate } from "@tanstack/react-router";
+import { useEffect, useRef, useState, type ReactNode } from "react";
+import { Link, useLocation, useNavigate } from "@tanstack/react-router";
 import {
   Home,
   Library,
@@ -15,7 +15,7 @@ import {
   X,
   type LucideIcon,
 } from "lucide-react";
-import { AdaptiveCreatorDNALogo, CreatorDNAIcon } from "./Logo";
+import { AdaptiveCreatorDNAIcon, AdaptiveCreatorDNALogo } from "./Logo";
 import { supabase } from "@/lib/supabase/client";
 import { useProfile } from "@/lib/use-profile";
 import { ThemeToggle } from "@/components/ThemeProvider";
@@ -34,7 +34,7 @@ function SidebarGroup({
 }) {
   return (
     <section>
-      <p className="mono-label mb-2 border-b border-sidebar-border px-3 pb-2 text-sidebar-foreground/40">
+      <p className="mono-label mb-2.5 border-b border-sidebar-border px-3 pb-2.5 text-sidebar-foreground/45">
         {title}
       </p>
       <div className="space-y-1">{children}</div>
@@ -54,9 +54,12 @@ function SidebarLink({
   return (
     <Link
       to={to}
-      className="sidebar-link group relative flex items-center gap-3 overflow-hidden rounded-lg border border-transparent px-3 py-2.5 text-sm font-medium text-sidebar-foreground/65 transition-colors hover:border-sidebar-border hover:bg-sidebar-accent hover:text-sidebar-accent-foreground data-[status=active]:border-primary/40 data-[status=active]:bg-sidebar-accent data-[status=active]:text-sidebar-foreground"
+      className="sidebar-link group relative flex items-center gap-3 overflow-hidden rounded-lg border border-transparent px-3 py-2.5 text-sm font-medium text-sidebar-foreground/65 transition-[color,background-color,border-color,transform] duration-200 hover:border-sidebar-border hover:bg-sidebar-accent hover:text-sidebar-accent-foreground active:translate-y-px focus-visible:ring-2 focus-visible:ring-sidebar-ring data-[status=active]:border-primary/40 data-[status=active]:bg-sidebar-accent data-[status=active]:text-sidebar-foreground"
     >
-      <Icon className="h-[18px] w-[18px] shrink-0" strokeWidth={1.9} />
+      <Icon
+        className="h-[18px] w-[18px] shrink-0 opacity-75 transition-opacity duration-200 group-hover:opacity-100 group-data-[status=active]:opacity-100"
+        strokeWidth={1.9}
+      />
       <span className="truncate">{label}</span>
     </Link>
   );
@@ -72,9 +75,12 @@ function DisabledSidebarLink({
   return (
     <div
       aria-disabled="true"
-      className="flex items-center gap-3 rounded-lg border border-transparent px-3 py-2.5 text-sm font-medium text-sidebar-foreground/30"
+      className="flex items-center gap-3 rounded-lg border border-transparent px-3 py-2.5 text-sm font-medium text-sidebar-foreground/35"
     >
-      <Icon className="h-[18px] w-[18px] shrink-0" strokeWidth={1.9} />
+      <Icon
+        className="h-[18px] w-[18px] shrink-0 opacity-55"
+        strokeWidth={1.9}
+      />
       <span>{label}</span>
     </div>
   );
@@ -82,9 +88,28 @@ function DisabledSidebarLink({
 
 export function AppSidebar() {
   const navigate = useNavigate();
+  const location = useLocation();
   const profile = useProfile();
   const [menuOpen, setMenuOpen] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const profileMenuRef = useRef<HTMLDivElement>(null);
+  useEffect(() => setMenuOpen(false), [location.pathname]);
+  useEffect(() => {
+    if (!menuOpen) return;
+    const closeOnOutsidePointer = (event: PointerEvent) => {
+      if (!profileMenuRef.current?.contains(event.target as Node))
+        setMenuOpen(false);
+    };
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setMenuOpen(false);
+    };
+    document.addEventListener("pointerdown", closeOnOutsidePointer);
+    document.addEventListener("keydown", closeOnEscape);
+    return () => {
+      document.removeEventListener("pointerdown", closeOnOutsidePointer);
+      document.removeEventListener("keydown", closeOnEscape);
+    };
+  }, [menuOpen]);
   async function signOut() {
     await supabase.auth.signOut();
     await navigate({ to: "/login", replace: true });
@@ -96,9 +121,9 @@ export function AppSidebar() {
           <Link
             to="/"
             aria-label="Creator DNA home"
-            className="flex items-center gap-2.5 px-2"
+            className="logo-link group flex items-center gap-2.5 rounded-lg px-2"
           >
-            <CreatorDNAIcon className="h-9 w-9 shrink-0 transition-transform duration-200 hover:scale-105" />
+            <AdaptiveCreatorDNAIcon className="h-9 w-9 shrink-0 transition-transform duration-200 group-hover:scale-105" />
             <AdaptiveCreatorDNALogo
               showIcon={false}
               showTagline={false}
@@ -129,10 +154,10 @@ export function AppSidebar() {
                 key={item.to}
                 to={item.to}
                 activeOptions={{ exact: item.to === "/" }}
-                className="sidebar-link group relative flex shrink-0 items-center gap-3 overflow-hidden rounded-lg border border-transparent px-3 py-2.5 text-sm font-medium text-sidebar-foreground/65 transition-colors hover:border-sidebar-border hover:bg-sidebar-accent hover:text-sidebar-accent-foreground data-[status=active]:border-primary/40 data-[status=active]:bg-sidebar-accent data-[status=active]:text-sidebar-foreground"
+                className="sidebar-link group relative flex shrink-0 items-center gap-3 overflow-hidden rounded-lg border border-transparent px-3 py-2.5 text-sm font-medium text-sidebar-foreground/65 transition-[color,background-color,border-color,transform] duration-200 hover:border-sidebar-border hover:bg-sidebar-accent hover:text-sidebar-accent-foreground active:translate-y-px focus-visible:ring-2 focus-visible:ring-sidebar-ring data-[status=active]:border-primary/40 data-[status=active]:bg-sidebar-accent data-[status=active]:text-sidebar-foreground"
               >
                 <item.icon
-                  className="h-[18px] w-[18px] shrink-0"
+                  className="h-[18px] w-[18px] shrink-0 opacity-75 transition-opacity duration-200 group-hover:opacity-100 group-data-[status=active]:opacity-100"
                   strokeWidth={1.9}
                 />
                 <span className="truncate">{item.label}</span>
@@ -163,21 +188,24 @@ export function AppSidebar() {
         </nav>
       </div>
       <div
-        className={`${mobileOpen ? "flex" : "hidden"} mt-4 items-center gap-2 border-t border-sidebar-border pt-4 lg:block lg:space-y-1`}
+        className={`${mobileOpen ? "flex" : "hidden"} mt-5 items-center gap-2 border-t border-sidebar-border pt-4 lg:block lg:space-y-1.5`}
       >
         <ThemeToggle />
         <Link
           to="/profile"
-          className="hidden w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground lg:flex"
+          className="hidden w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-sidebar-foreground/70 transition-[color,background-color,transform] duration-200 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground active:translate-y-px focus-visible:ring-2 focus-visible:ring-sidebar-ring lg:flex"
         >
           <Settings className="h-[18px] w-[18px] shrink-0" strokeWidth={1.9} />{" "}
           Profile & settings
         </Link>
-        <div className="relative flex-1 lg:mt-2">
+        <div ref={profileMenuRef} className="relative flex-1 lg:mt-2">
           <button
             type="button"
             onClick={() => setMenuOpen((open) => !open)}
-            className="flex w-full items-center gap-3 rounded-xl px-2 py-2.5 text-left text-sm font-medium text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+            aria-haspopup="menu"
+            aria-expanded={menuOpen}
+            aria-controls="creator-profile-menu"
+            className="flex w-full items-center gap-3 rounded-xl px-2 py-2.5 text-left text-sm font-medium text-sidebar-foreground/70 transition-[color,background-color,transform] duration-200 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground active:translate-y-px focus-visible:ring-2 focus-visible:ring-sidebar-ring"
           >
             <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-experience text-xs font-bold text-midnight">
               {profile?.displayName
@@ -201,7 +229,11 @@ export function AppSidebar() {
             />
           </button>
           {menuOpen ? (
-            <div className="absolute bottom-full left-0 z-20 mb-2 w-48 rounded-xl border border-sidebar-border bg-sidebar p-1 shadow-lift">
+            <div
+              id="creator-profile-menu"
+              role="menu"
+              className="popover-enter absolute bottom-full left-0 z-20 mb-2 w-48 rounded-xl border border-sidebar-border bg-sidebar p-1 shadow-lift"
+            >
               <Link
                 to="/profile"
                 className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-sidebar-foreground/80 hover:bg-sidebar-accent"

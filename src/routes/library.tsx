@@ -9,7 +9,7 @@ import {
   type DnaKind,
 } from "@/lib/creator-dna";
 import { DnaTypeIcon } from "@/components/DnaTypeIcon";
-import { getDnaIconForeground } from "@/lib/dna-iconography";
+import { getDnaBorderColor, getDnaIconForeground } from "@/lib/dna-iconography";
 
 export const Route = createFileRoute("/library")({
   head: () => ({
@@ -103,7 +103,7 @@ function LibraryPage() {
         subtitle="Each piece stays attached to the stories, beliefs and themes it produced, so every insight keeps its evidence."
       />
 
-      <Panel className="p-5 sm:p-6">
+      <Panel className="library-controls p-5 sm:p-6">
         <div className="relative">
           <Search className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <input
@@ -136,7 +136,7 @@ function LibraryPage() {
         </div>
       </Panel>
 
-      <Panel className="overflow-x-auto">
+      <Panel className="memory-archive overflow-x-auto">
         {error ? <p className="p-5 text-sm text-destructive">{error}</p> : null}
         <table className="w-full min-w-[54rem] text-left text-sm">
           <thead>
@@ -186,15 +186,16 @@ function LibraryPage() {
                               key={t}
                               className="group/badge inline-flex items-center gap-1.5 rounded-md border px-2 py-1 text-[0.6875rem] font-medium text-midnight transition-[filter] hover:brightness-110 hover:drop-shadow-[0_0_5px_currentColor]"
                               style={{
-                                borderColor: `${getNodeTypeColor(t)}66`,
+                                borderColor: `color-mix(in srgb, ${getDnaBorderColor(t as DnaKind)} 45%, transparent)`,
                                 backgroundColor: `color-mix(in srgb, ${getNodeTypeColor(t)} 12%, transparent)`,
                               }}
                             >
                               <span
-                                className="grid h-5 w-5 place-items-center rounded-full"
+                                className="semantic-node-marker grid h-5 w-5 place-items-center rounded-full"
                                 style={{
                                   color: getDnaIconForeground(t as DnaKind),
                                   backgroundColor: getNodeTypeColor(t),
+                                  borderColor: getDnaBorderColor(t as DnaKind),
                                 }}
                               >
                                 <DnaTypeIcon kind={t as DnaKind} size={11} />
@@ -262,7 +263,7 @@ function Filter({
 }) {
   return (
     <label className="flex items-center gap-2 rounded-xl border border-input bg-background px-3 py-2 text-xs">
-      <span className="font-mono font-semibold uppercase tracking-[0.12em] text-muted-foreground">
+      <span className="library-filter-label font-mono font-semibold uppercase tracking-[0.12em] text-muted-foreground">
         {label}
       </span>
       <select

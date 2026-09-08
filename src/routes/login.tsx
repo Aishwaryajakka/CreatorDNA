@@ -1,11 +1,16 @@
 import { FormEvent, ReactNode, useEffect, useState } from "react";
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { ArrowRight, Check, LockKeyhole } from "lucide-react";
 import { AdaptiveCreatorDNALogo } from "@/components/Logo";
 import { supabase } from "@/lib/supabase/client";
 import { useAuthState } from "@/lib/auth-state";
 import { ThemeToggle } from "@/components/ThemeProvider";
-import { DNAStrandGraphic, SignalPath } from "@/components/Motion";
+import {
+  DNAStrandGraphic,
+  NodeConstellation,
+  SignalPath,
+  TelemetryOrbit,
+} from "@/components/Motion";
 
 export const Route = createFileRoute("/login")({ component: LoginPage });
 
@@ -74,27 +79,38 @@ function LoginPage() {
   }
 
   return (
-    <main className="grid min-h-screen bg-obsidian-base lg:grid-cols-[46fr_54fr]">
-      <section className="telemetry-grid relative hidden border-r border-obsidian-border bg-obsidian-surface p-10 text-foreground lg:flex lg:items-center lg:justify-center">
-        <DNAStrandGraphic className="absolute inset-0 h-full w-full opacity-70" />
-        <SignalPath className="absolute bottom-[12%] left-[8%] h-48 w-[84%] opacity-60" />
-        <div className="relative z-10 max-w-lg">
-          <div className="mb-12 flex justify-center">
-            <AdaptiveCreatorDNALogo className="h-32 w-full max-w-[32rem]" />
-          </div>
-          <p className="eyebrow text-experience">
+    <main className="public-login grid min-h-screen bg-obsidian-base lg:grid-cols-[58fr_42fr]">
+      <section className="telemetry-grid relative hidden overflow-hidden border-r border-obsidian-border bg-obsidian-surface p-12 text-foreground lg:flex lg:items-center lg:justify-center xl:p-16">
+        <div className="pointer-events-none absolute left-1/2 top-1/2 h-[44rem] w-[44rem] -translate-x-1/2 -translate-y-1/2 rounded-full bg-primary/10 blur-[120px]" />
+        <DNAStrandGraphic className="absolute inset-0 h-full w-full opacity-75" />
+        <SignalPath className="absolute bottom-[10%] left-[6%] h-56 w-[88%] opacity-65" />
+        <NodeConstellation className="absolute -left-10 top-[18%] w-72 -rotate-12 opacity-55" />
+        <NodeConstellation className="absolute -right-12 bottom-[18%] w-80 rotate-[165deg] opacity-45" />
+        <TelemetryOrbit
+          animated
+          className="absolute -right-16 top-12 h-80 w-80 opacity-40"
+        />
+        <div className="relative z-10 w-full max-w-2xl">
+          <Link
+            to="/"
+            aria-label="Creator DNA home"
+            className="logo-link mx-auto mb-10 flex w-full justify-center rounded-lg"
+          >
+            <AdaptiveCreatorDNALogo className="h-36 w-full max-w-[38rem]" />
+          </Link>
+          <p className="text-sm font-bold text-experience">
             Memory for your personal brand
           </p>
-          <h1 className="marketing-display mt-5">
+          <h1 className="mt-5 max-w-2xl font-display text-5xl font-bold leading-[0.98] tracking-[-0.045em] xl:text-6xl">
             Most AI starts with a blank prompt.
             <br />
             <span className="text-belief">Creator DNA starts with you.</span>
           </h1>
-          <p className="mt-6 text-base leading-relaxed text-muted-foreground">
+          <p className="mt-7 max-w-xl text-lg leading-relaxed text-muted-foreground">
             Your stories, beliefs, and evolving perspective—connected,
             searchable, and ready when your next idea arrives.
           </p>
-          <div className="mt-10 flex flex-wrap gap-3 font-mono text-xs font-semibold text-muted-foreground">
+          <div className="mt-10 flex flex-wrap gap-3 text-xs font-semibold text-muted-foreground">
             <span className="rounded-lg border border-obsidian-border bg-obsidian-card px-3 py-2">
               Story Graph
             </span>
@@ -110,17 +126,21 @@ function LoginPage() {
           Your stories. A brighter tomorrow.
         </p>
       </section>
-      <section className="flex items-center justify-center px-5 py-12 sm:px-8">
-        <div className="telemetry-edge telemetry-card w-full max-w-[29rem] rounded-2xl border border-obsidian-border bg-obsidian-card p-7 sm:p-9">
+      <section className="relative flex items-center justify-center px-5 py-12 sm:px-8 lg:px-10 xl:px-14">
+        <div className="telemetry-edge telemetry-card w-full max-w-[31rem] rounded-2xl border border-obsidian-border bg-obsidian-card p-7 sm:p-10">
           <div className="mb-4 flex justify-end">
             <ThemeToggle
               variant="icon"
               className="grid h-10 w-10 place-items-center rounded-xl border border-obsidian-border bg-obsidian-surface text-muted-foreground transition-colors hover:border-aqua-accent/60 hover:text-foreground"
             />
           </div>
-          <div className="mb-10 lg:hidden">
+          <Link
+            to="/"
+            aria-label="Creator DNA home"
+            className="logo-link mb-10 inline-flex rounded-lg lg:hidden"
+          >
             <AdaptiveCreatorDNALogo showTagline={false} className="h-14 w-48" />
-          </div>
+          </Link>
           <div className="mb-8">
             <p className="eyebrow text-primary">
               {forgot
@@ -271,7 +291,7 @@ function LoginPage() {
 
 function Field({ label, children }: { label: string; children: ReactNode }) {
   return (
-    <label className="block font-mono text-xs font-semibold uppercase tracking-wide text-foreground">
+    <label className="block text-xs font-semibold text-foreground">
       <span>{label}</span>
       <span className="mt-2 block [&_input]:w-full [&_input]:rounded-xl [&_input]:border [&_input]:border-obsidian-border [&_input]:bg-obsidian-base [&_input]:px-4 [&_input]:py-3.5 [&_input]:font-sans [&_input]:text-sm [&_input]:normal-case [&_input]:tracking-normal [&_input]:outline-none [&_input]:focus:border-aqua-accent">
         {children}

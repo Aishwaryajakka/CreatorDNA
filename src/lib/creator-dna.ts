@@ -13,15 +13,15 @@ export type DnaKind = DomainDnaKind;
 export type LegacyDnaKind = DnaKind | "evolution";
 
 export const NODE_TYPE_COLORS: Record<DnaKind, string> = {
-  story: "#155EEF",
-  belief: "#E8F31A",
-  theme: "#31D158",
-  experience: "#36D6C5",
-  lesson: "#FFD83D",
-  goal: "#9B6FF2",
-  value: "#FF8A5B",
-  identity: "#4F7CFF",
-  expertise: "#5CC8FF",
+  story: "var(--dna-story)",
+  belief: "var(--dna-belief)",
+  theme: "var(--dna-theme)",
+  experience: "var(--dna-experience)",
+  lesson: "var(--dna-lesson)",
+  goal: "var(--dna-goal)",
+  value: "var(--dna-value)",
+  identity: "var(--dna-identity)",
+  expertise: "var(--dna-expertise)",
 };
 
 export const NODE_TYPE_LABELS: Record<DnaKind, string> = {
@@ -45,9 +45,7 @@ export function getNodeTypeTint(type: string) {
 }
 
 export function getNodeTypeReadableForeground(type: string) {
-  return type === "belief" || type === "lesson"
-    ? "#08204A"
-    : getNodeTypeColor(type);
+  return `var(--dna-${type}-foreground, ${getNodeTypeColor(type)})`;
 }
 
 export const KIND_META: Record<

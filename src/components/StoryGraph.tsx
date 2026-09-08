@@ -15,7 +15,7 @@ import {
   type GraphEdge,
   type GraphNode,
 } from "@/lib/creator-dna";
-import { getDnaIconForeground } from "@/lib/dna-iconography";
+import { getDnaBorderColor, getDnaIconForeground } from "@/lib/dna-iconography";
 
 function colorFor(kind: GraphNode["kind"]) {
   if (kind === "me") return "var(--midnight)";
@@ -51,6 +51,7 @@ type Props = {
   className?: string;
   compact?: boolean;
   zoom?: number;
+  onResize?: (size: { width: number; height: number }) => void;
 };
 
 export function StoryGraph({
@@ -60,8 +61,11 @@ export function StoryGraph({
   onSelect,
   className = "",
   zoom = 1,
+  onResize,
 }: Props) {
   const gid = useId().replace(/:/g, "");
+  const graphRef = useRef<HTMLDivElement>(null);
+  const lastSizeRef = useRef({ width: 0, height: 0 });
   const [hovered, setHovered] = useState<{
     node: GraphNode;
     x: number;
@@ -74,6 +78,28 @@ export function StoryGraph({
     const rect = tooltipRef.current.getBoundingClientRect();
     setTooltipSize({ width: rect.width, height: rect.height });
   }, [hovered]);
+  useLayoutEffect(() => {
+    const element = graphRef.current;
+    if (!element || !onResize || typeof ResizeObserver === "undefined") return;
+
+    const publishSize = (width: number, height: number) => {
+      const next = { width: Math.round(width), height: Math.round(height) };
+      if (
+        next.width === lastSizeRef.current.width &&
+        next.height === lastSizeRef.current.height
+      )
+        return;
+      lastSizeRef.current = next;
+      onResize(next);
+    };
+    const rect = element.getBoundingClientRect();
+    publishSize(rect.width, rect.height);
+    const observer = new ResizeObserver(([entry]) => {
+      if (entry) publishSize(entry.contentRect.width, entry.contentRect.height);
+    });
+    observer.observe(element);
+    return () => observer.disconnect();
+  }, [onResize]);
   const byId = new Map(nodes.map((n) => [n.id, n]));
   const degree = new Map<string, number>();
   for (const edge of edges) {
@@ -90,7 +116,10 @@ export function StoryGraph({
   }
 
   return (
-    <div className={`relative w-full overflow-hidden ${className}`}>
+    <div
+      ref={graphRef}
+      className={`relative w-full overflow-hidden ${className}`}
+    >
       <div
         className="absolute inset-0 origin-center transition-transform duration-200"
         style={{ transform: `scale(${zoom})` }}
@@ -112,10 +141,10 @@ export function StoryGraph({
             </pattern>
           </defs>
           <rect
+            className="story-graph-grid"
             width="100"
             height="100"
             fill={`url(#dots-${gid})`}
-            opacity="0.55"
           />
           {edges.map((edge, index) => {
             const from = byId.get(edge.from);
@@ -130,16 +159,20 @@ export function StoryGraph({
                 fill="none"
                 vectorEffect="non-scaling-stroke"
                 stroke={
-                  active
-                    ? colorFor(from.kind === "me" ? to.kind : from.kind)
-                    : "var(--muted-foreground)"
+                  active ? "var(--action-accent)" : "var(--muted-foreground)"
                 }
                 strokeOpacity={
-                  active ? (selectedId ? 0.9 : 0.82) : focusId ? 0.04 : 0.1
+                  active
+                    ? selectedId
+                      ? 0.9
+                      : 0.82
+                    : focusId
+                      ? "var(--graph-edge-dim)"
+                      : "var(--graph-edge-rest)"
                 }
                 strokeWidth={active ? 2.5 : 1.6}
                 strokeLinecap="round"
-                className={`story-graph-edge-enter ${active ? "dash-flow" : ""}`}
+                className={`story-graph-edge-enter ${selectedId && active ? "story-edge-flow" : ""}`}
                 style={
                   {
                     "--edge-delay": `${Math.min(index, 12) * 18}ms`,
@@ -199,7 +232,7 @@ export function StoryGraph({
               }}
               onMouseLeave={() => setHovered(null)}
               style={{ left: `${node.x}%`, top: `${node.y}%` }}
-              className={`group absolute -translate-x-1/2 -translate-y-1/2 ${interactive ? "cursor-pointer" : ""} transition-[opacity,transform] duration-150 hover:scale-110 ${selected || hoveredNode ? "scale-110" : focusId && neighbors.has(node.id) ? "scale-[1.03]" : ""} ${dim ? (selectedId ? "opacity-30" : "opacity-60") : "opacity-100"}`}
+              className={`group absolute -translate-x-1/2 -translate-y-1/2 rounded-full ${interactive ? "cursor-pointer" : ""} transition-[opacity,transform] duration-150 hover:scale-110 active:scale-105 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background ${selected || hoveredNode ? "scale-110" : focusId && neighbors.has(node.id) ? "scale-[1.03]" : ""} ${dim ? (selectedId ? "opacity-30" : "opacity-60") : "opacity-100"}`}
             >
               {isMe ? (
                 <span
@@ -214,28 +247,40 @@ export function StoryGraph({
                 </span>
               ) : (
                 <span
-                  className="story-graph-node-enter relative grid place-items-center rounded-full border-2 shadow-card transition-[box-shadow,transform] hover:shadow-lift"
+                  className="semantic-node-marker story-graph-semantic-node story-graph-node-enter relative grid place-items-center rounded-full transition-[box-shadow,transform]"
+                  data-selected={selected || undefined}
+                  data-hovered={hoveredNode || undefined}
                   style={
                     {
                       width: size,
                       height: size,
                       color: getDnaIconForeground(node.kind as LegacyDnaKind),
                       backgroundColor: color,
-                      borderColor:
-                        selected || hoveredNode ? "var(--card)" : `${color}CC`,
-                      boxShadow: selected
-                        ? `0 0 0 3px ${color}, 0 0 0 6px ${color}55, 0 0 24px ${color}88`
-                        : hoveredNode
-                          ? `0 0 0 3px ${color}77, 0 0 20px ${color}88`
-                          : `0 0 0 1px ${color}44`,
+                      borderColor: getDnaBorderColor(
+                        node.kind as LegacyDnaKind,
+                      ),
+                      "--semantic-color": color,
+                      "--semantic-border": getDnaBorderColor(
+                        node.kind as LegacyDnaKind,
+                      ),
                       "--node-delay": `${stableMotionDelay(node.id)}ms`,
                     } as CSSProperties
                   }
                 >
-                  <DnaTypeIcon
-                    kind={node.kind as DnaKind}
-                    size={size <= 24 ? 12 : size <= 32 ? 15 : 18}
-                  />
+                  <span
+                    className="story-node-breathe"
+                    style={
+                      {
+                        "--breathe-duration": `${7 + stableMotionDelay(`${node.id}:duration`, 35) / 10}s`,
+                        "--breathe-delay": `-${stableMotionDelay(`${node.id}:delay`, 60) / 10}s`,
+                      } as CSSProperties
+                    }
+                  >
+                    <DnaTypeIcon
+                      kind={node.kind as DnaKind}
+                      size={size <= 24 ? 12 : size <= 32 ? 15 : 18}
+                    />
+                  </span>
                 </span>
               )}
             </Tag>
@@ -291,10 +336,11 @@ export function GraphLegend({ kinds }: { kinds: LegacyDnaKind[] }) {
           className="flex items-center gap-2 text-xs font-medium text-muted-foreground"
         >
           <span
-            className="grid h-6 w-6 place-items-center rounded-full"
+            className="semantic-node-marker grid h-6 w-6 place-items-center rounded-full"
             style={{
               color: getDnaIconForeground(kind),
               backgroundColor: KIND_META[kind].color,
+              borderColor: getDnaBorderColor(kind),
             }}
           >
             <DnaTypeIcon kind={kind} size={12} />

@@ -4,7 +4,7 @@ import { PageHeader, Panel } from "@/components/dna-ui";
 import { Plus, X } from "lucide-react";
 import { NODE_TYPE_COLORS, type DnaKind } from "@/lib/creator-dna";
 import { DnaTypeIcon } from "@/components/DnaTypeIcon";
-import { getDnaIconForeground } from "@/lib/dna-iconography";
+import { getDnaBorderColor, getDnaIconForeground } from "@/lib/dna-iconography";
 import { authenticatedFetch } from "@/lib/supabase/client";
 import {
   CreatorFoundationSchema,
@@ -141,7 +141,10 @@ function FoundationPage() {
         title="The context behind your content."
         subtitle="Keep the foundation of your Creator DNA current. These answers stay editable and continue grounding your Story Map."
       />
-      <Panel className="overflow-hidden" accent={tab.color}>
+      <Panel
+        className="foundation-workspace overflow-hidden"
+        accent={tab.color}
+      >
         <div
           role="tablist"
           aria-label="Foundation sections"
@@ -154,13 +157,14 @@ function FoundationPage() {
               role="tab"
               aria-selected={activeTab === item.id}
               onClick={() => setActiveTab(item.id)}
-              className={`shrink-0 rounded-xl px-4 py-2.5 font-mono text-xs font-semibold uppercase tracking-wide transition-colors ${activeTab === item.id ? "bg-card text-midnight shadow-card" : "text-muted-foreground hover:text-midnight"}`}
+              className={`foundation-tab shrink-0 rounded-xl border border-transparent px-4 py-2.5 font-mono text-xs font-semibold uppercase tracking-wide transition-colors ${activeTab === item.id ? "bg-card text-midnight shadow-card" : "text-muted-foreground hover:text-midnight"}`}
             >
               <span
-                className="mr-2 inline-grid h-6 w-6 place-items-center rounded-full"
+                className="semantic-node-marker mr-2 inline-grid h-6 w-6 place-items-center rounded-full"
                 style={{
                   color: getDnaIconForeground(item.kind),
                   backgroundColor: item.color,
+                  borderColor: getDnaBorderColor(item.kind),
                 }}
               >
                 <DnaTypeIcon kind={item.kind} size={12} />
@@ -172,10 +176,11 @@ function FoundationPage() {
         <div className="p-6 sm:p-8">
           <div className="mb-6 flex items-center gap-3">
             <span
-              className="grid h-9 w-9 shrink-0 place-items-center rounded-full"
+              className="semantic-node-marker grid h-9 w-9 shrink-0 place-items-center rounded-full"
               style={{
                 color: getDnaIconForeground(tab.kind),
                 backgroundColor: tab.color,
+                borderColor: getDnaBorderColor(tab.kind),
               }}
             >
               <DnaTypeIcon kind={tab.kind} size={17} />
@@ -217,7 +222,7 @@ function FoundationPage() {
                 ) : (
                   <label
                     key={key}
-                    className="block font-mono text-xs font-semibold uppercase tracking-wide text-midnight"
+                    className="foundation-field-label block font-mono text-xs font-semibold uppercase tracking-wide text-midnight"
                   >
                     {label}
                     {required ? (
@@ -302,7 +307,7 @@ function ReadMode({
             className="grid gap-2 py-5 first:pt-0 sm:grid-cols-[12rem_1fr] sm:gap-8"
           >
             <div>
-              <p className="font-mono text-xs font-bold uppercase tracking-[0.12em] text-midnight">
+              <p className="foundation-summary-label font-mono text-xs font-bold uppercase tracking-[0.12em] text-midnight">
                 {label}
               </p>
               <p className="mt-1 text-xs text-muted-foreground">{hint}</p>

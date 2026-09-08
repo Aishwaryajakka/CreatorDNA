@@ -54,7 +54,7 @@ function ResetPasswordPage() {
           <Link
             to="/"
             aria-label="Creator DNA home"
-            className="inline-flex rounded-lg focus-visible:ring-2 focus-visible:ring-primary"
+            className="logo-link inline-flex rounded-lg"
           >
             <AdaptiveCreatorDNALogo showTagline={false} className="h-14 w-48" />
           </Link>

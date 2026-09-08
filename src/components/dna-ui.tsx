@@ -7,7 +7,7 @@ import {
   type DnaKind,
   type LegacyDnaKind,
 } from "@/lib/creator-dna";
-import { getDnaIconForeground } from "@/lib/dna-iconography";
+import { getDnaBorderColor, getDnaIconForeground } from "@/lib/dna-iconography";
 
 export function PageHeader({
   eyebrow,
@@ -45,12 +45,13 @@ export function KindBadge({
 }) {
   const meta = KIND_META[kind];
   return (
-    <span className="mono-label inline-flex items-center gap-2 rounded-lg border border-border bg-card px-2.5 py-1 text-midnight">
+    <span className="metadata-label inline-flex items-center gap-2 rounded-full border border-border-subtle bg-surface-elevated px-2.5 py-1 text-midnight">
       <span
-        className="grid h-5 w-5 place-items-center rounded-full"
+        className="semantic-node-marker grid h-5 w-5 place-items-center rounded-full"
         style={{
           color: getDnaIconForeground(kind),
           backgroundColor: NODE_TYPE_COLORS[kind as DnaKind] ?? meta.color,
+          borderColor: getDnaBorderColor(kind),
         }}
       >
         <DnaTypeIcon kind={kind} size={11} />
@@ -62,7 +63,7 @@ export function KindBadge({
 
 export function SourceChip({ children }: { children: ReactNode }) {
   return (
-    <span className="inline-flex items-center gap-1.5 rounded-md bg-muted px-2 py-1 text-[0.6875rem] font-medium text-muted-foreground">
+    <span className="inline-flex items-center gap-1.5 rounded-full bg-muted px-2 py-1 text-[0.6875rem] font-medium text-muted-foreground">
       <FileText className="h-3 w-3 shrink-0" />
       {children}
     </span>
@@ -109,7 +110,7 @@ export function Panel({
 }) {
   return (
     <section
-      className={`telemetry-edge telemetry-card relative overflow-hidden rounded-xl border border-border bg-card ${className}`}
+      className={`telemetry-edge telemetry-card relative overflow-hidden rounded-[var(--radius-card)] border border-border bg-card transition-[background-color,border-color,box-shadow] duration-200 ${className}`}
     >
       {accent ? (
         <span
@@ -131,7 +132,7 @@ export function TelemetryDeck({
 }) {
   return (
     <div
-      className={`telemetry-edge telemetry-card relative overflow-hidden rounded-2xl border border-obsidian-border bg-obsidian-card ${className}`}
+      className={`telemetry-edge telemetry-card relative overflow-hidden rounded-[var(--radius-panel)] border border-border bg-card ${className}`}
     >
       {children}
     </div>

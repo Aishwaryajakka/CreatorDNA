@@ -27,16 +27,12 @@ export const DNA_TYPE_ICONS: Record<LegacyDnaKind, LucideIcon> = {
   evolution: TrendingUp,
 };
 
-const DARK_ICON_KINDS = new Set<LegacyDnaKind>([
-  "belief",
-  "theme",
-  "experience",
-  "lesson",
-  "value",
-  "expertise",
-  "evolution",
-]);
-
 export function getDnaIconForeground(kind: LegacyDnaKind) {
-  return DARK_ICON_KINDS.has(kind) ? "#08204A" : "#FFFFFF";
+  const token = kind === "evolution" ? "lesson" : kind;
+  return `var(--dna-${token}-foreground)`;
+}
+
+export function getDnaBorderColor(kind: LegacyDnaKind) {
+  const token = kind === "evolution" ? "lesson" : kind;
+  return `var(--dna-${token}-border)`;
 }
