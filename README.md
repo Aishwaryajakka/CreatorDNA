@@ -4,9 +4,12 @@
 
 **Creator DNA is an AI memory and narrative intelligence layer for creators.**
 
-Most AI content tools start with a blank prompt.
+Most AI starts with a blank prompt.
 
 Creator DNA starts with **you** — your past stories, beliefs, experiences, lessons, expertise, and how your perspective has evolved over time.
+
+> **Don't build an AI that writes like the creator.  
+> Build an AI that remembers the creator.**
 
 Instead of asking:
 
@@ -16,8 +19,37 @@ Creator DNA asks:
 
 > **“Given who I've been, what I believe now, and where I want my story to go — what should I say next?”**
 
-🌐 **Live Demo:** https://creator-dna-pi.vercel.app  
+🚀 **Try Creator DNA:** https://creator-dna-pi.vercel.app  
 💻 **GitHub:** https://github.com/Aishwaryajakka/CreatorDNA
+
+---
+
+## Demo Account
+
+Use this pre-seeded account to explore Creator DNA with a complete multi-year creator history.
+
+**Email:** `jordan.creator@example.com`  
+**Password:** `CreatorDNA!Demo26`
+
+The demo account includes:
+
+- YouTube, LinkedIn, and X content history
+- Creator Foundation
+- Brand Territories
+- Story Map
+- Jina-powered semantic retrieval
+- Plan Content
+- Alignment
+- Reshape
+- Research Pulse
+
+### Best demo prompt
+
+Try this inside **Plan Content**:
+
+> **“I want to create something about working hard as a founder.”**
+
+Jordan's history evolves from intense hustle culture to burnout, consistency, recovery, and sustainable ambition — so Creator DNA can surface the belief evolution instead of generating generic founder advice.
 
 ---
 
@@ -47,9 +79,6 @@ That means creators still have to manually remember their entire body of work ev
 
 ## The Core Idea
 
-> **Don't build an AI that writes like the creator.  
-> Build an AI that remembers the creator.**
-
 Creator DNA transforms a creator's historical content into a structured **Creator Story Graph**.
 
 ```text
@@ -68,8 +97,14 @@ New Idea
      ↓
 Relevant History + Perspective Evolution
      ↓
-3 Authentic Directions
+Alignment + 3 Authentic Directions
 ```
+
+The goal is not to generate a post as quickly as possible.
+
+The goal is to understand:
+
+> **What is the most authentic place this creator's story could go next?**
 
 ---
 
@@ -81,19 +116,27 @@ Creator DNA can ingest creator history from multiple platforms.
 
 ### YouTube
 
-Import existing YouTube videos and turn transcripts/content into Creator DNA.
+Direct YouTube import works today.
+
+Creators can import existing YouTube content and turn it into Creator DNA — including stories, beliefs, themes, experiences, lessons, and expertise.
 
 ### LinkedIn
 
-LinkedIn OAuth is connected.
+LinkedIn OAuth is connected and working.
 
-Direct historical post import requires additional LinkedIn API permissions, so creators can currently add LinkedIn posts manually while direct import access is pending.
+Direct historical LinkedIn post import depends on additional LinkedIn API permissions that are still pending provider approval.
+
+For now, creators can manually add LinkedIn posts into Creator DNA.
 
 ### X
 
-X OAuth is connected.
+X OAuth is connected and working.
 
-Recent-post import depends on available X API access. Manual content addition provides a fallback when direct access is unavailable.
+Direct recent-post import depends on the level of X API access approved for the application.
+
+When direct import is unavailable, creators can manually add X content.
+
+Once content is added — whether through YouTube direct import or manual LinkedIn/X ingestion — the same Creator DNA pipeline runs end-to-end.
 
 ### Manual Content
 
@@ -131,13 +174,15 @@ Founder Performance Is a Long Game
 2025
 ```
 
+This makes Creator DNA evidence-backed instead of purely generative.
+
 ---
 
 ## 3. Build a Story Map
 
 Creator DNA turns extracted memory into a visual **Story Map**.
 
-Instead of looking at content as isolated posts, you can explore how your:
+Instead of looking at content as isolated posts, creators can explore how:
 
 - stories connect to lessons
 - experiences shape beliefs
@@ -145,7 +190,15 @@ Instead of looking at content as isolated posts, you can explore how your:
 - perspectives evolve
 - expertise develops over time
 
-Your content becomes a navigable narrative graph.
+A creator's content becomes a navigable narrative graph.
+
+A content calendar answers:
+
+> What am I publishing next?
+
+A Story Map answers:
+
+> **What story have I been telling?**
 
 ---
 
@@ -159,7 +212,7 @@ The Foundation captures information such as:
 
 - identity
 - beliefs
-- experiences
+- formative experiences
 - values
 - expertise
 - goals
@@ -167,7 +220,7 @@ The Foundation captures information such as:
 
 This gives Creator DNA a current reference point when older and newer content disagree.
 
-That disagreement is often the most interesting part.
+That disagreement is often where the most interesting story is.
 
 ---
 
@@ -175,7 +228,7 @@ That disagreement is often the most interesting part.
 
 Creators define the areas they want people to associate with them.
 
-Examples:
+For example:
 
 ```text
 Entrepreneurship
@@ -188,7 +241,7 @@ Brand Territories represent **where the creator wants to go**.
 
 Historical Creator DNA remains the evidence of where they have actually been.
 
-That distinction matters.
+Creator DNA intentionally keeps those two things separate.
 
 ---
 
@@ -196,31 +249,31 @@ That distinction matters.
 
 This is where Creator DNA's memory becomes useful.
 
-Enter a new idea:
+A creator enters a new idea:
 
 > “I want to create something about working hard as a founder.”
 
-Creator DNA retrieves the most relevant parts of your history and analyzes:
+Creator DNA retrieves the most relevant parts of their history and analyzes:
 
 ### Relevant Stories
 
-What experiences from your past could make the idea more personal?
+What experiences from the creator's past could make this idea more personal?
 
 ### Previous Positions
 
-What have you already said about this subject?
+What has the creator already said about this subject?
 
 ### Perspective Evolution
 
-Has your opinion changed?
+Has their opinion changed over time?
 
 ### Repetition
 
-Are you about to tell the same story again?
+Is this authentic, but too similar to something they've already published?
 
 ### Alignment
 
-How well does the idea fit your actual Creator DNA?
+How well does the idea fit the creator's actual DNA and current direction?
 
 Alignment uses four states:
 
@@ -231,9 +284,9 @@ Weak
 Insufficient evidence
 ```
 
-No fake “87% authentic” scores.
+No arbitrary authenticity percentages.
 
-Creator DNA shows:
+Creator DNA explains:
 
 - **Why**
 - **Watch Out**
@@ -296,7 +349,7 @@ Creator DNA doesn't immediately write a generic post.
 
 It first proposes **exactly three directions** grounded in the creator's history.
 
-For each direction, the creator can see the relevant DNA that supports it.
+For each direction, the creator can see the Creator DNA that supports it.
 
 Then they can reshape the direction in three ways:
 
@@ -310,7 +363,7 @@ Clarify the creator's current belief without inventing a fake contrarian positio
 
 ### Fresh angle without repeating myself
 
-Find a new framing when the idea is authentic but too similar to something the creator has already said.
+Find a genuinely different framing when the idea is authentic but too similar to something the creator has already said.
 
 ---
 
@@ -318,15 +371,17 @@ Find a new framing when the idea is authentic but too similar to something the c
 
 Creator DNA separates:
 
-**What should I say?**
+> **What should I say?**
 
 from:
 
-**How should I express it on this platform?**
+> **How should I express it on this platform?**
 
 The same Creator DNA can support content across platforms.
 
 A YouTube story from 2024 might become evidence for a LinkedIn post in 2026.
+
+An X post might become evidence for a YouTube idea.
 
 Platform selection affects preparation — not authenticity.
 
@@ -334,7 +389,7 @@ Platform selection affects preparation — not authenticity.
 
 Creator DNA prepares:
 
-- first-line hook
+- strong first-line hook
 - personal/professional framing
 - structural beats
 - point-of-view positioning
@@ -354,7 +409,7 @@ Creator DNA prepares:
 
 - title direction
 - opening tension
-- narrative structure
+- story structure
 - talking points
 
 ### Threads
@@ -384,7 +439,7 @@ External research is matched against:
 - themes
 - goals
 
-The result is research connected to the creator's existing narrative rather than another generic trend feed.
+The result is research connected to the creator's existing narrative instead of another generic trend feed.
 
 ---
 
@@ -395,7 +450,7 @@ flowchart TD
     A[YouTube / LinkedIn / X / Manual Content] --> B[Content Ingestion]
 
     B --> C[Groq]
-    C --> D[DNA Extraction]
+    C --> D[Structured DNA Extraction]
 
     D --> E[Stories]
     D --> F[Beliefs]
@@ -403,9 +458,9 @@ flowchart TD
     D --> H[Experiences]
     D --> I[Lessons]
     D --> J[Values]
-    D --> K[Identity / Expertise / Goals]
+    D --> K[Goals / Identity / Expertise]
 
-    E --> L[Supabase]
+    E --> L[Supabase + PostgreSQL]
     F --> L
     G --> L
     H --> L
@@ -416,7 +471,7 @@ flowchart TD
     D --> M[Jina Embeddings]
     M --> L
 
-    N[New Content Idea] --> O[Semantic Retrieval]
+    N[New Idea] --> O[Semantic Retrieval]
     L --> O
 
     P[Creator Foundation] --> Q[Story Intelligence]
@@ -428,7 +483,7 @@ flowchart TD
     Q --> U[Repetition Detection]
     Q --> V[3 Authentic Directions]
 
-    V --> W[Platform Prep]
+    V --> W[Platform Preparation]
     V --> X[Reshape]
 ```
 
@@ -436,7 +491,7 @@ flowchart TD
 
 # Technology
 
-### Frontend
+## Frontend
 
 - React
 - TypeScript
@@ -444,36 +499,47 @@ flowchart TD
 - Vite
 - Tailwind CSS
 
-### Backend & Data
+## Backend & Data
 
 - Supabase
 - PostgreSQL
 - pgvector
 - Row Level Security
-- Server-side OAuth/token handling
+- server-side authentication
+- server-side OAuth token handling
 
-### AI
+## AI
 
-**Groq**
+### Groq
 
-Used for structured extraction, narrative reasoning, alignment analysis, and content-direction reasoning.
+Used for:
 
-**Jina AI**
+- structured Creator DNA extraction
+- narrative reasoning
+- alignment analysis
+- perspective evolution
+- repetition analysis
+- authentic direction generation
 
-Used for semantic Creator DNA memory and retrieval with:
+### Jina AI
+
+Used for semantic Creator DNA memory and retrieval.
 
 ```text
+Model:
 jina-embeddings-v3
-1024-dimensional vectors
+
+Dimensions:
+1024
 ```
 
-Stored creator memories use retrieval-oriented embeddings so new ideas can find semantically relevant historical evidence.
+Creator DNA nodes are embedded as semantic memories so a new idea can retrieve relevant evidence from years of historical content.
 
-**Perplexity**
+### Perplexity
 
 Used by Research Pulse for current external research and source discovery.
 
-### Deployment
+## Deployment
 
 - Vercel
 - Supabase
@@ -481,8 +547,6 @@ Used by Research Pulse for current external research and source discovery.
 ---
 
 # Data Model
-
-At a high level:
 
 ```text
 User
@@ -518,17 +582,7 @@ Every creator's data and semantic retrieval are user-scoped.
 
 # Why a Story Graph?
 
-A content calendar answers:
-
-> What am I publishing next?
-
-A Story Map answers:
-
-> What story have I been telling?
-
-Creator DNA is designed around the second question.
-
-Because creators don't only produce posts.
+Creators do not only publish posts.
 
 Over time, they build:
 
@@ -536,9 +590,58 @@ Over time, they build:
 - personal mythology
 - expertise
 - intellectual territory
-- evolving perspectives
+- perspective shifts
+- a recognizable narrative
+
+Creator DNA makes those relationships visible.
 
 **Every creator has a content calendar. Creator DNA gives them a story map.**
+
+---
+
+# Current Platform Support
+
+| Platform | Account Connection | Direct Import | Current Fallback |
+| --- | --- | --- | --- |
+| YouTube | Supported | ✅ Working | Manual Add Content |
+| LinkedIn | ✅ OAuth connected | Pending additional LinkedIn API approval | Manual Add Content |
+| X | ✅ OAuth connected | Depends on approved X API access | Manual Add Content |
+
+Provider connection and Creator DNA memory are intentionally separate.
+
+Connecting an account does not mean Creator DNA claims to have analyzed its history.
+
+Only content that has actually been imported or manually added becomes evidence.
+
+---
+
+# Privacy & Grounding
+
+Creator DNA is intentionally designed around evidence.
+
+The system distinguishes between:
+
+### Historical Evidence
+
+What the creator has actually published.
+
+### Creator Foundation
+
+What the creator believes about themselves now.
+
+### Brand Territories
+
+Where the creator wants their story to go.
+
+### External Research
+
+What is currently happening outside the creator's content history.
+
+These sources are intentionally kept distinct.
+
+A future direction should not be treated as proof of historical authenticity, and external research should not be mistaken for personal experience.
+
+Creator DNA also validates retrieved personal evidence against the authenticated user before using it in reasoning.
 
 ---
 
@@ -563,9 +666,9 @@ Create your environment file:
 cp .env.example .env.local
 ```
 
-Configure the required environment variables for your local environment.
+Configure the required environment variables.
 
-The application currently uses services including:
+Creator DNA currently uses services including:
 
 ```text
 Supabase
@@ -577,18 +680,12 @@ LinkedIn OAuth
 X OAuth
 ```
 
-Do not expose server-side secrets through client-side environment variables.
+Keep server-side credentials server-side.
 
 Start development:
 
 ```bash
 npm run dev
-```
-
-Build:
-
-```bash
-npm run build
 ```
 
 Type-check:
@@ -597,29 +694,11 @@ Type-check:
 npx tsc --noEmit
 ```
 
----
+Build:
 
-# Privacy & Grounding
-
-Creator DNA is intentionally designed around evidence.
-
-The system distinguishes between:
-
-### Historical Evidence
-
-What the creator has actually published.
-
-### Declared Direction
-
-What the creator says they want to become known for.
-
-### External Research
-
-What is currently happening outside the creator's content history.
-
-These sources should not be silently blended together.
-
-Creator DNA also validates retrieved DNA against the authenticated user before using it as personal evidence.
+```bash
+npm run build
+```
 
 ---
 
@@ -630,13 +709,16 @@ Creator DNA is **not another generic AI post generator**.
 The goal is not:
 
 ```text
-Prompt → polished LinkedIn post
+Prompt
+→ polished LinkedIn post
 ```
 
 The goal is:
 
 ```text
 Your History
++
+Your Experiences
 +
 Your Current Beliefs
 +
@@ -649,7 +731,7 @@ The most authentic place your story could go next
 
 Writing is downstream.
 
-Memory comes first.
+**Memory comes first.**
 
 ---
 
@@ -657,11 +739,9 @@ Memory comes first.
 
 Creator DNA was built for the **AI Content Engine Hackathon**.
 
-The challenge asks builders to automate meaningful parts of the creator workflow.
+It focuses on a part of the creator workflow that is still surprisingly manual:
 
-Creator DNA focuses on a part of that workflow that is still largely manual:
-
-> **remembering everything you've created before deciding what to create next.**
+> **Remembering everything you've created before deciding what to create next.**
 
 ---
 
@@ -673,9 +753,10 @@ Today, Creator DNA remembers:
 - what you've experienced
 - what you believe
 - how those beliefs changed
-- where you want to go next
+- what you're becoming known for
+- where you want your story to go next
 
-The longer-term opportunity is a persistent intelligence layer for a creator's entire body of work.
+The longer-term opportunity is a persistent intelligence layer across a creator's entire body of work.
 
 Not just:
 
@@ -689,6 +770,14 @@ But:
 
 ## Creator DNA
 
+### Your content remembers everything, so you don't have to.
+
 **Most AI starts with a blank prompt. Creator DNA starts with you.**
+
+🚀 **Try Creator DNA:** https://creator-dna-pi.vercel.app
+
+**Demo login**  
+Email: `jordan.creator@example.com`  
+Password: `CreatorDNA!Demo26`
 
 Built by [Aishwarya Jakka](https://github.com/Aishwaryajakka)
