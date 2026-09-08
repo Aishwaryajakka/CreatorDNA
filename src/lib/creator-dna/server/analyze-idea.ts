@@ -4,6 +4,7 @@ import type { ChatCompletionCreateParams } from "groq-sdk/resources/chat/complet
 
 import type {
   CreatorDNAMatch,
+  PlanningCreatorContext,
   StoryIntelligenceResult,
   TargetPlatform,
 } from "../types";
@@ -147,6 +148,7 @@ function buildUserPrompt(
   idea: string,
   targetPlatform: TargetPlatform,
   retrievedDNA: CreatorDNAMatch[],
+  creatorContext?: PlanningCreatorContext,
 ): string {
   return `Content idea:
 ${idea}
@@ -173,6 +175,11 @@ ${JSON.stringify(
   2,
 )}
 
+Intended Brand Territories (declared future direction, not historical evidence):
+${JSON.stringify(creatorContext?.intendedBrandTerritories ?? [], null, 2)}
+
+Use this context only for alignment, opportunity, or future direction. Retrieved historical Creator DNA remains authoritative. Never let an intended territory overwrite contrary historical evidence or present it as something the creator has already discussed or believed. Supporting node IDs must still refer only to Retrieved Creator DNA.
+
 Return the requested structured Story Intelligence result only.`;
 }
 
@@ -180,6 +187,7 @@ export async function analyzeContentIdea(
   idea: string,
   retrievedDNA: CreatorDNAMatch[],
   targetPlatform: TargetPlatform,
+  creatorContext?: PlanningCreatorContext,
 ): Promise<StoryIntelligenceResult> {
   if (!idea.trim()) {
     throw new CreatorDNAProviderError("Content idea must not be empty.");
@@ -194,7 +202,12 @@ export async function analyzeContentIdea(
         { role: "system", content: SYSTEM_PROMPT },
         {
           role: "user",
-          content: buildUserPrompt(idea, targetPlatform, retrievedDNA),
+          content: buildUserPrompt(
+            idea,
+            targetPlatform,
+            retrievedDNA,
+            creatorContext,
+          ),
         },
       ],
       response_format: responseFormat,

@@ -12,6 +12,30 @@ export const TargetPlatformSchema = z.enum([
 
 const nonEmptyString = z.string().trim().min(1);
 
+export const BrandTerritoryInputSchema = z.object({
+  name: nonEmptyString.max(80),
+  description: z.string().trim().max(280).optional(),
+});
+
+const BrandTerritoryListSchema = z
+  .array(BrandTerritoryInputSchema)
+  .transform((territories) => {
+    const seen = new Set<string>();
+    return territories.filter(({ name }) => {
+      const normalized = name.toLowerCase();
+      if (seen.has(normalized)) return false;
+      seen.add(normalized);
+      return true;
+    });
+  })
+  .pipe(z.array(BrandTerritoryInputSchema).min(3).max(7));
+
+export const BrandTerritoriesInputSchema = z.object({
+  territories: BrandTerritoryListSchema,
+});
+
+export type BrandTerritoriesInput = z.infer<typeof BrandTerritoriesInputSchema>;
+
 export const DnaKindSchema = z.enum([
   "story",
   "belief",

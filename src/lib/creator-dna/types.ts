@@ -63,6 +63,46 @@ export type CreatorDNAEdge = {
   relationship: string;
 };
 
+export type BrandTerritory = {
+  id: string;
+  name: string;
+  description: string | null;
+  position: number;
+};
+
+export type BrandEvolutionPoint = {
+  id: string;
+  date: string;
+  type: DnaKind;
+  title: string;
+  summary: string;
+  evidenceQuote: string | null;
+  sourceTitle: string | null;
+  sourceDate: string;
+  contentId: string | null;
+  stage: "past" | "turning_point" | "new_position";
+};
+
+export type BrandEvolutionResult = {
+  timeline: BrandEvolutionPoint[];
+  currentPosition: {
+    beliefs: BrandEvidenceNode[];
+    themes: BrandEvidenceNode[];
+    expertise: BrandEvidenceNode[];
+  };
+  futureDirection: {
+    label: "Declared direction";
+    territories: BrandTerritory[];
+    goals: BrandEvidenceNode[];
+  };
+};
+
+export type BrandEvidenceNode = Omit<CreatorDNANode, "embedding">;
+
+export type PlanningCreatorContext = {
+  intendedBrandTerritories: BrandTerritory[];
+};
+
 export type CreatorDNAMatch = {
   id: string;
   contentId?: string | null;

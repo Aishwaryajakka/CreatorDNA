@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AddContentRouteImport } from './routes/add-content'
+import { Route as BrandTerritoriesRouteImport } from './routes/brand-territories'
 import { Route as FoundationRouteImport } from './routes/foundation'
 import { Route as ImportYoutubeRouteImport } from './routes/import-youtube'
 import { Route as LibraryRouteImport } from './routes/library'
@@ -20,6 +21,8 @@ import { Route as PlanRouteImport } from './routes/plan'
 import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as StoryMapRouteImport } from './routes/story-map'
+import { Route as ApiBrandEvolutionRouteImport } from './routes/api/brand-evolution'
+import { Route as ApiBrandTerritoriesRouteImport } from './routes/api/brand-territories'
 import { Route as ApiContentRouteImport } from './routes/api/content'
 import { Route as ApiContentLibraryRouteImport } from './routes/api/content-library'
 import { Route as ApiFoundationRouteImport } from './routes/api/foundation'
@@ -48,6 +51,11 @@ const IndexRoute = IndexRouteImport.update({
 const AddContentRoute = AddContentRouteImport.update({
   id: '/add-content',
   path: '/add-content',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const BrandTerritoriesRoute = BrandTerritoriesRouteImport.update({
+  id: '/brand-territories',
+  path: '/brand-territories',
   getParentRoute: () => rootRouteImport,
 } as any)
 const FoundationRoute = FoundationRouteImport.update({
@@ -93,6 +101,16 @@ const ResetPasswordRoute = ResetPasswordRouteImport.update({
 const StoryMapRoute = StoryMapRouteImport.update({
   id: '/story-map',
   path: '/story-map',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiBrandEvolutionRoute = ApiBrandEvolutionRouteImport.update({
+  id: '/api/brand-evolution',
+  path: '/api/brand-evolution',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiBrandTerritoriesRoute = ApiBrandTerritoriesRouteImport.update({
+  id: '/api/brand-territories',
+  path: '/api/brand-territories',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiContentRoute = ApiContentRouteImport.update({
@@ -196,6 +214,7 @@ const ApiYoutubeVideosRoute = ApiYoutubeVideosRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/add-content': typeof AddContentRoute
+  '/brand-territories': typeof BrandTerritoriesRoute
   '/foundation': typeof FoundationRoute
   '/import-youtube': typeof ImportYoutubeRoute
   '/library': typeof LibraryRoute
@@ -205,6 +224,8 @@ export interface FileRoutesByFullPath {
   '/profile': typeof ProfileRoute
   '/reset-password': typeof ResetPasswordRoute
   '/story-map': typeof StoryMapRoute
+  '/api/brand-evolution': typeof ApiBrandEvolutionRoute
+  '/api/brand-territories': typeof ApiBrandTerritoriesRoute
   '/api/content': typeof ApiContentRoute
   '/api/content-library': typeof ApiContentLibraryRoute
   '/api/foundation': typeof ApiFoundationRoute
@@ -228,6 +249,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/add-content': typeof AddContentRoute
+  '/brand-territories': typeof BrandTerritoriesRoute
   '/foundation': typeof FoundationRoute
   '/import-youtube': typeof ImportYoutubeRoute
   '/library': typeof LibraryRoute
@@ -237,6 +259,8 @@ export interface FileRoutesByTo {
   '/profile': typeof ProfileRoute
   '/reset-password': typeof ResetPasswordRoute
   '/story-map': typeof StoryMapRoute
+  '/api/brand-evolution': typeof ApiBrandEvolutionRoute
+  '/api/brand-territories': typeof ApiBrandTerritoriesRoute
   '/api/content': typeof ApiContentRoute
   '/api/content-library': typeof ApiContentLibraryRoute
   '/api/foundation': typeof ApiFoundationRoute
@@ -261,6 +285,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/add-content': typeof AddContentRoute
+  '/brand-territories': typeof BrandTerritoriesRoute
   '/foundation': typeof FoundationRoute
   '/import-youtube': typeof ImportYoutubeRoute
   '/library': typeof LibraryRoute
@@ -270,6 +295,8 @@ export interface FileRoutesById {
   '/profile': typeof ProfileRoute
   '/reset-password': typeof ResetPasswordRoute
   '/story-map': typeof StoryMapRoute
+  '/api/brand-evolution': typeof ApiBrandEvolutionRoute
+  '/api/brand-territories': typeof ApiBrandTerritoriesRoute
   '/api/content': typeof ApiContentRoute
   '/api/content-library': typeof ApiContentLibraryRoute
   '/api/foundation': typeof ApiFoundationRoute
@@ -295,6 +322,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/add-content'
+    | '/brand-territories'
     | '/foundation'
     | '/import-youtube'
     | '/library'
@@ -304,6 +332,8 @@ export interface FileRouteTypes {
     | '/profile'
     | '/reset-password'
     | '/story-map'
+    | '/api/brand-evolution'
+    | '/api/brand-territories'
     | '/api/content'
     | '/api/content-library'
     | '/api/foundation'
@@ -327,6 +357,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/add-content'
+    | '/brand-territories'
     | '/foundation'
     | '/import-youtube'
     | '/library'
@@ -336,6 +367,8 @@ export interface FileRouteTypes {
     | '/profile'
     | '/reset-password'
     | '/story-map'
+    | '/api/brand-evolution'
+    | '/api/brand-territories'
     | '/api/content'
     | '/api/content-library'
     | '/api/foundation'
@@ -359,6 +392,7 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/add-content'
+    | '/brand-territories'
     | '/foundation'
     | '/import-youtube'
     | '/library'
@@ -368,6 +402,8 @@ export interface FileRouteTypes {
     | '/profile'
     | '/reset-password'
     | '/story-map'
+    | '/api/brand-evolution'
+    | '/api/brand-territories'
     | '/api/content'
     | '/api/content-library'
     | '/api/foundation'
@@ -392,6 +428,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AddContentRoute: typeof AddContentRoute
+  BrandTerritoriesRoute: typeof BrandTerritoriesRoute
   FoundationRoute: typeof FoundationRoute
   ImportYoutubeRoute: typeof ImportYoutubeRoute
   LibraryRoute: typeof LibraryRoute
@@ -401,6 +438,8 @@ export interface RootRouteChildren {
   ProfileRoute: typeof ProfileRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
   StoryMapRoute: typeof StoryMapRoute
+  ApiBrandEvolutionRoute: typeof ApiBrandEvolutionRoute
+  ApiBrandTerritoriesRoute: typeof ApiBrandTerritoriesRoute
   ApiContentRoute: typeof ApiContentRoute
   ApiContentLibraryRoute: typeof ApiContentLibraryRoute
   ApiFoundationRoute: typeof ApiFoundationRoute
@@ -436,6 +475,13 @@ declare module '@tanstack/react-router' {
       path: '/add-content'
       fullPath: '/add-content'
       preLoaderRoute: typeof AddContentRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/brand-territories': {
+      id: '/brand-territories'
+      path: '/brand-territories'
+      fullPath: '/brand-territories'
+      preLoaderRoute: typeof BrandTerritoriesRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/foundation': {
@@ -499,6 +545,20 @@ declare module '@tanstack/react-router' {
       path: '/story-map'
       fullPath: '/story-map'
       preLoaderRoute: typeof StoryMapRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/brand-evolution': {
+      id: '/api/brand-evolution'
+      path: '/api/brand-evolution'
+      fullPath: '/api/brand-evolution'
+      preLoaderRoute: typeof ApiBrandEvolutionRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/brand-territories': {
+      id: '/api/brand-territories'
+      path: '/api/brand-territories'
+      fullPath: '/api/brand-territories'
+      preLoaderRoute: typeof ApiBrandTerritoriesRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/content': {
@@ -640,6 +700,7 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AddContentRoute: AddContentRoute,
+  BrandTerritoriesRoute: BrandTerritoriesRoute,
   FoundationRoute: FoundationRoute,
   ImportYoutubeRoute: ImportYoutubeRoute,
   LibraryRoute: LibraryRoute,
@@ -649,6 +710,8 @@ const rootRouteChildren: RootRouteChildren = {
   ProfileRoute: ProfileRoute,
   ResetPasswordRoute: ResetPasswordRoute,
   StoryMapRoute: StoryMapRoute,
+  ApiBrandEvolutionRoute: ApiBrandEvolutionRoute,
+  ApiBrandTerritoriesRoute: ApiBrandTerritoriesRoute,
   ApiContentRoute: ApiContentRoute,
   ApiContentLibraryRoute: ApiContentLibraryRoute,
   ApiFoundationRoute: ApiFoundationRoute,

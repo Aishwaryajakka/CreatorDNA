@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 
+import { listBrandTerritories } from "@/lib/creator-dna/brand-territories-repository";
 import { analyzeContentIdea } from "@/lib/creator-dna/server/analyze-idea";
 import { searchCreatorDNA } from "@/lib/creator-dna/server/search-dna";
 import { PlanContentInputSchema } from "@/lib/creator-dna/validation";
@@ -34,14 +35,15 @@ export const Route = createFileRoute("/api/plan-content")({
 
         try {
           const user = await requireAuthenticatedUser(request);
-          const retrievedDNA = await searchCreatorDNA(
-            parsed.data.idea,
-            user.id,
-          );
+          const [retrievedDNA, intendedBrandTerritories] = await Promise.all([
+            searchCreatorDNA(parsed.data.idea, user.id),
+            listBrandTerritories(user.id),
+          ]);
           const intelligence = await analyzeContentIdea(
             parsed.data.idea,
             retrievedDNA,
             parsed.data.targetPlatform,
+            { intendedBrandTerritories },
           );
           return Response.json({
             idea: parsed.data.idea,

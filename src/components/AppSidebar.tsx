@@ -47,7 +47,13 @@ function SidebarLink({
   label,
   icon: Icon,
 }: {
-  to: "/foundation" | "/library" | "/import-youtube" | "/add-content" | "/plan";
+  to:
+    | "/foundation"
+    | "/brand-territories"
+    | "/library"
+    | "/import-youtube"
+    | "/add-content"
+    | "/plan";
   label: string;
   icon: LucideIcon;
 }) {
@@ -170,7 +176,11 @@ export function AppSidebar() {
               label="My Foundation"
               icon={Settings}
             />
-            <DisabledSidebarLink label="Brand Territories" icon={Settings} />
+            <SidebarLink
+              to="/brand-territories"
+              label="Brand Territories"
+              icon={Network}
+            />
             <SidebarLink to="/library" label="Content Library" icon={Library} />
           </SidebarGroup>
           <SidebarGroup title="GROW">
