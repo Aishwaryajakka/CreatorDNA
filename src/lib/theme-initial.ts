@@ -5,6 +5,6 @@ import { THEME_COOKIE_NAME, type ResolvedTheme } from "@/lib/theme";
 
 export const getInitialTheme = createServerFn({ method: "GET" }).handler(
   (): ResolvedTheme => {
-    return getCookie(THEME_COOKIE_NAME) === "dark" ? "dark" : "light";
+    return getCookie(THEME_COOKIE_NAME) === "light" ? "light" : "dark";
   },
 );

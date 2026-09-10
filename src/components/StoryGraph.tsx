@@ -210,7 +210,10 @@ export function StoryGraph({
                 ? {
                     type: "button" as const,
                     "aria-pressed": selected,
-                    onClick: () => onSelect?.(node),
+                    onClick: () => {
+                      setHovered(null);
+                      onSelect?.(node);
+                    },
                   }
                 : {})}
               aria-label={`${KIND_META[node.kind as DnaKind]?.label ?? "DNA node"}: ${node.label}`}
@@ -232,7 +235,7 @@ export function StoryGraph({
               }}
               onMouseLeave={() => setHovered(null)}
               style={{ left: `${node.x}%`, top: `${node.y}%` }}
-              className={`group absolute -translate-x-1/2 -translate-y-1/2 rounded-full ${interactive ? "cursor-pointer" : ""} transition-[opacity,transform] duration-150 hover:scale-110 active:scale-105 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background ${selected || hoveredNode ? "scale-110" : focusId && neighbors.has(node.id) ? "scale-[1.03]" : ""} ${dim ? (selectedId ? "opacity-30" : "opacity-60") : "opacity-100"}`}
+              className={`group absolute -translate-x-1/2 -translate-y-1/2 rounded-full ${interactive ? "cursor-pointer" : ""} transition-[opacity,transform] duration-150 hover:scale-110 active:scale-105 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background ${selected || hoveredNode ? "scale-110" : focusId && neighbors.has(node.id) ? "scale-[1.03]" : ""} ${dim ? (selectedId ? "opacity-45" : "opacity-60") : "opacity-100"}`}
             >
               {isMe ? (
                 <span
@@ -287,7 +290,9 @@ export function StoryGraph({
           );
         })}
       </div>
-      {hovered && typeof document !== "undefined"
+      {hovered &&
+      hovered.node.id !== selectedId &&
+      typeof document !== "undefined"
         ? createPortal(
             <div
               role="tooltip"

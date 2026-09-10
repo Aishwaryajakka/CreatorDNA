@@ -4,6 +4,7 @@ import {
   generateResearchPulse,
   ResearchContextError,
 } from "@/lib/research/pulse.server";
+import { ResearchProviderError } from "@/lib/research/provider.server";
 import { ResearchPulseInputSchema } from "@/lib/research/validation";
 import {
   AuthenticationError,
@@ -43,13 +44,44 @@ export const Route = createFileRoute("/api/research/pulse")({
                   : error.message === "insufficient_creator_context"
                     ? "Add more Creator DNA or Brand Territories to make Research Pulse more relevant."
                     : "Research Pulse couldn't find enough cited current research.",
+                code: missingProvider
+                  ? "PERPLEXITY_NOT_CONFIGURED"
+                  : error.message === "insufficient_creator_context"
+                    ? "INSUFFICIENT_CREATOR_CONTEXT"
+                    : "NO_CITED_RESEARCH",
               },
               { status: missingProvider ? 503 : 409 },
             );
           }
+          if (error instanceof ResearchProviderError) {
+            const providerUnavailable = [
+              "PERPLEXITY_NOT_CONFIGURED",
+              "PERPLEXITY_TIMEOUT",
+              "PERPLEXITY_UNAVAILABLE",
+            ].includes(error.code);
+            return Response.json(
+              {
+                error:
+                  error.code === "PERPLEXITY_NOT_CONFIGURED"
+                    ? "Research Pulse is not configured on this server."
+                    : error.code === "PERPLEXITY_TIMEOUT"
+                      ? "Research Pulse timed out. Please try again."
+                      : "Research Pulse is temporarily unavailable.",
+                code: error.code,
+              },
+              { status: providerUnavailable ? 503 : 502 },
+            );
+          }
+          console.error("[research-pulse]", {
+            stage: "unexpected_error",
+            errorName: error instanceof Error ? error.name : typeof error,
+          });
           return Response.json(
-            { error: "Research Pulse couldn't refresh right now." },
-            { status: 502 },
+            {
+              error: "Research Pulse couldn't refresh right now.",
+              code: "RESEARCH_INTERNAL_ERROR",
+            },
+            { status: 500 },
           );
         }
       },

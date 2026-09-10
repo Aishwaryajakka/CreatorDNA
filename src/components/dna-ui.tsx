@@ -4,6 +4,7 @@ import {
   ExternalLink,
   FileText,
   Linkedin,
+  UserRound,
   Youtube,
 } from "lucide-react";
 import { DnaTypeIcon } from "@/components/DnaTypeIcon";
@@ -87,12 +88,11 @@ export function SourceProvenance({
   date?: string | null | undefined;
   url?: string | null | undefined;
 }) {
-  const source =
-    title === "Creator Foundation"
-      ? "Creator Foundation"
-      : platform || "Manual";
-  const Icon =
-    source.toLowerCase() === "youtube"
+  const isFoundation = title === "Creator Foundation";
+  const source = platform || "Manual";
+  const Icon = isFoundation
+    ? UserRound
+    : source.toLowerCase() === "youtube"
       ? Youtube
       : source.toLowerCase() === "linkedin"
         ? Linkedin
@@ -100,9 +100,20 @@ export function SourceProvenance({
           ? AtSign
           : FileText;
   return (
-    <div className="flex items-center gap-2 text-xs text-muted-foreground">
-      <Icon className="h-3.5 w-3.5 shrink-0" />
-      {url ? (
+    <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+      <span className="grid h-7 w-7 shrink-0 place-items-center rounded-lg bg-muted text-primary">
+        <Icon className="h-3.5 w-3.5" />
+      </span>
+      {isFoundation ? (
+        <>
+          <span className="font-semibold text-midnight">
+            Creator Foundation
+          </span>
+          <span className="rounded-full border border-border bg-muted px-2 py-0.5 text-[0.625rem] font-semibold uppercase tracking-wide text-muted-foreground">
+            Profile source
+          </span>
+        </>
+      ) : url ? (
         <a
           href={url}
           target="_blank"
@@ -115,8 +126,13 @@ export function SourceProvenance({
       ) : (
         <span className="font-semibold text-midnight">{title || source}</span>
       )}
-      <span>{source}</span>
-      {date ? <span>· {new Date(date).toLocaleDateString()}</span> : null}
+      {!isFoundation ? <span>{source}</span> : null}
+      {date ? (
+        <span>
+          · {isFoundation ? "Profile updated " : ""}
+          {new Date(date).toLocaleDateString()}
+        </span>
+      ) : null}
     </div>
   );
 }

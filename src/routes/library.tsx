@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
-import { ExternalLink, Search } from "lucide-react";
+import { ExternalLink, Search, UserRound } from "lucide-react";
 import { PageHeader, Panel } from "@/components/dna-ui";
 import { authenticatedFetch } from "@/lib/supabase/client";
 import {
@@ -24,7 +24,7 @@ export const Route = createFileRoute("/library")({
       {
         property: "og:description",
         content:
-          "Search everything you've ever said, filtered by platform, theme and date.",
+          "Search content you've added or imported, filtered by platform, theme and date.",
       },
     ],
   }),
@@ -100,8 +100,8 @@ function LibraryPage() {
   return (
     <div className="space-y-8">
       <PageHeader
-        title="Everything you've ever said"
-        subtitle="Each piece stays attached to the stories, beliefs and themes it produced, so every insight keeps its evidence."
+        title="Everything Creator DNA remembers."
+        subtitle="Each item you add or import stays attached to the stories, beliefs, and themes extracted from it, so every insight keeps its evidence."
       />
 
       <Panel className="library-controls p-5 sm:p-6">
@@ -110,7 +110,7 @@ function LibraryPage() {
           <input
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Search everything you've ever said..."
+            placeholder="Search content Creator DNA remembers..."
             className="w-full rounded-xl border border-input bg-background py-3.5 pl-11 pr-4 text-sm outline-none placeholder:text-muted-foreground focus:border-primary"
           />
         </div>
@@ -168,7 +168,19 @@ function LibraryPage() {
                     className="border-b border-border transition-[background-color,box-shadow] duration-[160ms] last:border-0 hover:bg-aqua-accent/5 hover:shadow-[inset_3px_0_0_var(--aqua-accent)]"
                   >
                     <td className="px-5 py-4 font-semibold text-midnight">
-                      {i.sourceUrl ? (
+                      {i.title === "Creator Foundation" ? (
+                        <div className="flex items-center gap-3">
+                          <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-primary/10 text-primary">
+                            <UserRound className="h-4 w-4" />
+                          </span>
+                          <span>
+                            <span className="block">Creator Foundation</span>
+                            <span className="mt-1 inline-flex rounded-full border border-border bg-muted px-2 py-0.5 text-[0.625rem] font-semibold uppercase tracking-wide text-muted-foreground">
+                              Profile source
+                            </span>
+                          </span>
+                        </div>
+                      ) : i.sourceUrl ? (
                         <a
                           href={i.sourceUrl}
                           target="_blank"
@@ -185,7 +197,7 @@ function LibraryPage() {
                     <td className="px-5 py-4 text-muted-foreground">
                       {i.platform === "Manual" &&
                       i.title === "Creator Foundation"
-                        ? "Creator Foundation"
+                        ? "Foundation"
                         : i.platform}
                     </td>
                     <td className="px-5 py-4 text-muted-foreground">

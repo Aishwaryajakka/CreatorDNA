@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
-import { Link, useLocation, useNavigate } from "@tanstack/react-router";
+import { Link, useLocation } from "@tanstack/react-router";
 import {
   Home,
   Import,
@@ -16,9 +16,9 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { AdaptiveCreatorDNAIcon, AdaptiveCreatorDNALogo } from "./Logo";
-import { supabase } from "@/lib/supabase/client";
 import { useProfile } from "@/lib/use-profile";
 import { ThemeToggle } from "@/components/ThemeProvider";
+import { useAuthState } from "@/lib/auth-state";
 
 const nav = [
   { to: "/", label: "Home", icon: Home },
@@ -73,8 +73,8 @@ function SidebarLink({
 }
 
 export function AppSidebar() {
-  const navigate = useNavigate();
   const location = useLocation();
+  const { signOut } = useAuthState();
   const profile = useProfile();
   const [menuOpen, setMenuOpen] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -96,10 +96,6 @@ export function AppSidebar() {
       document.removeEventListener("keydown", closeOnEscape);
     };
   }, [menuOpen]);
-  async function signOut() {
-    await supabase.auth.signOut();
-    await navigate({ to: "/login", replace: true });
-  }
   return (
     <aside className="telemetry-grid flex w-full shrink-0 flex-col justify-between border-r border-sidebar-border bg-sidebar px-4 py-4 text-sidebar-foreground lg:sticky lg:top-0 lg:h-screen lg:w-[15.5rem] lg:px-4 lg:py-6">
       <div>

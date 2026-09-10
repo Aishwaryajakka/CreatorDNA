@@ -130,7 +130,7 @@ export const StoryIntelligenceAngleSchema = z.object({
   ]),
   hook: nonEmptyString,
   rationale: nonEmptyString,
-  supportingNodeIds: supportingNodeIdsSchema,
+  supportingNodeIds: supportingNodeIdsSchema.min(1),
   platformPrep: z.object({
     platform: TargetPlatformSchema,
     hook: nonEmptyString,

@@ -433,7 +433,13 @@ type XImportResult = {
   error?: string;
 };
 
-export function XImportPanel({ onClose }: { onClose: () => void }) {
+export function XImportPanel({
+  onClose,
+  onCapabilityUnavailable,
+}: {
+  onClose: () => void;
+  onCapabilityUnavailable?: () => void;
+}) {
   const [posts, setPosts] = useState<RecentXPost[]>([]);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [results, setResults] = useState<XImportResult[]>([]);
@@ -457,6 +463,7 @@ export function XImportPanel({ onClose }: { onClose: () => void }) {
         if (body.status === "api_access_unavailable") {
           if (active) {
             setCapabilityUnavailable(true);
+            onCapabilityUnavailable?.();
             setError("");
           }
           return;
@@ -483,7 +490,7 @@ export function XImportPanel({ onClose }: { onClose: () => void }) {
     return () => {
       active = false;
     };
-  }, []);
+  }, [onCapabilityUnavailable]);
 
   const availablePosts = posts.filter((post) => !post.alreadyImported);
   const importedCount = results.filter(
@@ -525,12 +532,15 @@ export function XImportPanel({ onClose }: { onClose: () => void }) {
       };
       if (body.status === "api_access_unavailable") {
         setCapabilityUnavailable(true);
+        onCapabilityUnavailable?.();
         setError("");
         return;
       }
       if (!response.ok || !body.results) {
         if (body.code === "x_api_access_unavailable")
           setCapabilityUnavailable(true);
+        if (body.code === "x_api_access_unavailable")
+          onCapabilityUnavailable?.();
         throw new Error(
           body.message ??
             body.error ??
@@ -589,9 +599,7 @@ export function XImportPanel({ onClose }: { onClose: () => void }) {
             Your X account is still connected.
           </p>
           <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
-            Your X account is connected. Direct post import is waiting on the
-            required X API access and will be available once that access is
-            approved.
+            Direct X import requires additional API access.
           </p>
           <Link
             to="/add-content"

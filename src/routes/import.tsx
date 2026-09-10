@@ -1,4 +1,10 @@
-import { useEffect, useState, type KeyboardEvent, type ReactNode } from "react";
+import {
+  useCallback,
+  useEffect,
+  useState,
+  type KeyboardEvent,
+  type ReactNode,
+} from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { AtSign, Linkedin, Loader2, Youtube } from "lucide-react";
 import { z } from "zod";
@@ -42,6 +48,11 @@ function ImportContentPage() {
   const [statusError, setStatusError] = useState("");
   const [connecting, setConnecting] = useState<SocialProvider | null>(null);
   const [xPostsOpen, setXPostsOpen] = useState(false);
+  const [xCapabilityUnavailable, setXCapabilityUnavailable] = useState(false);
+  const markXCapabilityUnavailable = useCallback(
+    () => setXCapabilityUnavailable(true),
+    [],
+  );
 
   useEffect(() => {
     let active = true;
@@ -192,9 +203,11 @@ function ImportContentPage() {
             loading={!integrations && !statusError}
             connecting={connecting === "x"}
             postsOpen={xPostsOpen}
+            capabilityUnavailable={xCapabilityUnavailable}
             onConnect={() => void connect("x")}
             onLoadPosts={() => setXPostsOpen(true)}
             onClosePosts={() => setXPostsOpen(false)}
+            onCapabilityUnavailable={markXCapabilityUnavailable}
           />
         )}
       </section>
@@ -240,9 +253,8 @@ function LinkedInWorkspace({
             Add LinkedIn content manually
           </Link>
           <p className="mt-3 text-xs text-muted-foreground">
-            Direct LinkedIn post import is waiting on additional LinkedIn API
-            permissions. Your account is connected, and direct import will be
-            available once those permissions are approved.
+            Direct LinkedIn import requires additional API access. Your account
+            remains connected.
           </p>
           <p className="mt-2 text-xs text-muted-foreground">
             For now, paste any LinkedIn post you want Creator DNA to remember.
@@ -264,17 +276,21 @@ function XWorkspace({
   loading,
   connecting,
   postsOpen,
+  capabilityUnavailable,
   onConnect,
   onLoadPosts,
   onClosePosts,
+  onCapabilityUnavailable,
 }: {
   connection: IntegrationStatus["x"] | null;
   loading: boolean;
   connecting: boolean;
   postsOpen: boolean;
+  capabilityUnavailable: boolean;
   onConnect: () => void;
   onLoadPosts: () => void;
   onClosePosts: () => void;
+  onCapabilityUnavailable: () => void;
 }) {
   const connected = connection?.connected === true ? connection : null;
   return (
@@ -289,7 +305,23 @@ function XWorkspace({
       ) : connected ? (
         <>
           <ConnectionIdentity connection={connected} providerLabel="X" />
-          {!postsOpen ? (
+          {capabilityUnavailable ? (
+            <div className="mt-6 rounded-xl border border-border bg-muted p-4">
+              <p className="text-sm font-semibold text-midnight">
+                Your X account remains connected.
+              </p>
+              <p className="mt-2 text-sm text-muted-foreground">
+                Direct X import requires additional API access.
+              </p>
+              <Link
+                to="/add-content"
+                search={{ platform: "x" }}
+                className="motion-cta mt-4 inline-flex rounded-xl bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground"
+              >
+                Add X content manually
+              </Link>
+            </div>
+          ) : !postsOpen ? (
             <div className="mt-6">
               <div className="flex flex-wrap gap-3">
                 <button
@@ -314,7 +346,10 @@ function XWorkspace({
               </p>
             </div>
           ) : (
-            <XImportPanel onClose={onClosePosts} />
+            <XImportPanel
+              onClose={onClosePosts}
+              onCapabilityUnavailable={onCapabilityUnavailable}
+            />
           )}
         </>
       ) : (

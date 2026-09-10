@@ -15,11 +15,13 @@ function ResearchPage() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [message, setMessage] = useState("");
+  const [contextInsufficient, setContextInsufficient] = useState(false);
   const autoRefreshed = useRef(false);
 
   const refresh = useCallback(async (selectedWindow: ResearchWindow) => {
     setRefreshing(true);
     setMessage("");
+    setContextInsufficient(false);
     try {
       const response = await authenticatedFetch("/api/research/pulse", {
         method: "POST",
@@ -29,11 +31,15 @@ function ResearchPage() {
       const body = (await response.json()) as {
         items?: ResearchItem[];
         error?: string;
+        code?: string;
       };
-      if (!response.ok || !body.items)
+      if (!response.ok || !body.items) {
+        setContextInsufficient(body.code === "INSUFFICIENT_CREATOR_CONTEXT");
         throw new Error(
           body.error ?? "Research Pulse couldn't refresh right now.",
         );
+      }
+      setContextInsufficient(false);
       setItems(body.items);
     } catch (error) {
       setMessage(
@@ -140,7 +146,7 @@ function ResearchPage() {
             <ResearchCard key={item.id} item={item} />
           ))}
         </div>
-      ) : !refreshing && providerConfigured ? (
+      ) : !refreshing && providerConfigured && contextInsufficient ? (
         <Panel className="p-7">
           <p className="font-semibold text-midnight">
             Add more Creator DNA or Brand Territories to make Research Pulse
@@ -161,6 +167,14 @@ function ResearchPage() {
               Add Content
             </Link>
           </div>
+        </Panel>
+      ) : !refreshing && providerConfigured && !message ? (
+        <Panel className="p-7">
+          <p className="font-semibold text-midnight">No saved research yet.</p>
+          <p className="mt-2 text-sm text-muted-foreground">
+            Refresh Research Pulse to find current developments connected to
+            your Creator DNA.
+          </p>
         </Panel>
       ) : null}
     </div>

@@ -3,15 +3,21 @@
 const YOUTUBE_API_BASE = "https://www.googleapis.com/youtube/v3";
 
 export class YouTubeApiError extends Error {
+  readonly kind: "configuration" | "input" | "upstream";
   readonly status: number | undefined;
   readonly reason: string | undefined;
 
   constructor(
     message: string,
-    options?: ErrorOptions & { status?: number; reason?: string },
+    options: ErrorOptions & {
+      kind: "configuration" | "input" | "upstream";
+      status?: number;
+      reason?: string;
+    },
   ) {
     super(message, options);
     this.name = "YouTubeApiError";
+    this.kind = options.kind;
     this.status = options?.status;
     this.reason = options?.reason;
   }
@@ -19,15 +25,18 @@ export class YouTubeApiError extends Error {
 
 function youtubeDiagnostic(
   step: string,
-  details: { status?: number; reason?: string; message?: string } = {},
+  details: Record<string, boolean | number | string | undefined> = {},
 ): void {
-  if (process.env["NODE_ENV"] === "production") return;
   console.info("[youtube]", { step, ...details });
 }
 
 function getApiKey(): string {
   const key = process.env["YOUTUBE_API_KEY"];
-  if (!key) throw new YouTubeApiError("YouTube import is not configured.");
+  youtubeDiagnostic("configuration", { apiKeyPresent: Boolean(key) });
+  if (!key)
+    throw new YouTubeApiError("YouTube import is not configured.", {
+      kind: "configuration",
+    });
   return key;
 }
 
@@ -43,6 +52,7 @@ async function youtubeRequest<T>(
     response = await fetch(url);
   } catch (error) {
     throw new YouTubeApiError("Unable to reach YouTube right now.", {
+      kind: "upstream",
       cause: error,
     });
   }
@@ -65,7 +75,7 @@ async function youtubeRequest<T>(
     if (reason === "quotaExceeded") {
       throw new YouTubeApiError(
         "YouTube import quota has been reached. Try again later.",
-        { status: response.status, reason },
+        { kind: "upstream", status: response.status, reason },
       );
     }
     if (response.status === 404 || reason === "playlistNotFound") {
@@ -73,18 +83,23 @@ async function youtubeRequest<T>(
         "That YouTube channel or playlist was not found.",
         {
           status: response.status,
+          kind: "upstream",
           ...(reason ? { reason } : {}),
         },
       );
     }
     throw new YouTubeApiError("YouTube could not return that data right now.", {
+      kind: "upstream",
       status: response.status,
       ...(reason ? { reason } : {}),
     });
   }
   if (!body || isYouTubeErrorBody(body)) {
     youtubeDiagnostic("response_parse_failed", { status: response.status });
-    throw new YouTubeApiError("YouTube returned an invalid response.");
+    throw new YouTubeApiError("YouTube returned an invalid response.", {
+      kind: "upstream",
+      status: response.status,
+    });
   }
   youtubeDiagnostic("response_parse_succeeded", { status: response.status });
   return body;
@@ -139,6 +154,7 @@ export async function resolveYouTubeChannel(
   if (!identifier)
     throw new YouTubeApiError(
       "Enter a YouTube channel URL, handle, or channel ID.",
+      { kind: "input" },
     );
 
   let id: string | undefined;
@@ -156,10 +172,14 @@ export async function resolveYouTubeChannel(
     try {
       url = new URL(identifier);
     } catch {
-      throw new YouTubeApiError("Enter a valid YouTube channel URL.");
+      throw new YouTubeApiError("Enter a valid YouTube channel URL.", {
+        kind: "input",
+      });
     }
     if (!/(^|\.)youtube\.com$/.test(url.hostname)) {
-      throw new YouTubeApiError("Use a youtube.com channel URL.");
+      throw new YouTubeApiError("Use a youtube.com channel URL.", {
+        kind: "input",
+      });
     }
     const parts = url.pathname.split("/").filter(Boolean);
     if (parts[0] === "channel" && parts[1]) id = parts[1];
@@ -168,10 +188,22 @@ export async function resolveYouTubeChannel(
     else
       throw new YouTubeApiError(
         "Use a /@handle, /channel/ID, or /user/name URL.",
+        { kind: "input" },
       );
   } else {
     handle = identifier.replace(/^@/, "");
   }
+
+  const normalizedIdentifier = id ?? handle ?? username ?? "";
+  const lookupStrategy = id ? "channel_id" : handle ? "handle" : "username";
+  if (!normalizedIdentifier || /[\s/?#]/.test(normalizedIdentifier))
+    throw new YouTubeApiError("Enter a valid YouTube channel identifier.", {
+      kind: "input",
+    });
+  youtubeDiagnostic("channel_lookup", {
+    normalizedIdentifier,
+    lookupStrategy,
+  });
 
   const params = id
     ? { part: "snippet,contentDetails", id }
@@ -181,7 +213,9 @@ export async function resolveYouTubeChannel(
   const response = await youtubeRequest<ChannelResponse>("channels", params);
   const channel = response.items?.[0];
   if (!channel)
-    throw new YouTubeApiError("No public YouTube channel matched that input.");
+    throw new YouTubeApiError("No public YouTube channel matched that input.", {
+      kind: "input",
+    });
   return {
     id: channel.id,
     title: channel.snippet.title,

@@ -88,6 +88,7 @@
 }
 
 :root {
+  scroll-behavior: smooth;
   --radius: 0.75rem;
   --radius-control: 0.625rem;
   --radius-card: 1rem;
@@ -985,8 +986,44 @@
 }
 
 .public-page {
+  --landing-page: var(--obsidian-base);
+  --landing-section: var(--obsidian-surface);
+  --landing-card: var(--obsidian-card);
+  --landing-border: var(--obsidian-border);
+  --landing-heading: var(--foreground);
+  --landing-copy: var(--muted-foreground);
+  --landing-action: var(--action-accent);
+  --landing-action-hover: var(--action-accent-hover);
+  --landing-action-foreground: var(--action-accent-foreground);
+  --landing-shadow: var(--telemetry-shadow);
   --grid-dot: color-mix(in srgb, var(--aqua-accent) 2.5%, transparent);
   --grid-line: color-mix(in srgb, var(--story) 1.25%, transparent);
+}
+
+.public-page #story-graph {
+  scroll-margin-top: 6rem;
+}
+
+:root:not(.dark) .public-page {
+  --landing-page: #f8faf5;
+  --landing-section: #f1f5f7;
+  --landing-card: #ffffff;
+  --landing-border: #cbd8e4;
+  --landing-heading: var(--midnight);
+  --landing-copy: #465b73;
+  --landing-action: var(--primary);
+  --landing-action-hover: #2563ff;
+  --landing-action-foreground: #ffffff;
+  --landing-shadow:
+    0 16px 40px -28px rgb(8 32 74 / 0.38),
+    inset 0 1px 0 rgb(255 255 255 / 0.92);
+  --obsidian-base: var(--landing-page);
+  --obsidian-card: var(--landing-card);
+  --obsidian-surface: var(--landing-section);
+  --obsidian-border: var(--landing-border);
+  --obsidian-highlight: #e7eef5;
+  --foreground: var(--landing-heading);
+  --muted-foreground: var(--landing-copy);
 }
 
 :root:not(.dark) .public-page .text-chartreuse,
@@ -1043,13 +1080,6 @@
   background-color: var(--accent-surface);
 }
 
-:root:not(.dark) .public-gradient-text {
-  color: var(--action-accent);
-  background: none;
-  filter: none;
-  -webkit-text-fill-color: currentColor;
-}
-
 :root:not(.dark) .public-page .border-chartreuse {
   border-color: var(--decorative-lime);
 }
@@ -1076,16 +1106,41 @@
   opacity: 0.35;
 }
 
-.public-gradient-text {
+.creator-dna-gradient-text {
+  color: transparent;
+  background-image: linear-gradient(
+    90deg,
+    var(--chartreuse),
+    var(--creator-green) 34%,
+    var(--aqua-accent) 67%,
+    var(--story)
+  );
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
   filter: drop-shadow(0 8px 24px rgb(54 214 197 / 0.2));
 }
 
 :root:not(.dark) .landing-graph-canvas {
-  background-color: #fbfcfe;
-  border-color: var(--border-canonical);
+  background-color: var(--landing-page);
+  border-color: var(--landing-border);
   box-shadow:
     inset 0 1px 0 rgb(255 255 255 / 0.9),
     0 18px 44px -34px rgb(8 32 74 / 0.35);
+}
+
+:root:not(.dark) .public-page .telemetry-card {
+  box-shadow: var(--landing-shadow);
+}
+
+:root:not(.dark) .public-page .landing-memory-cta {
+  border-color: var(--landing-border);
+  background: var(--landing-card);
+  box-shadow: var(--landing-shadow);
+}
+
+:root:not(.dark) .public-page .creator-dna-gradient-text {
+  filter: drop-shadow(0 8px 24px rgb(21 94 239 / 0.14));
 }
 
 .landing-faq-card {

@@ -597,12 +597,12 @@ function StoryMapPage() {
                       className="mb-5 w-32 opacity-70"
                       compact
                     />
-                    <p className="eyebrow">Pick a node</p>
+                    <p className="eyebrow">Grounded memory</p>
                     <h2 className="card-title mt-3 text-midnight">
-                      Inspect grounded evidence.
+                      Every memory has evidence.
                     </h2>
                     <p className="mt-2 max-w-xs text-sm leading-relaxed text-muted-foreground">
-                      Select a node to inspect its evidence and connections.
+                      Select a node to see where Creator DNA learned it.
                     </p>
                   </div>
                 </Panel>
@@ -763,6 +763,7 @@ function Detail({
   onSelect: (node: CreatorDNANode) => void;
   transitionClass: string;
 }) {
+  const isFoundation = node.sourceTitle === "Creator Foundation";
   return (
     <Panel
       accent={KIND_META[node.type].color}
@@ -782,10 +783,18 @@ function Detail({
       </p>
       <dl className="mt-6 space-y-4 text-sm">
         <div>
-          <dt className="eyebrow">Evidence</dt>
-          <dd className="story-evidence-quote mt-2 rounded-xl bg-muted/60 px-4 py-3 font-display text-[0.9375rem] italic leading-relaxed text-midnight">
-            “{node.evidenceQuote || "No evidence quote available."}”
-          </dd>
+          <dt className="eyebrow">
+            {isFoundation ? "Foundation statement" : "Evidence quote"}
+          </dt>
+          {node.evidenceQuote ? (
+            <dd className="story-evidence-quote mt-2 rounded-xl bg-muted/60 px-4 py-3 font-display text-[0.9375rem] italic leading-relaxed text-midnight">
+              “{node.evidenceQuote}”
+            </dd>
+          ) : (
+            <dd className="mt-2 rounded-xl border border-border bg-muted/40 px-4 py-3 text-sm text-muted-foreground">
+              No source quote is available for this memory.
+            </dd>
+          )}
         </div>
         <div>
           <dt className="eyebrow">Source</dt>

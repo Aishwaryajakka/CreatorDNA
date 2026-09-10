@@ -124,7 +124,11 @@ const storyIntelligenceSchema = {
           framingType: { type: "string", enum: framingTypes },
           hook: { type: "string" },
           rationale: { type: "string" },
-          supportingNodeIds: { type: "array", items: { type: "string" } },
+          supportingNodeIds: {
+            type: "array",
+            minItems: 1,
+            items: { type: "string" },
+          },
           platformPrep: {
             type: "object",
             additionalProperties: false,
@@ -313,6 +317,7 @@ export async function analyzeContentIdea(
     const params: ChatCompletionCreateParams = {
       model: getGroqModel(),
       temperature: 0,
+      max_completion_tokens: 8_000,
       messages: [
         { role: "system", content: SYSTEM_PROMPT },
         {
@@ -428,6 +433,14 @@ function sanitizeStoryIntelligence(
   if (!firstAngle || !secondAngle || !thirdAngle)
     throw new CreatorDNAProviderError(
       "Story Intelligence returned fewer than three angles.",
+    );
+  if (
+    [firstAngle, secondAngle, thirdAngle].some(
+      (angle) => angle.supportingNodeIds.length === 0,
+    )
+  )
+    throw new CreatorDNAProviderError(
+      "Story Intelligence returned an ungrounded direction.",
     );
   return {
     ...result,

@@ -130,7 +130,7 @@ function LandingPage() {
               How It Works
             </a>
             <a
-              href="#story-map"
+              href="#story-graph"
               className="public-nav-link rounded-full px-4 py-1.5 transition-colors hover:text-chartreuse"
             >
               Story Map
@@ -210,7 +210,7 @@ function LandingPage() {
             </p>
             <h1 className="marketing-display mt-8 text-foreground">
               <span className="hero-line-one block">Same stories.</span>
-              <span className="hero-line-two public-gradient-text block bg-[linear-gradient(90deg,var(--story),var(--aqua-accent),var(--creator-green),var(--chartreuse))] bg-clip-text text-transparent">
+              <span className="hero-line-two creator-dna-gradient-text block">
                 Bigger possibilities.
               </span>
             </h1>
@@ -226,7 +226,7 @@ function LandingPage() {
                 Build my Creator DNA <ArrowRight className="h-4 w-4" />
               </Link>
               <a
-                href="#story-map"
+                href="#story-graph"
                 className="motion-secondary glow-aqua inline-flex w-full items-center justify-center gap-2 rounded-xl border border-aqua-accent/40 bg-obsidian-surface px-8 py-4 font-sans text-sm font-bold text-aqua-accent hover:border-aqua-accent hover:bg-obsidian-highlight sm:w-auto"
               >
                 <Network className="h-4 w-4" /> Explore Story Graph
@@ -482,7 +482,7 @@ function LandingPage() {
           </div>
         </section>
         <section
-          id="story-map"
+          id="story-graph"
           className="telemetry-grid relative border-t border-obsidian-border bg-obsidian-surface px-4 py-24 sm:px-6 lg:px-8"
         >
           <div className="mx-auto grid max-w-7xl items-center gap-12 lg:grid-cols-12">
@@ -676,7 +676,7 @@ function LandingPage() {
           </div>
         </section>
         <section className="bg-obsidian-base px-4 py-16 sm:px-6 lg:px-8">
-          <ScrollReveal className="glow-lime relative mx-auto max-w-7xl overflow-hidden rounded-3xl border-2 border-chartreuse/60 bg-gradient-to-r from-primary/20 via-obsidian-card to-obsidian-base p-10 sm:p-14">
+          <ScrollReveal className="landing-memory-cta glow-lime relative mx-auto max-w-7xl overflow-hidden rounded-3xl border-2 border-chartreuse/60 bg-gradient-to-r from-primary/20 via-obsidian-card to-obsidian-base p-10 sm:p-14">
             <div className="pointer-events-none absolute -bottom-10 -right-10 h-96 w-96 rounded-full bg-aqua-accent/15 blur-3xl" />
             <div className="relative z-10 flex flex-col items-center justify-between gap-8 text-center lg:flex-row lg:text-left">
               <div className="max-w-2xl">
@@ -783,7 +783,7 @@ function LandingPage() {
             <h2 className="font-display text-4xl font-black leading-tight tracking-tight text-foreground sm:text-6xl">
               Turn your past into your
               <br />
-              <span className="bg-[linear-gradient(90deg,var(--chartreuse),var(--aqua-accent),var(--story))] bg-clip-text text-transparent">
+              <span className="creator-dna-gradient-text">
                 most powerful creative future.
               </span>
             </h2>
@@ -829,7 +829,7 @@ function LandingPage() {
               </h3>
               <ul className="space-y-2.5 font-sans">
                 <li>
-                  <a href="#story-map" className="hover:text-chartreuse">
+                  <a href="#story-graph" className="hover:text-chartreuse">
                     Living Story Graph
                   </a>
                 </li>
@@ -896,8 +896,8 @@ function LandingPage() {
               brighter tomorrow.
             </p>
             <a
-              href="#build"
-              className="font-bold text-chartreuse hover:text-aqua-accent"
+              href="#story-graph"
+              className="rounded-sm font-bold text-chartreuse hover:text-aqua-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-aqua-accent focus-visible:ring-offset-4 focus-visible:ring-offset-obsidian-surface"
             >
               Build your Story Graph ↑
             </a>
