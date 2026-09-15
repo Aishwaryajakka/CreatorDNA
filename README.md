@@ -18,7 +18,7 @@ Creator DNA asks:
 
 > **"Given who I've been, what I believe now, and where I want my story to go — what should I say next?"**
 
-**Live Demo:** https://creator-dna-pi.vercel.app
+**Live Demo:** https://creator-dna-pi.vercel.app //
 **GitHub:** https://github.com/Aishwaryajakka/CreatorDNA
 
 ---
