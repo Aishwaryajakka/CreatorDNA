@@ -643,7 +643,7 @@ export function DemoGuide() {
       <aside
         ref={guideRef}
         style={guideStyle}
-        className="demo-guide fixed inset-x-3 bottom-3 z-[70] max-h-[48vh] overflow-y-auto rounded-2xl border border-aqua-accent/50 bg-obsidian-card p-5 font-sans text-foreground shadow-2xl sm:inset-x-auto sm:bottom-5 sm:right-5 sm:min-h-[21rem] sm:w-[23rem] sm:max-h-[calc(100vh-2.5rem)]"
+        className="demo-guide fixed inset-x-3 bottom-3 z-[70] box-border min-w-0 max-w-full max-h-[48vh] overflow-y-auto rounded-2xl border border-aqua-accent/50 bg-obsidian-card p-5 font-sans text-foreground shadow-2xl sm:inset-x-auto sm:bottom-5 sm:right-5 sm:min-h-[21rem] sm:w-[23rem] sm:max-h-[calc(100vh-2.5rem)]"
         aria-label="Creator DNA guided demo"
         aria-live="polite"
       >
@@ -684,7 +684,8 @@ export function DemoGuide() {
               size="md"
               className="demo-primary-cta mt-5"
             >
-              <RotateCcw className="h-3.5 w-3.5" /> Try locating it again
+              <RotateCcw className="h-3.5 w-3.5" />
+              <span className="min-w-0">Try locating it again</span>
             </Button>
           </>
         ) : locating ? (
@@ -720,7 +721,8 @@ export function DemoGuide() {
                   size="md"
                   className="demo-primary-cta"
                 >
-                  Build my Creator DNA <ArrowRight className="h-3.5 w-3.5" />
+                  <span className="min-w-0">Build my Creator DNA</span>
+                  <ArrowRight className="h-3.5 w-3.5" />
                 </Button>
                 <Button
                   type="button"
@@ -729,8 +731,10 @@ export function DemoGuide() {
                   size="md"
                   className="demo-secondary-cta"
                 >
-                  Try {demo.persona === "jordan" ? "Maya" : "Jordan"}&apos;s
-                  story →
+                  <span className="min-w-0">
+                    Try {demo.persona === "jordan" ? "Maya" : "Jordan"}
+                    &apos;s story →
+                  </span>
                 </Button>
                 <button
                   type="button"
@@ -741,15 +745,7 @@ export function DemoGuide() {
                 </button>
               </div>
             ) : (
-              <div className="mt-5 flex items-center justify-between gap-3">
-                <button
-                  type="button"
-                  disabled={demo.step === 0}
-                  onClick={goBack}
-                  className="inline-flex items-center gap-1 rounded-lg px-2 py-2 text-xs font-bold text-muted-foreground hover:text-foreground focus-visible:ring-2 focus-visible:ring-primary disabled:invisible"
-                >
-                  <ArrowLeft className="h-3.5 w-3.5" /> Back
-                </button>
+              <div className="mt-5 grid min-w-0 gap-2">
                 {step.primaryAction ? (
                   <Button
                     type="button"
@@ -759,9 +755,18 @@ export function DemoGuide() {
                     size="md"
                     className="demo-primary-cta"
                   >
-                    {step.primaryAction} <ArrowRight className="h-3.5 w-3.5" />
+                    <span className="min-w-0">{step.primaryAction}</span>
+                    <ArrowRight className="h-3.5 w-3.5" />
                   </Button>
                 ) : null}
+                <button
+                  type="button"
+                  disabled={demo.step === 0}
+                  onClick={goBack}
+                  className="inline-flex min-w-0 max-w-full items-center gap-1 justify-self-start rounded-lg px-2 py-2 text-xs font-bold text-muted-foreground hover:text-foreground focus-visible:ring-2 focus-visible:ring-primary disabled:invisible"
+                >
+                  <ArrowLeft className="h-3.5 w-3.5 shrink-0" /> Back
+                </button>
               </div>
             )}
             {demo.step === 1 && !demo.nodeOpened ? (
