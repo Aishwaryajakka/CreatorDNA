@@ -6,6 +6,9 @@ import { analyzeContentIdea } from "@/lib/creator-dna/server/analyze-idea";
 import { searchCreatorDNA } from "@/lib/creator-dna/server/search-dna";
 import { PlanContentInputSchema } from "@/lib/creator-dna/validation";
 import { getResearchItem } from "@/lib/research/repository.server";
+import { cacheTrustedPlanContext } from "@/lib/creator-dna/server/plan-context-cache";
+import { ServerTimings } from "@/lib/server-timing";
+import { providerStatus } from "@/lib/creator-dna/server/llm";
 import {
   AuthenticationError,
   requireAuthenticatedUser,
@@ -15,11 +18,12 @@ export const Route = createFileRoute("/api/plan-content")({
   server: {
     handlers: {
       POST: async ({ request }) => {
+        const timings = new ServerTimings();
         let body: unknown;
         try {
           body = await request.json();
         } catch {
-          return Response.json(
+          return timings.json(
             { error: "Please provide a valid content idea." },
             { status: 400 },
           );
@@ -27,7 +31,7 @@ export const Route = createFileRoute("/api/plan-content")({
 
         const parsed = PlanContentInputSchema.safeParse(body);
         if (!parsed.success) {
-          return Response.json(
+          return timings.json(
             {
               error: "Please add a content idea and choose a target platform.",
             },
@@ -36,12 +40,16 @@ export const Route = createFileRoute("/api/plan-content")({
         }
 
         try {
-          const user = await requireAuthenticatedUser(request);
+          const user = await timings.measure("auth", () =>
+            requireAuthenticatedUser(request),
+          );
           const researchItem = parsed.data.researchItemId
-            ? await getResearchItem(user.id, parsed.data.researchItemId)
+            ? await timings.measure("research", () =>
+                getResearchItem(user.id, parsed.data.researchItemId!),
+              )
             : null;
           if (parsed.data.researchItemId && !researchItem)
-            return Response.json(
+            return timings.json(
               { error: "Research item not found." },
               { status: 404 },
             );
@@ -52,40 +60,58 @@ export const Route = createFileRoute("/api/plan-content")({
                   ? `${parsed.data.idea}\n${researchItem.headline}\n${researchItem.summary}`
                   : parsed.data.idea,
                 user.id,
+                { onTiming: timings.record },
               ),
-              listBrandTerritories(user.id),
-              getFoundationForUser(user.id),
+              timings.measure("territories", () =>
+                listBrandTerritories(user.id),
+              ),
+              timings.measure("foundation", () =>
+                getFoundationForUser(user.id),
+              ),
             ]);
+          const creatorContext = {
+            intendedBrandTerritories,
+            ...(creatorFoundation
+              ? {
+                  creatorFoundation: {
+                    whatYouDo: creatorFoundation.whatYouDo,
+                    mainTopics: creatorFoundation.mainTopics,
+                    expertise: creatorFoundation.expertise,
+                    beliefs: creatorFoundation.beliefs,
+                    goals: creatorFoundation.goals,
+                  },
+                }
+              : {}),
+            ...(researchItem
+              ? {
+                  externalResearch: {
+                    headline: researchItem.headline,
+                    summary: researchItem.summary,
+                    sources: researchItem.sources,
+                    whyItMatters: researchItem.whyItMatters,
+                  },
+                }
+              : {}),
+          };
           const intelligence = await analyzeContentIdea(
             parsed.data.idea,
             retrievedDNA,
             parsed.data.targetPlatform,
+            creatorContext,
+            timings.record,
+          );
+          cacheTrustedPlanContext(
+            user.id,
+            parsed.data.idea,
+            parsed.data.targetPlatform,
             {
+              retrievedDNA,
+              creatorFoundation,
               intendedBrandTerritories,
-              ...(creatorFoundation
-                ? {
-                    creatorFoundation: {
-                      whatYouDo: creatorFoundation.whatYouDo,
-                      mainTopics: creatorFoundation.mainTopics,
-                      expertise: creatorFoundation.expertise,
-                      beliefs: creatorFoundation.beliefs,
-                      goals: creatorFoundation.goals,
-                    },
-                  }
-                : {}),
-              ...(researchItem
-                ? {
-                    externalResearch: {
-                      headline: researchItem.headline,
-                      summary: researchItem.summary,
-                      sources: researchItem.sources,
-                      whyItMatters: researchItem.whyItMatters,
-                    },
-                  }
-                : {}),
+              intelligence,
             },
           );
-          return Response.json({
+          return timings.json({
             idea: parsed.data.idea,
             targetPlatform: parsed.data.targetPlatform,
             ...(researchItem
@@ -101,17 +127,39 @@ export const Route = createFileRoute("/api/plan-content")({
           });
         } catch (error) {
           if (error instanceof AuthenticationError) {
-            return Response.json(
+            return timings.json(
               { error: "Authentication required." },
               { status: 401 },
             );
           }
-          return Response.json(
+          const upstreamStatus = providerStatus(error);
+          const cause =
+            error instanceof Error && error.cause instanceof Error
+              ? error.cause
+              : null;
+          console.error("[plan-content] request failed", {
+            errorName: error instanceof Error ? error.name : typeof error,
+            message: error instanceof Error ? error.message : "unknown error",
+            causeName: cause?.name,
+            causeMessage: cause?.message,
+            status:
+              cause && "status" in cause
+                ? String((cause as Error & { status?: unknown }).status)
+                : undefined,
+            stack:
+              process.env["NODE_ENV"] !== "production" && error instanceof Error
+                ? error.stack
+                : undefined,
+          });
+          return timings.json(
             {
               error:
-                "Creator DNA planning is temporarily unavailable. Please try again.",
+                upstreamStatus === 429
+                  ? "Creator DNA is temporarily at capacity. Please try again shortly."
+                  : "Creator DNA planning is temporarily unavailable. Please try again.",
+              ...(upstreamStatus === 429 ? { code: "AI_RATE_LIMITED" } : {}),
             },
-            { status: 502 },
+            { status: upstreamStatus === 429 ? 429 : 502 },
           );
         }
       },

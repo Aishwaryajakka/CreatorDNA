@@ -3,6 +3,7 @@ import { ZodError } from "zod";
 import {
   requireAuthenticatedUser,
   AuthenticationError,
+  demoMutationResponse,
 } from "@/lib/supabase/auth";
 import { saveCreatorFoundation } from "@/lib/creator-dna/server/save-foundation";
 import { supabaseServer } from "@/lib/supabase/server";
@@ -41,6 +42,8 @@ export const Route = createFileRoute("/api/onboarding")({
       POST: async ({ request }) => {
         try {
           const user = await requireAuthenticatedUser(request);
+          const demoGuard = demoMutationResponse(user);
+          if (demoGuard) return demoGuard;
           const normalizedInput = normalizeFoundationInput(
             await request.json(),
           );

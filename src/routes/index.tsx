@@ -11,7 +11,6 @@ import {
   History,
   Layers3,
   Menu,
-  Network,
   Sparkles,
   Waypoints,
   Zap,
@@ -25,7 +24,7 @@ import {
   type GraphNode,
 } from "@/lib/creator-dna";
 import type { CreatorDNANode } from "@/lib/creator-dna/types";
-import { authenticatedFetch } from "@/lib/supabase/client";
+import { useStoryMapQuery } from "@/lib/queries/story-map";
 import { useAuthState } from "@/lib/auth-state";
 import { AdaptiveCreatorDNALogo } from "@/components/Logo";
 import { DnaTypeIcon } from "@/components/DnaTypeIcon";
@@ -38,6 +37,7 @@ import {
   SignalPath,
   TelemetryOrbit,
 } from "@/components/Motion";
+import { useDemoMode } from "@/lib/demo-mode";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -218,18 +218,24 @@ function LandingPage() {
               Creator DNA turns your content history into a living, intelligent
               story graph—so you can create what&apos;s next with clarity.
             </p>
-            <div className="hero-actions mt-10 flex flex-col items-center justify-center gap-4 sm:flex-row">
+            <div className="hero-actions mt-10 flex flex-col items-center justify-center gap-4 sm:flex-row sm:flex-wrap lg:flex-nowrap">
               <Link
                 to="/login"
-                className="motion-cta glow-lime inline-flex w-full items-center justify-center gap-2 rounded-xl bg-chartreuse px-8 py-4 font-sans text-sm font-black uppercase tracking-wider text-[#050811] sm:w-auto"
+                className="landing-hero-cta landing-hero-cta-primary motion-cta glow-lime"
               >
-                Build my Creator DNA <ArrowRight className="h-4 w-4" />
+                BUILD MY CREATOR DNA <ArrowRight />
+              </Link>
+              <Link
+                to="/demo"
+                className="landing-hero-cta landing-hero-cta-secondary motion-secondary glow-aqua"
+              >
+                TRY CREATOR DNA <ArrowRight />
               </Link>
               <a
                 href="#story-graph"
-                className="motion-secondary glow-aqua inline-flex w-full items-center justify-center gap-2 rounded-xl border border-aqua-accent/40 bg-obsidian-surface px-8 py-4 font-sans text-sm font-bold text-aqua-accent hover:border-aqua-accent hover:bg-obsidian-highlight sm:w-auto"
+                className="landing-hero-cta landing-hero-cta-secondary motion-secondary glow-aqua"
               >
-                <Network className="h-4 w-4" /> Explore Story Graph
+                EXPLORE STORY GRAPH <ArrowRight />
               </a>
             </div>
             <div className="hero-capabilities mt-12 inline-flex flex-wrap items-center justify-center gap-6 rounded-2xl border border-obsidian-border bg-obsidian-card/80 px-6 py-3 font-mono text-xs text-muted-foreground shadow-lg sm:gap-10">
@@ -1164,16 +1170,10 @@ function GraphLegendItem({ kind }: { kind: DnaKind }) {
 }
 
 function Dashboard() {
+  const demo = useDemoMode();
   const navigate = useNavigate();
-  const [nodes, setNodes] = useState<CreatorDNANode[]>([]);
+  const { data: nodes = [], isLoading: dataLoading } = useStoryMapQuery();
   const [topic, setTopic] = useState("");
-  const [dataLoading, setDataLoading] = useState(true);
-  useEffect(() => {
-    void authenticatedFetch("/api/story-map")
-      .then((response) => (response.ok ? response.json() : { nodes: [] }))
-      .then((data: { nodes: CreatorDNANode[] }) => setNodes(data.nodes))
-      .finally(() => setDataLoading(false));
-  }, []);
   const kinds: DnaKind[] = [
     "story",
     "belief",
@@ -1342,10 +1342,17 @@ function Dashboard() {
           </div>
         </section>
       ) : null}
-      <Panel className="story-preview-panel telemetry-grid order-2 p-6 sm:p-8">
+      <Panel
+        className="story-preview-panel telemetry-grid order-2 p-6 sm:p-8"
+        data-demo-target="home-graph"
+      >
         <div className="flex items-center justify-between">
           <div>
-            <p className="eyebrow">Story Graph preview</p>
+            <p className="eyebrow">
+              {demo.active
+                ? "What Creator DNA remembers"
+                : "Story Graph preview"}
+            </p>
             <h2 className="mt-2 text-xl font-bold text-midnight">
               The context behind your content.
             </h2>
@@ -1366,6 +1373,16 @@ function Dashboard() {
             label="themes"
           />
         </div>
+        {demo.active ? (
+          <div className="mt-4 flex flex-wrap gap-x-5 gap-y-1 font-mono text-[0.6875rem] font-semibold text-primary">
+            <span>Each point is something Creator DNA remembers.</span>
+            <span>Lines show how those memories connect.</span>
+            <span>
+              These describe what Creator DNA remembers—not how good a creator
+              is.
+            </span>
+          </div>
+        ) : null}
         {dataLoading ? (
           <div className="telemetry-skeleton mt-5 h-[19rem] rounded-2xl border border-border" />
         ) : nodes.length ? (
@@ -1402,8 +1419,20 @@ function Dashboard() {
 }
 
 function MemoryStat({ value, label }: { value: number; label: string }) {
+  const descriptions: Record<string, string> = {
+    memories:
+      "Stories, beliefs, experiences, lessons, values, goals, and other context learned from your sources.",
+    connections: "Relationships Creator DNA has found between memories.",
+    beliefs: "Points of view supported by things you've actually said.",
+    themes: "Ideas that recur across your content.",
+  };
   return (
-    <div>
+    <div
+      tabIndex={0}
+      title={descriptions[label]}
+      aria-label={`${value} ${label}. ${descriptions[label]}`}
+      className="rounded-lg outline-none focus-visible:ring-2 focus-visible:ring-primary"
+    >
       <p className="display-title text-2xl text-midnight">{value}</p>
       <p className="text-xs font-semibold uppercase tracking-[0.1em] text-muted-foreground">
         {label}

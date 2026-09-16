@@ -13,6 +13,7 @@ import {
 import { saveResearchItems } from "./repository.server";
 import { interpretResearch } from "./reasoning.server";
 import type { ResearchWindow } from "./types";
+import type { TimingRecorder } from "@/lib/server-timing";
 
 export class ResearchContextError extends Error {}
 
@@ -30,15 +31,18 @@ const usefulTypes = new Set([
 export async function generateResearchPulse(
   userId: string,
   window: ResearchWindow,
+  onTiming?: TimingRecorder,
 ) {
   if (!isResearchProviderConfigured())
     throw new ResearchContextError("research_provider_required");
 
+  const contextStartedAt = performance.now();
   const [foundation, territories, allNodes] = await Promise.all([
     getFoundationForUser(userId),
     listBrandTerritories(userId),
     getDnaNodesForUser(userId),
   ]);
+  onTiming?.("context", performance.now() - contextStartedAt);
   const nodes = allNodes
     .filter((node) => usefulTypes.has(node.type))
     .sort((a, b) => (b.confidence ?? 0) - (a.confidence ?? 0))
@@ -63,7 +67,9 @@ export async function generateResearchPulse(
       summary: node.summary,
     })),
   });
+  const externalStartedAt = performance.now();
   const liveItems = await fetchLiveResearch(context, window);
+  onTiming?.("external_research", performance.now() - externalStartedAt);
   if (!liveItems.length)
     throw new ResearchContextError("no_cited_research_found");
 
@@ -72,22 +78,29 @@ export async function generateResearchPulse(
       searchCreatorDNA(`${item.headline}\n${item.summary}`, userId, {
         matchCount: 6,
         matchThreshold: 0.3,
+        ...(onTiming ? { onTiming } : {}),
       }).catch(() => []),
     ),
   );
+  const reasoningStartedAt = performance.now();
   const interpretations = await interpretResearch(
     liveItems,
     foundation,
     territories,
     candidates,
   );
+  onTiming?.("groq", performance.now() - reasoningStartedAt);
   const byIndex = new Map(interpretations.map((item) => [item.index, item]));
-  return saveResearchItems(
+  const databaseStartedAt = performance.now();
+  const result = await saveResearchItems(
     userId,
     window,
     liveItems.flatMap((item, index) => {
       const interpretation = byIndex.get(index);
       return interpretation ? [{ ...item, ...interpretation }] : [];
     }),
+    allNodes,
   );
+  onTiming?.("database", performance.now() - databaseStartedAt);
+  return result;
 }

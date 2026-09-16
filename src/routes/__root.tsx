@@ -17,6 +17,8 @@ import { ThemeProvider } from "@/components/ThemeProvider";
 import { AuthProvider, useAuthState } from "@/lib/auth-state";
 import { DataPulse } from "@/components/Motion";
 import { getInitialTheme } from "@/lib/theme-initial";
+import { DemoModeProvider } from "@/lib/demo-mode";
+import { DemoGuide } from "@/components/DemoGuide";
 
 function NotFoundComponent() {
   return (
@@ -139,7 +141,9 @@ function RootComponent() {
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
-        <RootContent />
+        <DemoModeProvider>
+          <RootContent />
+        </DemoModeProvider>
       </AuthProvider>
     </QueryClientProvider>
   );
@@ -149,7 +153,9 @@ function RootContent() {
   const { initialTheme } = Route.useLoaderData();
   const location = useLocation();
   const { status } = useAuthState();
-  const publicPath = ["/login", "/reset-password"].includes(location.pathname);
+  const publicPath = ["/login", "/reset-password", "/demo"].includes(
+    location.pathname,
+  );
   const landingPath = location.pathname === "/" && status === "unauthenticated";
   const authenticated = status === "authenticated";
 
@@ -189,6 +195,7 @@ export function AuthenticatedAppShell({ children }: { children: ReactNode }) {
           {children}
         </div>
       </main>
+      <DemoGuide />
     </div>
   );
 }

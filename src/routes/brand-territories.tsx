@@ -163,7 +163,11 @@ function BrandTerritoriesPage() {
         subtitle="Choose 3–7 areas you want your body of work to become known for."
       />
 
-      <Panel accent="var(--dna-belief)" className="p-6 sm:p-8">
+      <Panel
+        accent="var(--dna-belief)"
+        className="p-6 sm:p-8"
+        data-demo-target="brand-territories"
+      >
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
             <h2 className="text-xl font-bold text-midnight">

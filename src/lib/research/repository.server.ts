@@ -5,6 +5,7 @@ import { supabaseServer } from "@/lib/supabase/server";
 import type { Json } from "@/lib/supabase/types";
 import type { LiveResearchItem } from "./provider.server";
 import type { ResearchItem, ResearchSource, ResearchWindow } from "./types";
+import type { CreatorDNANode } from "@/lib/creator-dna/types";
 import { ResearchSourceSchema } from "./validation";
 
 type PersistableResearch = LiveResearchItem & {
@@ -37,7 +38,9 @@ export async function listResearchItems(
 ): Promise<ResearchItem[]> {
   const { data: rows, error } = await supabaseServer
     .from("research_items")
-    .select()
+    .select(
+      "id,headline,summary,published_at,category,source_data,query_context,created_at",
+    )
     .eq("user_id", userId)
     .order("created_at", { ascending: false })
     .limit(limit);
@@ -48,7 +51,7 @@ export async function listResearchItems(
   const [{ data: linkRows, error: linkError }, ownedNodes] = await Promise.all([
     supabaseServer
       .from("research_item_dna_links")
-      .select()
+      .select("research_item_id,dna_node_id,relevance_summary")
       .in("research_item_id", ids),
     getDnaNodesForUser(userId),
   ]);
@@ -116,17 +119,24 @@ export async function saveResearchItems(
   userId: string,
   window: ResearchWindow,
   items: PersistableResearch[],
+  ownedNodes?: CreatorDNANode[],
 ) {
-  const existing = await listResearchItems(userId, 30);
+  const { data: existing, error: existingError } = await supabaseServer
+    .from("research_items")
+    .select("headline,source_data")
+    .eq("user_id", userId)
+    .order("created_at", { ascending: false })
+    .limit(30);
+  if (existingError) throw new Error("Unable to load existing research keys.");
   const existingKeys = new Set(
     existing.map((item) =>
-      item.sources[0]?.url
-        ? `url:${normalizedUrl(item.sources[0].url)}`
+      sourcesFromJson(item.source_data)[0]?.url
+        ? `url:${normalizedUrl(sourcesFromJson(item.source_data)[0]!.url)}`
         : `headline:${item.headline.trim().toLowerCase()}`,
     ),
   );
   const ownedNodeIds = new Set(
-    (await getDnaNodesForUser(userId)).map((node) => node.id),
+    (ownedNodes ?? (await getDnaNodesForUser(userId))).map((node) => node.id),
   );
 
   for (const item of items) {

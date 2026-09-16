@@ -8,36 +8,47 @@ import { ResearchProviderError } from "@/lib/research/provider.server";
 import { ResearchPulseInputSchema } from "@/lib/research/validation";
 import {
   AuthenticationError,
+  demoMutationResponse,
   requireAuthenticatedUser,
 } from "@/lib/supabase/auth";
+import { ServerTimings } from "@/lib/server-timing";
 
 export const Route = createFileRoute("/api/research/pulse")({
   server: {
     handlers: {
       POST: async ({ request }) => {
+        const timings = new ServerTimings();
         try {
-          const user = await requireAuthenticatedUser(request);
+          const user = await timings.measure("auth", () =>
+            requireAuthenticatedUser(request),
+          );
+          const demoGuard = demoMutationResponse(user);
+          if (demoGuard) return demoGuard;
           const parsed = ResearchPulseInputSchema.safeParse(
             await request.json().catch(() => ({})),
           );
           if (!parsed.success)
-            return Response.json(
+            return timings.json(
               { error: "Choose a valid research window." },
               { status: 400 },
             );
-          return Response.json({
-            items: await generateResearchPulse(user.id, parsed.data.window),
+          return timings.json({
+            items: await generateResearchPulse(
+              user.id,
+              parsed.data.window,
+              timings.record,
+            ),
           });
         } catch (error) {
           if (error instanceof AuthenticationError)
-            return Response.json(
+            return timings.json(
               { error: "Authentication required." },
               { status: 401 },
             );
           if (error instanceof ResearchContextError) {
             const missingProvider =
               error.message === "research_provider_required";
-            return Response.json(
+            return timings.json(
               {
                 error: missingProvider
                   ? "Research Pulse requires a live research provider to surface current developments."
@@ -76,7 +87,7 @@ export const Route = createFileRoute("/api/research/pulse")({
             stage: "unexpected_error",
             errorName: error instanceof Error ? error.name : typeof error,
           });
-          return Response.json(
+          return timings.json(
             {
               error: "Research Pulse couldn't refresh right now.",
               code: "RESEARCH_INTERNAL_ERROR",

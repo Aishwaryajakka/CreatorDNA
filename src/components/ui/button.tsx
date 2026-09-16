@@ -11,19 +11,29 @@ const buttonVariants = cva(
       variant: {
         default:
           "bg-primary text-primary-foreground shadow hover:bg-primary/90",
+        primary:
+          "border border-chartreuse bg-chartreuse font-black uppercase tracking-wider text-[#050811] shadow-[0_8px_20px_-12px_rgb(232_243_26_/_0.72)] hover:bg-chartreuse hover:shadow-[0_10px_24px_-10px_rgb(232_243_26_/_0.78)]",
+        product:
+          "border border-primary bg-primary font-black uppercase tracking-wider text-primary-foreground shadow-[0_8px_20px_-12px_rgb(21_94_239_/_0.65)] hover:bg-[#2563ff]",
         destructive:
           "bg-destructive text-destructive-foreground shadow-sm hover:bg-destructive/90",
         outline:
           "border border-input bg-background shadow-sm hover:bg-accent hover:text-accent-foreground",
         secondary:
-          "bg-secondary text-secondary-foreground shadow-sm hover:bg-secondary/80",
-        ghost: "hover:bg-accent hover:text-accent-foreground",
+          "border border-aqua-accent bg-midnight font-black uppercase tracking-wider text-aqua-accent hover:bg-[color-mix(in_srgb,var(--midnight)_92%,var(--aqua-accent))]",
+        ghost:
+          "border border-transparent text-muted-foreground hover:border-border hover:bg-accent hover:text-foreground",
+        filter:
+          "border border-border bg-card font-mono text-xs font-bold uppercase tracking-wide text-muted-foreground shadow-none hover:border-aqua-accent hover:bg-aqua-accent/10 hover:text-midnight",
         link: "text-primary underline-offset-4 hover:underline",
       },
       size: {
         default: "h-9 px-4 py-2",
         sm: "h-8 px-3 text-xs",
+        md: "h-10 px-5 text-sm",
+        card: "h-9 px-4 text-xs",
         lg: "h-10 px-8",
+        xl: "h-10 px-5 text-sm",
         icon: "h-9 w-9",
       },
     },

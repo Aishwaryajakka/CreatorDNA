@@ -144,6 +144,7 @@ function FoundationPage() {
       <Panel
         className="foundation-workspace overflow-hidden"
         accent={tab.color}
+        data-demo-target="foundation"
       >
         <div
           role="tablist"

@@ -12,8 +12,18 @@ import type {
   TargetPlatform,
 } from "../types";
 import { analyzeContentIdea } from "./analyze-idea";
-import { CreatorDNAProviderError, getGroqClient, getGroqModel } from "./llm";
+import {
+  CreatorDNAProviderError,
+  getGroqClient,
+  getGroqModel,
+  isProviderRateLimitError,
+} from "./llm";
 import { searchCreatorDNA } from "./search-dna";
+import {
+  cacheTrustedPlanContext,
+  getTrustedPlanContext,
+} from "./plan-context-cache";
+import type { TimingRecorder } from "@/lib/server-timing";
 
 const ModelResultSchema = z.object({
   title: z.string().trim().min(1),
@@ -65,32 +75,63 @@ export async function reshapeContentDirection(
     reshapeMode: ReshapeMode;
   },
   userId: string,
+  onTiming?: TimingRecorder,
 ): Promise<ReshapeResult> {
-  const [retrievedDNA, creatorFoundation, intendedBrandTerritories] =
-    await Promise.all([
-      searchCreatorDNA(input.idea, userId),
-      getFoundationForUser(userId),
-      listBrandTerritories(userId),
-    ]);
-  const intelligence = await analyzeContentIdea(
+  const cacheStartedAt = performance.now();
+  let trustedContext = getTrustedPlanContext(
+    userId,
     input.idea,
-    retrievedDNA,
     input.targetPlatform,
-    {
-      intendedBrandTerritories,
-      ...(creatorFoundation
-        ? {
-            creatorFoundation: {
-              whatYouDo: creatorFoundation.whatYouDo,
-              mainTopics: creatorFoundation.mainTopics,
-              expertise: creatorFoundation.expertise,
-              beliefs: creatorFoundation.beliefs,
-              goals: creatorFoundation.goals,
-            },
-          }
-        : {}),
-    },
   );
+  onTiming?.("plan_cache", performance.now() - cacheStartedAt);
+  if (!trustedContext) {
+    const [retrievedDNA, creatorFoundation, intendedBrandTerritories] =
+      await Promise.all([
+        searchCreatorDNA(input.idea, userId, {
+          ...(onTiming ? { onTiming } : {}),
+        }),
+        measure("foundation", () => getFoundationForUser(userId), onTiming),
+        measure("territories", () => listBrandTerritories(userId), onTiming),
+      ]);
+    const intelligence = await analyzeContentIdea(
+      input.idea,
+      retrievedDNA,
+      input.targetPlatform,
+      {
+        intendedBrandTerritories,
+        ...(creatorFoundation
+          ? {
+              creatorFoundation: {
+                whatYouDo: creatorFoundation.whatYouDo,
+                mainTopics: creatorFoundation.mainTopics,
+                expertise: creatorFoundation.expertise,
+                beliefs: creatorFoundation.beliefs,
+                goals: creatorFoundation.goals,
+              },
+            }
+          : {}),
+      },
+      onTiming,
+    );
+    trustedContext = {
+      retrievedDNA,
+      creatorFoundation,
+      intendedBrandTerritories,
+      intelligence,
+    };
+    cacheTrustedPlanContext(
+      userId,
+      input.idea,
+      input.targetPlatform,
+      trustedContext,
+    );
+  }
+  const {
+    retrievedDNA,
+    creatorFoundation,
+    intendedBrandTerritories,
+    intelligence,
+  } = trustedContext;
   const selectedDirection =
     intelligence.threeAuthenticAngles[input.directionIndex];
   if (!selectedDirection)
@@ -189,6 +230,7 @@ export async function reshapeContentDirection(
   let completion;
   let lastError: unknown;
   for (let attempt = 0; attempt < 2 && !completion; attempt += 1) {
+    const groqStartedAt = performance.now();
     try {
       completion = await getGroqClient().chat.completions.create({
         ...params,
@@ -207,6 +249,9 @@ export async function reshapeContentDirection(
       });
     } catch (error) {
       lastError = error;
+      if (isProviderRateLimitError(error)) break;
+    } finally {
+      onTiming?.("groq_reshape", performance.now() - groqStartedAt);
     }
   }
   if (!completion) {
@@ -224,6 +269,7 @@ export async function reshapeContentDirection(
       cause: error,
     });
   }
+  const validationStartedAt = performance.now();
   const parsed = ModelResultSchema.safeParse(decoded);
   if (!parsed.success)
     throw new CreatorDNAProviderError("Direction reshape was invalid.");
@@ -254,7 +300,7 @@ export async function reshapeContentDirection(
     ];
   });
 
-  return {
+  const result = {
     title: parsed.data.title,
     angle: parsed.data.angle,
     platformPrep: {
@@ -271,4 +317,19 @@ export async function reshapeContentDirection(
     },
     groundedIn,
   };
+  onTiming?.("validation", performance.now() - validationStartedAt);
+  return result;
+}
+
+async function measure<T>(
+  name: string,
+  operation: () => Promise<T>,
+  onTiming?: TimingRecorder,
+) {
+  const startedAt = performance.now();
+  try {
+    return await operation();
+  } finally {
+    onTiming?.(name, performance.now() - startedAt);
+  }
 }

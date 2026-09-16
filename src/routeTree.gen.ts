@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AddContentRouteImport } from './routes/add-content'
 import { Route as BrandTerritoriesRouteImport } from './routes/brand-territories'
+import { Route as DemoRouteImport } from './routes/demo'
 import { Route as FoundationRouteImport } from './routes/foundation'
 import { Route as ImportRouteImport } from './routes/import'
 import { Route as ImportYoutubeRouteImport } from './routes/import-youtube'
@@ -35,6 +36,7 @@ import { Route as ApiProfileRouteImport } from './routes/api/profile'
 import { Route as ApiResearchRouteImport } from './routes/api/research'
 import { Route as ApiReshapeContentRouteImport } from './routes/api/reshape-content'
 import { Route as ApiStoryMapRouteImport } from './routes/api/story-map'
+import { Route as ApiAuthDemoRouteImport } from './routes/api/auth/demo'
 import { Route as ApiAuthUsernameLoginRouteImport } from './routes/api/auth/username-login'
 import { Route as ApiDevExtractTestRouteImport } from './routes/api/dev/extract-test'
 import { Route as ApiDevSaveContentTestRouteImport } from './routes/api/dev/save-content-test'
@@ -70,6 +72,11 @@ const AddContentRoute = AddContentRouteImport.update({
 const BrandTerritoriesRoute = BrandTerritoriesRouteImport.update({
   id: '/brand-territories',
   path: '/brand-territories',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DemoRoute = DemoRouteImport.update({
+  id: '/demo',
+  path: '/demo',
   getParentRoute: () => rootRouteImport,
 } as any)
 const FoundationRoute = FoundationRouteImport.update({
@@ -187,6 +194,11 @@ const ApiStoryMapRoute = ApiStoryMapRouteImport.update({
   path: '/api/story-map',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiAuthDemoRoute = ApiAuthDemoRouteImport.update({
+  id: '/api/auth/demo',
+  path: '/api/auth/demo',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiAuthUsernameLoginRoute = ApiAuthUsernameLoginRouteImport.update({
   id: '/api/auth/username-login',
   path: '/api/auth/username-login',
@@ -302,6 +314,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/add-content': typeof AddContentRoute
   '/brand-territories': typeof BrandTerritoriesRoute
+  '/demo': typeof DemoRoute
   '/foundation': typeof FoundationRoute
   '/import': typeof ImportRoute
   '/import-youtube': typeof ImportYoutubeRoute
@@ -325,6 +338,7 @@ export interface FileRoutesByFullPath {
   '/api/research': typeof ApiResearchRouteWithChildren
   '/api/reshape-content': typeof ApiReshapeContentRoute
   '/api/story-map': typeof ApiStoryMapRoute
+  '/api/auth/demo': typeof ApiAuthDemoRoute
   '/api/auth/username-login': typeof ApiAuthUsernameLoginRoute
   '/api/dev/extract-test': typeof ApiDevExtractTestRoute
   '/api/dev/save-content-test': typeof ApiDevSaveContentTestRoute
@@ -351,6 +365,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/add-content': typeof AddContentRoute
   '/brand-territories': typeof BrandTerritoriesRoute
+  '/demo': typeof DemoRoute
   '/foundation': typeof FoundationRoute
   '/import': typeof ImportRoute
   '/import-youtube': typeof ImportYoutubeRoute
@@ -374,6 +389,7 @@ export interface FileRoutesByTo {
   '/api/research': typeof ApiResearchRouteWithChildren
   '/api/reshape-content': typeof ApiReshapeContentRoute
   '/api/story-map': typeof ApiStoryMapRoute
+  '/api/auth/demo': typeof ApiAuthDemoRoute
   '/api/auth/username-login': typeof ApiAuthUsernameLoginRoute
   '/api/dev/extract-test': typeof ApiDevExtractTestRoute
   '/api/dev/save-content-test': typeof ApiDevSaveContentTestRoute
@@ -401,6 +417,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/add-content': typeof AddContentRoute
   '/brand-territories': typeof BrandTerritoriesRoute
+  '/demo': typeof DemoRoute
   '/foundation': typeof FoundationRoute
   '/import': typeof ImportRoute
   '/import-youtube': typeof ImportYoutubeRoute
@@ -424,6 +441,7 @@ export interface FileRoutesById {
   '/api/research': typeof ApiResearchRouteWithChildren
   '/api/reshape-content': typeof ApiReshapeContentRoute
   '/api/story-map': typeof ApiStoryMapRoute
+  '/api/auth/demo': typeof ApiAuthDemoRoute
   '/api/auth/username-login': typeof ApiAuthUsernameLoginRoute
   '/api/dev/extract-test': typeof ApiDevExtractTestRoute
   '/api/dev/save-content-test': typeof ApiDevSaveContentTestRoute
@@ -452,6 +470,7 @@ export interface FileRouteTypes {
     | '/'
     | '/add-content'
     | '/brand-territories'
+    | '/demo'
     | '/foundation'
     | '/import'
     | '/import-youtube'
@@ -475,6 +494,7 @@ export interface FileRouteTypes {
     | '/api/research'
     | '/api/reshape-content'
     | '/api/story-map'
+    | '/api/auth/demo'
     | '/api/auth/username-login'
     | '/api/dev/extract-test'
     | '/api/dev/save-content-test'
@@ -501,6 +521,7 @@ export interface FileRouteTypes {
     | '/'
     | '/add-content'
     | '/brand-territories'
+    | '/demo'
     | '/foundation'
     | '/import'
     | '/import-youtube'
@@ -524,6 +545,7 @@ export interface FileRouteTypes {
     | '/api/research'
     | '/api/reshape-content'
     | '/api/story-map'
+    | '/api/auth/demo'
     | '/api/auth/username-login'
     | '/api/dev/extract-test'
     | '/api/dev/save-content-test'
@@ -550,6 +572,7 @@ export interface FileRouteTypes {
     | '/'
     | '/add-content'
     | '/brand-territories'
+    | '/demo'
     | '/foundation'
     | '/import'
     | '/import-youtube'
@@ -573,6 +596,7 @@ export interface FileRouteTypes {
     | '/api/research'
     | '/api/reshape-content'
     | '/api/story-map'
+    | '/api/auth/demo'
     | '/api/auth/username-login'
     | '/api/dev/extract-test'
     | '/api/dev/save-content-test'
@@ -600,6 +624,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AddContentRoute: typeof AddContentRoute
   BrandTerritoriesRoute: typeof BrandTerritoriesRoute
+  DemoRoute: typeof DemoRoute
   FoundationRoute: typeof FoundationRoute
   ImportRoute: typeof ImportRoute
   ImportYoutubeRoute: typeof ImportYoutubeRoute
@@ -623,6 +648,7 @@ export interface RootRouteChildren {
   ApiResearchRoute: typeof ApiResearchRouteWithChildren
   ApiReshapeContentRoute: typeof ApiReshapeContentRoute
   ApiStoryMapRoute: typeof ApiStoryMapRoute
+  ApiAuthDemoRoute: typeof ApiAuthDemoRoute
   ApiAuthUsernameLoginRoute: typeof ApiAuthUsernameLoginRoute
   ApiDevExtractTestRoute: typeof ApiDevExtractTestRoute
   ApiDevSaveContentTestRoute: typeof ApiDevSaveContentTestRoute
@@ -658,6 +684,13 @@ declare module '@tanstack/react-router' {
       path: '/brand-territories'
       fullPath: '/brand-territories'
       preLoaderRoute: typeof BrandTerritoriesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/demo': {
+      id: '/demo'
+      path: '/demo'
+      fullPath: '/demo'
+      preLoaderRoute: typeof DemoRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/foundation': {
@@ -819,6 +852,13 @@ declare module '@tanstack/react-router' {
       path: '/api/story-map'
       fullPath: '/api/story-map'
       preLoaderRoute: typeof ApiStoryMapRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/auth/demo': {
+      id: '/api/auth/demo'
+      path: '/api/auth/demo'
+      fullPath: '/api/auth/demo'
+      preLoaderRoute: typeof ApiAuthDemoRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/auth/username-login': {
@@ -1034,6 +1074,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AddContentRoute: AddContentRoute,
   BrandTerritoriesRoute: BrandTerritoriesRoute,
+  DemoRoute: DemoRoute,
   FoundationRoute: FoundationRoute,
   ImportRoute: ImportRoute,
   ImportYoutubeRoute: ImportYoutubeRoute,
@@ -1057,6 +1098,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiResearchRoute: ApiResearchRouteWithChildren,
   ApiReshapeContentRoute: ApiReshapeContentRoute,
   ApiStoryMapRoute: ApiStoryMapRoute,
+  ApiAuthDemoRoute: ApiAuthDemoRoute,
   ApiAuthUsernameLoginRoute: ApiAuthUsernameLoginRoute,
   ApiDevExtractTestRoute: ApiDevExtractTestRoute,
   ApiDevSaveContentTestRoute: ApiDevSaveContentTestRoute,

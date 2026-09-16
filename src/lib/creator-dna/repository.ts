@@ -273,14 +273,14 @@ export async function getDnaNodesForUser(
   const { data, error } = await supabaseServer
     .from("dna_nodes")
     .select(
-      "id,content_id,type,label,summary,evidence_quote,confidence,source_title,source_date,embedding,created_at",
+      "id,content_id,type,label,summary,evidence_quote,confidence,source_title,source_date,created_at",
     )
     .in("content_id", contentIds)
     .order("created_at", { ascending: true });
   if (error)
     throw new Error(`Failed to fetch Story Map nodes: ${error.message}`);
   return data.map((row) => {
-    const node = toDnaNode(row);
+    const node = toDnaNode({ ...row, embedding: null });
     const source = row.content_id
       ? sourcesByContentId.get(row.content_id)
       : undefined;

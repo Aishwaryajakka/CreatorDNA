@@ -11,6 +11,19 @@ export class CreatorDNAProviderError extends Error {
   }
 }
 
+export function providerStatus(error: unknown): number | null {
+  const candidate =
+    error instanceof CreatorDNAProviderError ? error.cause : error;
+  if (!candidate || typeof candidate !== "object" || !("status" in candidate))
+    return null;
+  const status = Number(candidate.status);
+  return Number.isFinite(status) ? status : null;
+}
+
+export function isProviderRateLimitError(error: unknown) {
+  return providerStatus(error) === 429;
+}
+
 let groqClient: Groq | undefined;
 
 export function getGroqClient(): Groq {

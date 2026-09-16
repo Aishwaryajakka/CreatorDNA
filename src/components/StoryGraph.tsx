@@ -52,6 +52,7 @@ type Props = {
   compact?: boolean;
   zoom?: number;
   onResize?: (size: { width: number; height: number }) => void;
+  guideFirstNode?: boolean;
 };
 
 export function StoryGraph({
@@ -62,6 +63,7 @@ export function StoryGraph({
   className = "",
   zoom = 1,
   onResize,
+  guideFirstNode = false,
 }: Props) {
   const gid = useId().replace(/:/g, "");
   const graphRef = useRef<HTMLDivElement>(null);
@@ -196,6 +198,10 @@ export function StoryGraph({
           const interactive = !!onSelect;
           const Tag = interactive ? "button" : "div";
           const connected = degree.get(node.id) ?? 0;
+          const guided =
+            guideFirstNode &&
+            !isMe &&
+            node.id === nodes.find((candidate) => candidate.kind !== "me")?.id;
           const size = isMe
             ? 64
             : connected >= 3
@@ -206,6 +212,8 @@ export function StoryGraph({
           return (
             <Tag
               key={node.id}
+              data-story-graph-node
+              data-demo-target={guided ? "story-node" : undefined}
               {...(interactive
                 ? {
                     type: "button" as const,

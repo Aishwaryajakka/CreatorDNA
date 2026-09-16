@@ -11,6 +11,19 @@ export class AuthenticationError extends Error {
   }
 }
 
+const demoEmails = new Set([
+  "jordan.creator@example.com",
+  "maya.creator@example.com",
+]);
+
+export function demoMutationResponse(user: User): Response | null {
+  if (!user.email || !demoEmails.has(user.email.toLowerCase())) return null;
+  return Response.json(
+    { error: "This action is disabled in Demo Mode to protect shared data." },
+    { status: 403 },
+  );
+}
+
 export async function getAuthenticatedUser(
   request: Request,
 ): Promise<User | null> {

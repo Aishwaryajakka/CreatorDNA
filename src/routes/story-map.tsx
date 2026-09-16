@@ -29,10 +29,11 @@ import {
   type GraphNode,
 } from "@/lib/creator-dna";
 import type { CreatorDNANode } from "@/lib/creator-dna/types";
-import { authenticatedFetch } from "@/lib/supabase/client";
+import { useDemoMode } from "@/lib/demo-mode";
 import { DataPulse, NodeConstellation } from "@/components/Motion";
 import { DnaTypeIcon } from "@/components/DnaTypeIcon";
 import { getDnaBorderColor, getDnaIconForeground } from "@/lib/dna-iconography";
+import { useStoryMapQuery } from "@/lib/queries/story-map";
 
 export const Route = createFileRoute("/story-map")({
   validateSearch: z.object({
@@ -69,12 +70,16 @@ function storyMapSearchRank(node: CreatorDNANode, needle: string) {
 }
 
 function StoryMapPage() {
+  const demo = useDemoMode();
   const search = Route.useSearch();
-  const [rawNodes, setRawNodes] = useState<CreatorDNANode[]>([]);
+  const {
+    data: rawNodes = [],
+    isLoading: loading,
+    error: storyMapError,
+  } = useStoryMapQuery();
   const [selected, setSelected] = useState<CreatorDNANode | null>(null);
   const [filter, setFilter] = useState<DnaKind | "all">("all");
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
+  const error = storyMapError instanceof Error ? storyMapError.message : "";
   const [zoom, setZoom] = useState(1);
   const [query, setQuery] = useState("");
   const [searchOpen, setSearchOpen] = useState(false);
@@ -113,23 +118,6 @@ function StoryMapPage() {
       window.removeEventListener("keydown", onKeyDown);
     };
   }, [expanded]);
-  useEffect(() => {
-    void authenticatedFetch("/api/story-map")
-      .then(async (r) => {
-        const data = await r.json();
-        if (!r.ok) throw new Error(data.error);
-        if (!Array.isArray(data.nodes)) {
-          throw new Error("Unable to load your Story Map.");
-        }
-        setRawNodes(data.nodes as CreatorDNANode[]);
-      })
-      .catch((e: unknown) =>
-        setError(
-          e instanceof Error ? e.message : "Unable to load your Story Map.",
-        ),
-      )
-      .finally(() => setLoading(false));
-  }, []);
   useEffect(() => {
     if (!rawNodes.length) return;
     if (search.node) {
@@ -269,7 +257,7 @@ function StoryMapPage() {
       </Panel>
     );
   return (
-    <div className="space-y-4">
+    <div className="space-y-4" data-demo-target="story-map">
       <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_minmax(30rem,38rem)] xl:items-start">
         <PageHeader
           title="Your Story Map"
@@ -547,8 +535,15 @@ function StoryMapPage() {
                       nodes={graphNodes}
                       edges={edges}
                       selectedId={selected?.id ?? null}
-                      onSelect={(n) =>
-                        setSelected(rawNodes.find((x) => x.id === n.id) ?? null)
+                      onSelect={(n) => {
+                        setSelected(
+                          rawNodes.find((x) => x.id === n.id) ?? null,
+                        );
+                        if (demo.active && demo.step === 1)
+                          demo.markNodeOpened();
+                      }}
+                      guideFirstNode={
+                        demo.active && demo.step === 1 && !demo.nodeOpened
                       }
                       className="h-full min-h-0"
                       compact
@@ -571,11 +566,16 @@ function StoryMapPage() {
                   </div>
                 )}
                 <div className="story-map-status flex h-12 shrink-0 items-center justify-center gap-3 border-t border-border bg-card px-4 text-xs text-muted-foreground sm:gap-5">
-                  <span className="font-semibold text-primary">
+                  <span
+                    className="font-semibold text-primary"
+                    title="A DNA node is a memory Creator DNA extracted from source content or Creator Foundation."
+                  >
                     {visible.length} nodes
                   </span>
                   <span aria-hidden="true">•</span>
-                  <span>{edges.length} connections</span>
+                  <span title="A connection is a meaningful relationship between two memories.">
+                    {edges.length} connections
+                  </span>
                   <span className="hidden h-5 w-px bg-border sm:block" />
                   <span className="hidden sm:inline">
                     Your ideas are connected.
@@ -767,6 +767,7 @@ function Detail({
   return (
     <Panel
       accent={KIND_META[node.type].color}
+      data-demo-target="evidence"
       className={`story-detail-panel ${transitionClass} fixed inset-x-4 bottom-4 z-40 max-h-[70dvh] overflow-y-auto p-6 xl:static xl:h-[var(--story-workspace-height)] xl:max-h-none`}
     >
       <div className="flex items-start justify-between">
@@ -809,7 +810,12 @@ function Detail({
         </div>
         {node.confidence != null && (
           <div>
-            <dt className="eyebrow">Confidence</dt>
+            <dt
+              className="eyebrow"
+              title="How confident the extraction system is that this memory is supported by its source."
+            >
+              Confidence ⓘ
+            </dt>
             <dd className="mt-1 text-midnight">
               {Math.round(node.confidence * 100)}%
             </dd>

@@ -3,6 +3,7 @@ import { z } from "zod";
 import {
   requireAuthenticatedUser,
   AuthenticationError,
+  demoMutationResponse,
 } from "@/lib/supabase/auth";
 import { importYouTubeVideos } from "@/lib/youtube/server/import";
 
@@ -22,6 +23,8 @@ export const Route = createFileRoute("/api/youtube/import")({
       POST: async ({ request }) => {
         try {
           const user = await requireAuthenticatedUser(request);
+          const demoGuard = demoMutationResponse(user);
+          if (demoGuard) return demoGuard;
           const parsed = requestSchema.safeParse(await request.json());
           if (!parsed.success)
             return Response.json(

@@ -1,4 +1,5 @@
 import { createClient } from "@supabase/supabase-js";
+import { isDemoSession } from "@/lib/demo-session";
 
 function requiredEnv(
   name: "VITE_SUPABASE_URL" | "VITE_SUPABASE_PUBLISHABLE_KEY",
@@ -16,8 +17,10 @@ export const supabase = createClient(
 );
 
 const authenticatedRequestControllers = new Set<AbortController>();
+let authenticatedRequestGeneration = 0;
 
 export function cancelAuthenticatedRequests() {
+  authenticatedRequestGeneration += 1;
   for (const controller of authenticatedRequestControllers) controller.abort();
   authenticatedRequestControllers.clear();
 }
@@ -31,8 +34,33 @@ export async function authenticatedFetch(
   input: RequestInfo | URL,
   init: RequestInit = {},
 ): Promise<Response> {
+  const requestGeneration = authenticatedRequestGeneration;
+  const method = init.method?.toUpperCase() ?? "GET";
+  const path =
+    typeof input === "string"
+      ? input
+      : input instanceof URL
+        ? input.pathname
+        : new URL(input.url).pathname;
+  const demoWriteAllowed = [
+    "/api/plan-content",
+    "/api/reshape-content",
+    "/api/auth/demo",
+  ].includes(path);
+  if (
+    isDemoSession() &&
+    !["GET", "HEAD"].includes(method) &&
+    !demoWriteAllowed
+  ) {
+    return new Response(
+      JSON.stringify({
+        error: "This action is disabled in Demo Mode to protect shared data.",
+      }),
+      { status: 403, headers: { "Content-Type": "application/json" } },
+    );
+  }
   const token = await getAccessToken();
-  if (!token) {
+  if (!token || requestGeneration !== authenticatedRequestGeneration) {
     return new Response(JSON.stringify({ error: "Unauthorized" }), {
       status: 401,
       headers: { "Content-Type": "application/json" },

@@ -3,6 +3,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { deleteSocialConnection } from "@/lib/oauth/repository.server";
 import {
   AuthenticationError,
+  demoMutationResponse,
   requireAuthenticatedUser,
 } from "@/lib/supabase/auth";
 
@@ -12,6 +13,8 @@ export const Route = createFileRoute("/api/integrations/linkedin")({
       DELETE: async ({ request }) => {
         try {
           const user = await requireAuthenticatedUser(request);
+          const demoGuard = demoMutationResponse(user);
+          if (demoGuard) return demoGuard;
           await deleteSocialConnection(user.id, "linkedin");
           return Response.json({ ok: true });
         } catch (error) {

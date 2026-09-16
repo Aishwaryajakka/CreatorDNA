@@ -3,7 +3,12 @@ import { ZodError } from "zod";
 
 import { getBrandTerritories } from "@/lib/creator-dna/server/get-brand-territories";
 import { saveBrandTerritories } from "@/lib/creator-dna/server/save-brand-territories";
-import { AuthenticationError } from "@/lib/supabase/auth";
+import {
+  AuthenticationError,
+  demoMutationResponse,
+  requireAuthenticatedUser,
+} from "@/lib/supabase/auth";
+import { clearTrustedPlanContextsForUser } from "@/lib/creator-dna/server/plan-context-cache";
 
 function errorResponse(error: unknown) {
   if (error instanceof AuthenticationError)
@@ -36,6 +41,9 @@ export const Route = createFileRoute("/api/brand-territories")({
       },
       PUT: async ({ request }) => {
         try {
+          const user = await requireAuthenticatedUser(request);
+          const demoGuard = demoMutationResponse(user);
+          if (demoGuard) return demoGuard;
           let input: unknown;
           try {
             input = await request.json();
@@ -45,9 +53,9 @@ export const Route = createFileRoute("/api/brand-territories")({
               { status: 400 },
             );
           }
-          return Response.json({
-            territories: await saveBrandTerritories(request, input),
-          });
+          const territories = await saveBrandTerritories(request, input);
+          clearTrustedPlanContextsForUser(user.id);
+          return Response.json({ territories });
         } catch (error) {
           return errorResponse(error);
         }

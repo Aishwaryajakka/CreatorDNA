@@ -4,8 +4,10 @@ import { ZodError } from "zod";
 import { saveCreatorContentAndDNA } from "@/lib/creator-dna/server/save-content";
 import {
   AuthenticationError,
+  demoMutationResponse,
   requireAuthenticatedUser,
 } from "@/lib/supabase/auth";
+import { clearTrustedPlanContextsForUser } from "@/lib/creator-dna/server/plan-context-cache";
 
 export const Route = createFileRoute("/api/content")({
   server: {
@@ -23,6 +25,8 @@ export const Route = createFileRoute("/api/content")({
 
         try {
           const user = await requireAuthenticatedUser(request);
+          const demoGuard = demoMutationResponse(user);
+          if (demoGuard) return demoGuard;
           const result = await saveCreatorContentAndDNA(
             body as {
               title: string;
@@ -32,6 +36,7 @@ export const Route = createFileRoute("/api/content")({
             },
             user.id,
           );
+          clearTrustedPlanContextsForUser(user.id);
           return Response.json({
             contentItem: {
               id: result.contentItem.id,

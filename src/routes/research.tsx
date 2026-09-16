@@ -1,14 +1,18 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { ArrowRight, ExternalLink, RefreshCw } from "lucide-react";
+import { ArrowRight, RefreshCw } from "lucide-react";
 
-import { KindBadge, PageHeader, Panel } from "@/components/dna-ui";
+import { KindBadge, PageHeader, Panel, SourceLink } from "@/components/dna-ui";
+import { Button, buttonVariants } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 import type { ResearchItem, ResearchWindow } from "@/lib/research/types";
 import { authenticatedFetch } from "@/lib/supabase/client";
+import { useDemoMode } from "@/lib/demo-mode";
 
 export const Route = createFileRoute("/research")({ component: ResearchPage });
 
 function ResearchPage() {
+  const demo = useDemoMode();
   const [items, setItems] = useState<ResearchItem[]>([]);
   const [window, setWindow] = useState<ResearchWindow>("7d");
   const [providerConfigured, setProviderConfigured] = useState(true);
@@ -17,6 +21,7 @@ function ResearchPage() {
   const [message, setMessage] = useState("");
   const [contextInsufficient, setContextInsufficient] = useState(false);
   const autoRefreshed = useRef(false);
+  const demoActiveAtMount = useRef(demo.active);
 
   const refresh = useCallback(async (selectedWindow: ResearchWindow) => {
     setRefreshing(true);
@@ -68,7 +73,12 @@ function ResearchPage() {
         const configured = body.providerConfigured === true;
         setItems(saved);
         setProviderConfigured(configured);
-        if (!saved.length && configured && !autoRefreshed.current) {
+        if (
+          !saved.length &&
+          configured &&
+          !demoActiveAtMount.current &&
+          !autoRefreshed.current
+        ) {
           autoRefreshed.current = true;
           void refresh("7d");
         }
@@ -87,37 +97,64 @@ function ResearchPage() {
     };
   }, [refresh]);
 
+  useEffect(() => {
+    if (demo.active && !demo.researchReady && !loading && items.length)
+      demo.markResearchReady();
+  }, [demo, items.length, loading]);
+
   return (
-    <div className="space-y-8">
+    <div className="space-y-8" data-demo-target="research-pulse">
       <PageHeader
         eyebrow="Research Pulse"
         title="What's happening around your story?"
         subtitle="Current developments connected to the ideas, beliefs, and territories already shaping your Creator DNA."
       />
+      {demo.active ? (
+        <Panel
+          accent="var(--aqua-accent)"
+          className="p-5 text-sm leading-relaxed text-muted-foreground"
+        >
+          <strong className="text-midnight">Creator DNA</strong> is personal
+          evidence from your history.{" "}
+          <strong className="text-midnight">Research</strong> is cited external
+          evidence about what matters now. The two stay distinct.
+        </Panel>
+      ) : null}
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="inline-flex rounded-xl border border-border bg-card p-1">
           {(["24h", "7d"] as const).map((value) => (
-            <button
+            <Button
               key={value}
               type="button"
               onClick={() => setWindow(value)}
-              className={`rounded-lg px-4 py-2 text-sm font-semibold ${window === value ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-muted"}`}
+              variant="filter"
+              size="sm"
+              className={cn(
+                window === value &&
+                  "border-aqua-accent bg-aqua-accent/10 text-midnight",
+              )}
             >
               {value === "24h" ? "24 hours" : "7 days"}
-            </button>
+            </Button>
           ))}
         </div>
-        <button
+        <Button
           type="button"
-          disabled={refreshing || !providerConfigured}
+          disabled={refreshing || !providerConfigured || demo.active}
+          title={
+            demo.active
+              ? "Refresh is disabled to keep the shared demo data unchanged."
+              : undefined
+          }
           onClick={() => void refresh(window)}
-          className="motion-cta inline-flex items-center gap-2 rounded-xl bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground disabled:opacity-50"
+          variant="product"
+          size="md"
         >
           <RefreshCw
             className={`h-4 w-4 ${refreshing ? "animate-spin" : ""}`}
           />
           Refresh Research Pulse
-        </button>
+        </Button>
       </div>
 
       {!providerConfigured ? (
@@ -142,8 +179,8 @@ function ResearchPage() {
         <p className="text-sm text-muted-foreground">Loading saved research…</p>
       ) : items.length ? (
         <div className="space-y-6">
-          {items.map((item) => (
-            <ResearchCard key={item.id} item={item} />
+          {items.map((item, index) => (
+            <ResearchCard key={item.id} item={item} featured={index === 0} />
           ))}
         </div>
       ) : !refreshing && providerConfigured && contextInsufficient ? (
@@ -181,9 +218,19 @@ function ResearchPage() {
   );
 }
 
-function ResearchCard({ item }: { item: ResearchItem }) {
+function ResearchCard({
+  item,
+  featured,
+}: {
+  item: ResearchItem;
+  featured: boolean;
+}) {
   return (
-    <Panel accent="var(--aqua-accent)" className="p-6 sm:p-8">
+    <Panel
+      accent="var(--aqua-accent)"
+      className="p-6 sm:p-8"
+      data-demo-target={featured ? "research-result" : undefined}
+    >
       <p className="eyebrow">Source / what happened</p>
       <h2 className="mt-2 text-2xl font-bold text-midnight">{item.headline}</h2>
       <p className="mt-3 max-w-3xl text-sm leading-relaxed text-muted-foreground">
@@ -195,22 +242,22 @@ function ResearchCard({ item }: { item: ResearchItem }) {
         ) : null}
         {item.category ? <span>· {item.category}</span> : null}
       </div>
-      <div className="mt-5 flex flex-wrap gap-2">
-        {item.sources.map((source) => (
-          <a
-            key={source.url}
-            href={source.url}
-            target="_blank"
-            rel="noreferrer"
-            className="inline-flex items-center gap-1 rounded-full border border-border px-3 py-1.5 text-xs font-semibold text-primary hover:bg-muted"
-          >
-            {source.publisher} <ExternalLink className="h-3 w-3" />
-          </a>
-        ))}
+      <div
+        className="research-source-area mt-5 rounded-xl border border-border bg-muted/50 p-4"
+        data-demo-target={featured ? "research-source" : undefined}
+      >
+        <p className="eyebrow mb-3">Sources</p>
+        <div className="flex flex-wrap gap-2">
+          {item.sources.map((source, index) => (
+            <SourceLink key={source.url} href={source.url}>
+              {source.publisher || `Source ${index + 1}`}
+            </SourceLink>
+          ))}
+        </div>
       </div>
-      <div className="mt-7 border-t border-border pt-6">
-        <p className="eyebrow">Why this matters to you</p>
-        <p className="mt-2 text-sm leading-relaxed text-midnight">
+      <div className="mt-7 rounded-xl border-l-4 border-aqua-accent bg-muted/60 p-5">
+        <p className="eyebrow text-primary">Why this matters to your story</p>
+        <p className="mt-2 max-w-3xl text-sm leading-relaxed text-midnight">
           {item.whyItMatters}
         </p>
         {item.matchedTerritory ? (
@@ -248,9 +295,12 @@ function ResearchCard({ item }: { item: ResearchItem }) {
       <Link
         to="/plan"
         search={{ research: item.id }}
-        className="motion-cta mt-6 inline-flex items-center gap-2 rounded-xl bg-chartreuse px-5 py-3 text-sm font-bold text-[#050811]"
+        className={cn(
+          buttonVariants({ variant: "primary", size: "md" }),
+          "mt-6",
+        )}
       >
-        Plan around this <ArrowRight className="h-4 w-4" />
+        PLAN AROUND THIS <ArrowRight />
       </Link>
     </Panel>
   );

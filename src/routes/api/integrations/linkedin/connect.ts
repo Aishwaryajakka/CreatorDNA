@@ -8,6 +8,7 @@ import {
 import { createOAuthState } from "@/lib/oauth/state.server";
 import {
   AuthenticationError,
+  demoMutationResponse,
   requireAuthenticatedUser,
 } from "@/lib/supabase/auth";
 
@@ -17,6 +18,8 @@ export const Route = createFileRoute("/api/integrations/linkedin/connect")({
       GET: async ({ request }) => {
         try {
           const user = await requireAuthenticatedUser(request);
+          const demoGuard = demoMutationResponse(user);
+          if (demoGuard) return demoGuard;
           oauthDiagnostic("linkedin", { step: "connect_authenticated" });
           const state = await createOAuthState(user.id, "linkedin");
           oauthDiagnostic("linkedin", {

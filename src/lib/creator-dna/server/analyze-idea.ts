@@ -9,7 +9,13 @@ import type {
   TargetPlatform,
 } from "../types";
 import { StoryIntelligenceSchema } from "../validation";
-import { CreatorDNAProviderError, getGroqClient, getGroqModel } from "./llm";
+import {
+  CreatorDNAProviderError,
+  getGroqClient,
+  getGroqModel,
+  isProviderRateLimitError,
+} from "./llm";
+import type { TimingRecorder } from "@/lib/server-timing";
 
 const framingTypes = [
   "personal story",
@@ -303,6 +309,7 @@ export async function analyzeContentIdea(
   retrievedDNA: CreatorDNAMatch[],
   targetPlatform: TargetPlatform,
   creatorContext?: PlanningCreatorContext,
+  onTiming?: TimingRecorder,
 ): Promise<StoryIntelligenceResult> {
   if (!idea.trim()) {
     throw new CreatorDNAProviderError("Content idea must not be empty.");
@@ -341,10 +348,14 @@ export async function analyzeContentIdea(
       ],
       response_format: responseFormat,
     };
+    const groqStartedAt = performance.now();
     try {
       completion = await getGroqClient().chat.completions.create(params);
     } catch (error) {
       lastError = error;
+      if (isProviderRateLimitError(error)) break;
+    } finally {
+      onTiming?.("groq", performance.now() - groqStartedAt);
     }
   }
   if (!completion) {
@@ -369,6 +380,7 @@ export async function analyzeContentIdea(
     );
   }
 
+  const validationStartedAt = performance.now();
   const result = StoryIntelligenceSchema.safeParse(decoded);
   if (!result.success) {
     throw new CreatorDNAProviderError(
@@ -389,11 +401,13 @@ export async function analyzeContentIdea(
     threeAuthenticAngles: [firstAngle, secondAngle, thirdAngle],
   };
   const validNodeIds = new Set(retrievedDNA.map((node) => node.id));
-  return sanitizeStoryIntelligence(
+  const sanitized = sanitizeStoryIntelligence(
     normalizedResult,
     validNodeIds,
     targetPlatform,
   );
+  onTiming?.("validation", performance.now() - validationStartedAt);
+  return sanitized;
 }
 
 function sanitizeStoryIntelligence(

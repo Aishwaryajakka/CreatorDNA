@@ -232,7 +232,7 @@ export function AppSidebar() {
               </Link>
               <button
                 type="button"
-                onClick={() => void signOut()}
+                onClick={() => void signOut("sidebar")}
                 className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm text-sidebar-foreground/80 hover:bg-sidebar-accent"
               >
                 <LogOut className="h-[18px] w-[18px]" strokeWidth={1.9} /> Sign

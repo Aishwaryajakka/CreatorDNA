@@ -4,6 +4,7 @@ import { z } from "zod";
 import { importXPosts, XPostAccessError } from "@/lib/oauth/x-posts.server";
 import {
   AuthenticationError,
+  demoMutationResponse,
   requireAuthenticatedUser,
 } from "@/lib/supabase/auth";
 
@@ -26,6 +27,8 @@ export const Route = createFileRoute("/api/integrations/x/import")({
       POST: async ({ request }) => {
         try {
           const user = await requireAuthenticatedUser(request);
+          const demoGuard = demoMutationResponse(user);
+          if (demoGuard) return demoGuard;
           const parsed = requestSchema.safeParse(await request.json());
           if (!parsed.success) {
             return Response.json(

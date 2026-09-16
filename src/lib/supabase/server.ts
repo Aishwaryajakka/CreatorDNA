@@ -38,6 +38,10 @@ export const supabaseAuthServer = createServerClient(
   "SUPABASE_PUBLISHABLE_KEY",
 );
 
+export function createSupabaseAuthClient() {
+  return createServerClient("SUPABASE_PUBLISHABLE_KEY");
+}
+
 // Dedicated server-secret client for OAuth state and encrypted token storage.
 // It is never given a user session or a request Authorization header.
 export const supabaseOAuthAdmin = createServerClient("SUPABASE_SECRET_KEY");

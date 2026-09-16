@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+import type { AnchorHTMLAttributes, HTMLAttributes, ReactNode } from "react";
 import {
   AtSign,
   ExternalLink,
@@ -77,6 +77,24 @@ export function SourceChip({ children }: { children: ReactNode }) {
   );
 }
 
+export function SourceLink({
+  children,
+  className = "",
+  ...props
+}: AnchorHTMLAttributes<HTMLAnchorElement>) {
+  return (
+    <a
+      {...props}
+      target="_blank"
+      rel="noreferrer"
+      className={`source-link inline-flex items-center gap-1.5 rounded-full border border-aqua-accent px-3 py-1.5 text-xs font-bold text-primary transition-colors hover:bg-aqua-accent/10 hover:text-midnight focus-visible:ring-2 focus-visible:ring-aqua-accent ${className}`}
+    >
+      {children}
+      <ExternalLink className="h-3 w-3 shrink-0" />
+    </a>
+  );
+}
+
 export function SourceProvenance({
   title,
   platform,
@@ -114,15 +132,9 @@ export function SourceProvenance({
           </span>
         </>
       ) : url ? (
-        <a
-          href={url}
-          target="_blank"
-          rel="noreferrer"
-          className="inline-flex items-center gap-1 font-semibold text-midnight hover:text-primary focus-visible:ring-2 focus-visible:ring-ring"
-        >
+        <SourceLink href={url} className="rounded-lg py-1">
           {title || source}
-          <ExternalLink className="h-3 w-3" />
-        </a>
+        </SourceLink>
       ) : (
         <span className="font-semibold text-midnight">{title || source}</span>
       )}
@@ -141,13 +153,15 @@ export function Panel({
   children,
   className = "",
   accent,
-}: {
+  ...props
+}: Omit<HTMLAttributes<HTMLElement>, "children" | "className"> & {
   children: ReactNode;
   className?: string;
   accent?: string;
 }) {
   return (
     <section
+      {...props}
       className={`telemetry-edge telemetry-card relative overflow-hidden rounded-[var(--radius-card)] border border-border bg-card transition-[background-color,border-color,box-shadow] duration-200 ${className}`}
     >
       {accent ? (

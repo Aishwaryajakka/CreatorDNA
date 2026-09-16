@@ -2,7 +2,9 @@ import { createFileRoute } from "@tanstack/react-router";
 import {
   requireAuthenticatedUser,
   AuthenticationError,
+  demoMutationResponse,
 } from "@/lib/supabase/auth";
+import { clearTrustedPlanContextsForUser } from "@/lib/creator-dna/server/plan-context-cache";
 import {
   getFoundationForUser,
   replaceFoundationNodes,
@@ -33,6 +35,8 @@ export const Route = createFileRoute("/api/foundation")({
       PUT: async ({ request }) => {
         try {
           const user = await requireAuthenticatedUser(request);
+          const demoGuard = demoMutationResponse(user);
+          if (demoGuard) return demoGuard;
           const parsed = CreatorFoundationSchema.safeParse(
             await request.json(),
           );
@@ -42,6 +46,7 @@ export const Route = createFileRoute("/api/foundation")({
               { status: 400 },
             );
           const nodes = await replaceFoundationNodes(parsed.data, user.id);
+          clearTrustedPlanContextsForUser(user.id);
           return Response.json({
             foundation: parsed.data,
             savedNodeCount: nodes.length,

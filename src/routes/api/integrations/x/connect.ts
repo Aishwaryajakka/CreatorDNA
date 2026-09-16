@@ -9,6 +9,7 @@ import { createOAuthState } from "@/lib/oauth/state.server";
 import { createXAuthorizationUrl } from "@/lib/oauth/x.server";
 import {
   AuthenticationError,
+  demoMutationResponse,
   requireAuthenticatedUser,
 } from "@/lib/supabase/auth";
 
@@ -18,6 +19,8 @@ export const Route = createFileRoute("/api/integrations/x/connect")({
       GET: async ({ request }) => {
         try {
           const user = await requireAuthenticatedUser(request);
+          const demoGuard = demoMutationResponse(user);
+          if (demoGuard) return demoGuard;
           oauthDiagnostic("x", { step: "connect_authenticated" });
           const pkce = createPkcePair();
           oauthDiagnostic("x", { step: "pkce_created" });

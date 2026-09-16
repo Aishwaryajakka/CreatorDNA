@@ -8,8 +8,10 @@ import {
   useState,
   type ReactNode,
 } from "react";
-import { cancelAuthenticatedRequests, supabase } from "@/lib/supabase/client";
+import { supabase } from "@/lib/supabase/client";
 import type { Profile } from "@/lib/supabase/profile";
+import { logout, type LogoutSource } from "@/lib/auth-logout";
+import { useQueryClient } from "@tanstack/react-query";
 
 type AuthStatus = "loading" | "authenticated" | "unauthenticated" | "error";
 
@@ -20,12 +22,14 @@ type AuthState = {
   profile: Profile | null;
   error: string | null;
   refresh: () => Promise<void>;
-  signOut: () => Promise<void>;
+  signOut: (source?: LogoutSource) => Promise<boolean>;
 };
 
 const AuthContext = createContext<AuthState | null>(null);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
+  const queryClient = useQueryClient();
+  const cachedUserId = useRef<string | null>(null);
   const resolveVersion = useRef(0);
   const signingOut = useRef(false);
   const profileRequest = useRef<AbortController | null>(null);
@@ -37,52 +41,65 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     error: null,
   });
 
-  const resolve = useCallback(async (session: Session | null) => {
-    const version = ++resolveVersion.current;
-    profileRequest.current?.abort();
-    profileRequest.current = null;
-    if (!session) {
-      setState({
-        status: "unauthenticated",
-        user: null,
-        session: null,
-        profile: null,
-        error: null,
-      });
-      return;
-    }
-    setState((current) => ({
-      ...current,
-      status: "loading",
-      user: session.user,
-      session,
-      error: null,
-    }));
-    const controller = new AbortController();
-    profileRequest.current = controller;
-    try {
-      const response = await fetch("/api/profile", {
-        headers: { Authorization: `Bearer ${session.access_token}` },
-        signal: controller.signal,
-      });
-      if (!response.ok) throw new Error("We couldn't load your account.");
-      const profile = (await response.json()) as Profile;
-      if (version !== resolveVersion.current) return;
-      setState((current) => ({ ...current, status: "authenticated", profile }));
-    } catch (error) {
-      if (version !== resolveVersion.current) return;
+  const resolve = useCallback(
+    async (session: Session | null) => {
+      const version = ++resolveVersion.current;
+      profileRequest.current?.abort();
+      profileRequest.current = null;
+      if (!session) {
+        queryClient.removeQueries({ queryKey: ["user"] });
+        cachedUserId.current = null;
+        setState({
+          status: "unauthenticated",
+          user: null,
+          session: null,
+          profile: null,
+          error: null,
+        });
+        return;
+      }
+      if (cachedUserId.current && cachedUserId.current !== session.user.id)
+        queryClient.removeQueries({ queryKey: ["user"] });
+      cachedUserId.current = session.user.id;
       setState((current) => ({
         ...current,
-        status: "error",
-        error:
-          error instanceof Error
-            ? error.message
-            : "We couldn't load your account.",
+        status: "loading",
+        user: session.user,
+        session,
+        error: null,
       }));
-    } finally {
-      if (profileRequest.current === controller) profileRequest.current = null;
-    }
-  }, []);
+      const controller = new AbortController();
+      profileRequest.current = controller;
+      try {
+        const response = await fetch("/api/profile", {
+          headers: { Authorization: `Bearer ${session.access_token}` },
+          signal: controller.signal,
+        });
+        if (!response.ok) throw new Error("We couldn't load your account.");
+        const profile = (await response.json()) as Profile;
+        if (version !== resolveVersion.current) return;
+        setState((current) => ({
+          ...current,
+          status: "authenticated",
+          profile,
+        }));
+      } catch (error) {
+        if (version !== resolveVersion.current) return;
+        setState((current) => ({
+          ...current,
+          status: "error",
+          error:
+            error instanceof Error
+              ? error.message
+              : "We couldn't load your account.",
+        }));
+      } finally {
+        if (profileRequest.current === controller)
+          profileRequest.current = null;
+      }
+    },
+    [queryClient],
+  );
 
   const refresh = async () => {
     setState((current) => ({ ...current, status: "loading", error: null }));
@@ -90,16 +107,27 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     await resolve(data.session);
   };
 
-  const signOut = async () => {
+  const signOut = async (source: LogoutSource = "sidebar") => {
     signingOut.current = true;
+    ++resolveVersion.current;
+    profileRequest.current?.abort();
+    profileRequest.current = null;
     try {
-      const { error } = await supabase.auth.signOut();
-      if (error) {
-        setState((current) => ({ ...current, error: error.message }));
-        return;
-      }
-      cancelAuthenticatedRequests();
+      await logout(source);
       await resolve(null);
+      return true;
+    } catch (error) {
+      const { data } = await supabase.auth.getSession();
+      if (!data.session) {
+        await resolve(null);
+        return true;
+      }
+      setState((current) => ({
+        ...current,
+        error:
+          error instanceof Error ? error.message : "We couldn't sign you out.",
+      }));
+      return false;
     } finally {
       signingOut.current = false;
     }

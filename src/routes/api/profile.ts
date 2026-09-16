@@ -3,6 +3,7 @@ import { z } from "zod";
 import {
   requireAuthenticatedUser,
   AuthenticationError,
+  demoMutationResponse,
 } from "@/lib/supabase/auth";
 import { getOrCreateProfile, updateProfile } from "@/lib/supabase/profile";
 
@@ -36,6 +37,8 @@ export const Route = createFileRoute("/api/profile")({
       PATCH: async ({ request }) => {
         try {
           const user = await requireAuthenticatedUser(request);
+          const demoGuard = demoMutationResponse(user);
+          if (demoGuard) return demoGuard;
           const parsed = schema.safeParse(await request.json());
           if (!parsed.success)
             return Response.json(
